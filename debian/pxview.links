@@ -1,2 +1,3 @@
 usr/bin/pxview usr/bin/px2sql
 usr/bin/pxview usr/bin/px2csv
+usr/bin/pxview usr/bin/px2html
