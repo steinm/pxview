@@ -1,3 +1,6 @@
+Version 0.1.6
+	- fixed freeing of memory
+
 Version 0.1.5
 	- support for sqlite output
 	- added first line to csv ouput with field name, type and size
