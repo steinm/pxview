@@ -22,7 +22,12 @@
 #ifdef HAVE_SQLITE
 #include <sqlite.h>
 #endif
+
+#ifdef ENABLE_NLS
 #define _(String) gettext(String)
+#else
+#define _(String) String
+#endif
 
 void strrep(char *str, char c1, char c2) {
 	char *ptr = str;
