@@ -113,7 +113,7 @@ void usage(char *progname) {
 
 	printf(_("Version: %s %s http://sourceforge.net/projects/pxlib"), progname, VERSION);
 	printf("\n");
-	printf(_("Copyright: Copyright (C) 2003 Uwe Steinmann <uwe@steinmann.cx>"));
+	printf(_("Copyright: Copyright (C) 2003, 2004 Uwe Steinmann <uwe@steinmann.cx>"));
 	printf("\n\n");
 	if(!strcmp(progname, "px2csv")) {
 		printf(_("%s reads a paradox file and outputs the file in CSV format."), progname);
@@ -129,13 +129,23 @@ void usage(char *progname) {
 	printf("\n\n");
 	printf(_("Usage: %s [OPTIONS] FILE"), progname);
 	printf("\n\n");
-	printf(_("Options:"));
-	printf("\n\n");
+	printf(_("General options:"));
+	printf("\n");
 	printf(_("  -h, --help          this usage information."));
 	printf("\n");
 	printf(_("  --version           show version information."));
 	printf("\n");
 	printf(_("  -v, --verbose       be more verbose."));
+	printf("\n");
+#ifdef HAVE_GSF
+	if(PX_has_gsf_support()) {
+		printf(_("  --use-gsf           use gsf library to read input file."));
+		printf("\n");
+	}
+#endif
+
+	printf("\n");
+	printf(_("Options to select output mode:"));
 	printf("\n");
 	if(!strcmp(progname, "pxview")) {
 		printf(_("  -i, --info          show information about file."));
@@ -152,53 +162,71 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  -t, --shema         output schema of database."));
 		printf("\n");
-		printf(_("  --mode=MODE         set output mode (csv, sql, sqlite, html or schema)."));
+		printf(_("  --mode=MODE         set output mode (info, csv, sql, sqlite, html or schema)."));
 		printf("\n");
 	}
 	printf(_("  -o, --output-file=FILE output data into file instead of stdout."));
+	printf("\n");
+	printf(_("  --output-deleted    output also records which were deleted."));
+	printf("\n");
+	printf(_("  --fields=REGEX      extended regular expression to select fields."));
+	printf("\n");
+	printf(_("  -r, --recode=ENCODING sets the target encoding."));
+	printf("\n");
+	printf(_("  -n, --primary-index-file=FILE read primary index from file."));
+	printf("\n");
+
+	printf("\n");
+	printf(_("Options to handle blob files:"));
+	printf("\n");
+	printf(_("  --include-blobs     add blob fields in sql output."));
 	printf("\n");
 	printf(_("  -b, --blobfile=FILE read blob data from file."));
 	printf("\n");
 	printf(_("  -p, --blobprefix=PREFIX prefix for all created files with blob data."));
 	printf("\n");
-	printf(_("  -n, --primary-index-file=FILE read primary index from file."));
-	printf("\n");
-	printf(_("  -r, --recode=ENCODING sets the target encoding."));
-	printf("\n");
-	if(!strcmp(progname, "px2csv") || !strcmp(progname, "pxview")) {
-		printf(_("  --separator=CHAR    character used to separate field values (default is ',')."));
+
+	if(!strcmp(progname, "px2html") || !strcmp(progname, "pxview")) {
 		printf("\n");
-		printf(_("  --enclosure=CHAR    character used to enclose field values (default is '\"')."));
+		printf(_("Options for html ouput:"));
 		printf("\n");
-		printf(_("  --without-head      Turn off first line with field names."));
+		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
-	}
-	if(!strcmp(progname, "px2csv") || !strcmp(progname, "px2html") || !strcmp(progname, "pxview")) {
 		printf(_("  --mark-deleted      add extra column with 1 for deleted records."));
 		printf("\n");
 	}
-	printf(_("  --include-blobs     add blob fields in sql output."));
-	printf("\n");
-	printf(_("  --fields=REGEX      extended regular expression to select fields."));
-	printf("\n");
-	printf(_("  --output-deleted    output also records which were deleted."));
-	printf("\n");
-#ifdef HAVE_GSF
-	if(PX_has_gsf_support()) {
-		printf(_("  --use-gsf           use gsf library to read input file."));
+
+	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview") || !strcmp(progname, "px2sqlite")) {
 		printf("\n");
-	}
-#endif
-	if(strcmp(progname, "px2csv") && strcmp(progname, "px2html")) {
+		printf(_("Options for sql and sqlite ouput:"));
+		printf("\n");
 		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
-	}
-	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview") || !strcmp(progname, "px2sqlite")) {
 		printf(_("  --delete-table      delete existing sql database table."));
+		printf("\n");
+	}
+	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
+		printf("\n");
+		printf(_("Options for sql output:"));
 		printf("\n");
 		printf(_("  --use-copy          use COPY instead of INSERT statement."));
 		printf("\n");
 	}
+
+	if(!strcmp(progname, "px2csv") || !strcmp(progname, "pxview")) {
+		printf("\n");
+		printf(_("Options for csv ouput:"));
+		printf("\n");
+		printf(_("  --separator=CHAR    character used to separate field values\n                      (default is ',')."));
+		printf("\n");
+		printf(_("  --enclosure=CHAR    character used to enclose field values\n                      (default is '\"')."));
+		printf("\n");
+		printf(_("  --without-head      Turn off first line with field names."));
+		printf("\n");
+		printf(_("  --mark-deleted      add extra column with 1 for deleted records."));
+		printf("\n");
+	}
+
 	printf("\n");
 	if(!strcmp(progname, "pxview")) {
 		printf(_("If you do not specify any of the options -i, -c, -s, -x, -q or -t\nthen -i will be used."));
@@ -206,16 +234,6 @@ void usage(char *progname) {
 	}
 	if(!strcmp(progname, "pxview")) {
 		printf(_("The option --fields will only affect csv, html, sql and sqlite output."));
-		printf("\n\n");
-		printf(_("The option --use-copy will only affect sql output."));
-		printf("\n\n");
-		printf(_("The option --delete-table will only affect sql and sqlite output."));
-		printf("\n\n");
-		printf(_("The options --separator, --enclosure and --mark-deleted will only\naffect csv output."));
-		printf("\n\n");
-	}
-	if(!strcmp(progname, "px2csv")) {
-		printf(_("If exporting csv format fields will be separated by tabulator\nand enclosed into \"."));
 		printf("\n\n");
 	}
 
@@ -360,7 +378,9 @@ int main(int argc, char *argv[]) {
 				tablename = strdup(optarg);
 				break;
 			case 4:
-				if(!strcmp(optarg, "csv")) {
+				if(!strcmp(optarg, "info")) {
+					outputinfo = 1;
+				} else if(!strcmp(optarg, "csv")) {
 					outputcsv = 1;
 				} else if(!strcmp(optarg, "sql")) {
 					outputsql = 1;
@@ -1544,7 +1564,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		fprintf(outfp, "<table>\n");
-		fprintf(outfp, " <caption>%s</caption>\n", pxh->px_tablename);
+		fprintf(outfp, " <caption>%s</caption>\n", tablename);
 		fprintf(outfp, " <tr>\n");
 
 		/* output field name */
