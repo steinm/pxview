@@ -139,6 +139,8 @@ void usage(char *progname) {
 	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview") || !strcmp(progname, "px2sqlite")) {
 		printf(_("  --delete-table      delete existing sql database table."));
 		printf("\n");
+		printf(_("  --use-copy          use COPY instead of INSERT statement."));
+		printf("\n");
 	}
 	printf("\n");
 	if(!strcmp(progname, "pxview")) {
@@ -147,6 +149,8 @@ void usage(char *progname) {
 	}
 	if(!strcmp(progname, "pxview")) {
 		printf(_("The option --fields will only affect csv, html, sql and sqlite output."));
+		printf("\n\n");
+		printf(_("The options --delete-table and --use-copy will only affect sql output."));
 		printf("\n\n");
 		printf(_("The options --separator, --enclosure and --mark-deleted will only\naffect csv output."));
 		printf("\n\n");
@@ -213,6 +217,7 @@ int main(int argc, char *argv[]) {
 	int deletetable = 0;
 	int outputdeleted = 0;
 	int markdeleted = 0;
+	int usecopy = 0;
 	int usegsf = 0;
 	int verbose = 0;
 	char delimiter = '\t';
@@ -271,6 +276,7 @@ int main(int argc, char *argv[]) {
 			{"markdeleted", 0, 0, 7},
 			{"mark-deleted", 0, 0, 7},
 			{"use-gsf", 0, 0, 8},
+			{"use-copy", 0, 0, 9},
 			{"primary-index-file", 1, 0, 'n'},
 			{0, 0, 0, 0}
 		};
@@ -322,6 +328,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 8:
 				usegsf = 1;
+				break;
+			case 9:
+				usecopy = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -1742,161 +1751,281 @@ int main(int argc, char *argv[]) {
 				exit(1);
 			}
 
-			fprintf(outfp, "COPY %s (", tablename);
-			first = 0;  // set to 1 when first field has been output
-			pxf = pxh->px_fields;
-			/* output field name */
-			for(i=0; i<pxh->px_numfields; i++) {
-				if(fieldregex == NULL ||  selectedfields[i]) {
-					if(first == 1)
-						fprintf(outfp, ", ");
-					switch(pxf->px_ftype) {
-						case pxfAlpha:
-						case pxfDate:
-						case pxfShort:
-						case pxfLong:
-						case pxfAutoInc:
-						case pxfTime:
-						case pxfCurrency:
-						case pxfNumber:
-						case pxfLogical:
-						case pxfBCD:
-						case pxfTimestamp:
-						case pxfBytes:
-							fprintf(outfp, "%s", pxf->px_fname);
-							first = 1;
-							break;
-						case pxfMemoBLOb:
-						case pxfBLOb:
-						case pxfFmtMemoBLOb:
-						case pxfGraphic:
-							if(includeblobs) {
+			if(usecopy) {
+				fprintf(outfp, "COPY %s (", tablename);
+				first = 0;  // set to 1 when first field has been output
+				pxf = pxh->px_fields;
+				/* output field name */
+				for(i=0; i<pxh->px_numfields; i++) {
+					if(fieldregex == NULL ||  selectedfields[i]) {
+						if(first == 1)
+							fprintf(outfp, ", ");
+						switch(pxf->px_ftype) {
+							case pxfAlpha:
+							case pxfDate:
+							case pxfShort:
+							case pxfLong:
+							case pxfAutoInc:
+							case pxfTime:
+							case pxfCurrency:
+							case pxfNumber:
+							case pxfLogical:
+							case pxfBCD:
+							case pxfTimestamp:
+							case pxfBytes:
 								fprintf(outfp, "%s", pxf->px_fname);
 								first = 1;
-							} else {
-								first = 0;
-							}
-							break;
-					}
-				}
-				pxf++;
-			}
-			fprintf(outfp, ") FROM stdin;\n");
-			for(j=0; j<pxh->px_numrecords; j++) {
-				int offset;
-				if(PX_get_record(pxdoc, j, data)) {
-					first = 0;  // set to 1 when first field has been output
-					offset = 0;
-					pxf = pxh->px_fields;
-					for(i=0; i<pxh->px_numfields; i++) {
-						if(fieldregex == NULL ||  selectedfields[i]) {
-							if(first == 1)
-								fprintf(outfp, "\t");
-							switch(pxf->px_ftype) {
-								case pxfAlpha: {
-									char *value;
-									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "%s", value);
-										pxdoc->free(pxdoc, value);
-									}
+								break;
+							case pxfMemoBLOb:
+							case pxfBLOb:
+							case pxfFmtMemoBLOb:
+							case pxfGraphic:
+								if(includeblobs) {
+									fprintf(outfp, "%s", pxf->px_fname);
 									first = 1;
-
-									break;
+								} else {
+									first = 0;
 								}
-								case pxfDate: {
-									long value;
-									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "%ld", value);
-									} else {
-										fprintf(outfp, "\\N");
-									}
-									first = 1;
-									break;
-								}
-								case pxfShort: {
-									short int value;
-									if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "%d", value);
-									} else {
-										fprintf(outfp, "\\N");
-									}
-									first = 1;
-									break;
-								}
-								case pxfAutoInc:
-								case pxfTimestamp:
-								case pxfLong: {
-									long value;
-									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "%ld", value);
-									} else {
-										fprintf(outfp, "\\N");
-									}
-									first = 1;
-									break;
-								}
-								case pxfTime: {
-									long value;
-									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
-									} else {
-										fprintf(outfp, "\\N");
-									}
-									first = 1;
-									break;
-								}
-								case pxfCurrency:
-								case pxfNumber: {
-									double value;
-									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "%g", value);
-									} else {
-										fprintf(outfp, "\\N");
-									}
-									first = 1;
-									break;
-								}
-								case pxfLogical: {
-									char value;
-									if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										if(value)
-											fprintf(outfp, "TRUE");
-										else
-											fprintf(outfp, "FALSE");
-									} else {
-										fprintf(outfp, "\\N");
-									}
-									first = 1;
-									break;
-								}
-								case pxfMemoBLOb:
-								case pxfBLOb:
-								case pxfFmtMemoBLOb:
-								case pxfGraphic:
-									if(includeblobs) {
-										fprintf(outfp, "\\N");
-										first = 1;
-									} else {
-										first = 0;
-									}
-									break;
-								case pxfBCD:
-								case pxfBytes:
-									fprintf(outfp, "\\N");
-									break;
-								default:
-									fprintf(outfp, "");
-							}
+								break;
 						}
-						offset += pxf->px_flen;
-						pxf++;
 					}
-					fprintf(outfp, "\n");
-				} else {
-					fprintf(stderr, _("Couldn't get record number %d\n"), j);
+					pxf++;
+				}
+				fprintf(outfp, ") FROM stdin;\n");
+				for(j=0; j<pxh->px_numrecords; j++) {
+					int offset;
+					if(PX_get_record(pxdoc, j, data)) {
+						first = 0;  // set to 1 when first field has been output
+						offset = 0;
+						pxf = pxh->px_fields;
+						for(i=0; i<pxh->px_numfields; i++) {
+							if(fieldregex == NULL ||  selectedfields[i]) {
+								if(first == 1)
+									fprintf(outfp, "\t");
+								switch(pxf->px_ftype) {
+									case pxfAlpha: {
+										char *value;
+										if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%s", value);
+											pxdoc->free(pxdoc, value);
+										}
+										first = 1;
+
+										break;
+									}
+									case pxfDate: {
+										long value;
+										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%ld", value);
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfShort: {
+										short int value;
+										if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%d", value);
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfAutoInc:
+									case pxfTimestamp:
+									case pxfLong: {
+										long value;
+										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%ld", value);
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfTime: {
+										long value;
+										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%02d:%02d:%02.3f", value/3600000, value/60000%60, value%60000/1000.0);
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfCurrency:
+									case pxfNumber: {
+										double value;
+										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%g", value);
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfLogical: {
+										char value;
+										if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											if(value)
+												fprintf(outfp, "TRUE");
+											else
+												fprintf(outfp, "FALSE");
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfMemoBLOb:
+									case pxfBLOb:
+									case pxfFmtMemoBLOb:
+									case pxfGraphic:
+										if(includeblobs) {
+											fprintf(outfp, "\\N");
+											first = 1;
+										} else {
+											first = 0;
+										}
+										break;
+									case pxfBCD:
+									case pxfBytes:
+										fprintf(outfp, "\\N");
+										break;
+									default:
+										fprintf(outfp, "");
+								}
+							}
+							offset += pxf->px_flen;
+							pxf++;
+						}
+						fprintf(outfp, "\n");
+					} else {
+						fprintf(stderr, _("Couldn't get record number %d\n"), j);
+					}
+				}
+				fprintf(outfp, "\\.\n");
+			} else {
+				for(j=0; j<pxh->px_numrecords; j++) {
+					int offset;
+					if(PX_get_record(pxdoc, j, data)) {
+						first = 0;  // set to 1 when first field has been output
+						offset = 0;
+						fprintf(outfp, "insert into %s values (", tablename);
+						pxf = pxh->px_fields;
+						for(i=0; i<pxh->px_numfields; i++) {
+							if(fieldregex == NULL ||  selectedfields[i]) {
+								if(first == 1)
+									fprintf(outfp, ", ");
+								switch(pxf->px_ftype) {
+									case pxfAlpha: {
+										char *value;
+										if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "'%s'", value);
+											pxdoc->free(pxdoc, value);
+										} else {
+											fprintf(outfp, "''", value);
+										}
+										first = 1;
+
+										break;
+									}
+									case pxfDate: {
+										long value;
+										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%ld", value);
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfShort: {
+										short int value;
+										if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%d", value);
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfAutoInc:
+									case pxfTimestamp:
+									case pxfLong: {
+										long value;
+										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%ld", value);
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfTime: {
+										long value;
+										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfCurrency:
+									case pxfNumber: {
+										double value;
+										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											fprintf(outfp, "%g", value);
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfLogical: {
+										char value;
+										if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											if(value)
+												fprintf(outfp, "TRUE");
+											else
+												fprintf(outfp, "FALSE");
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfMemoBLOb:
+									case pxfBLOb:
+									case pxfFmtMemoBLOb:
+									case pxfGraphic:
+										if(includeblobs) {
+											fprintf(outfp, "NULL");
+											first = 1;
+										} else {
+											first = 0;
+										}
+										break;
+									case pxfBCD:
+									case pxfBytes:
+										fprintf(outfp, "NULL");
+										break;
+									default:
+										fprintf(outfp, "");
+								}
+							}
+							offset += pxf->px_flen;
+							pxf++;
+						}
+						fprintf(outfp, ");\n");
+					} else {
+						fprintf(stderr, _("Couldn't get record number %d\n"), j);
+					}
 				}
 			}
-			fprintf(outfp, "\\.\n");
 			pxdoc->free(pxdoc, data);
 		}
 	}
