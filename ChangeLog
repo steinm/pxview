@@ -1,3 +1,7 @@
+Version 0.0.6
+	- added spec file to create rpms
+	- don't use enclosure characters in sql output
+
 Version 0.0.5
 	- added support for recoding alpha fields
 	- access to alpha fields is done with PX_get_data_alpha()
