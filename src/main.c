@@ -35,8 +35,10 @@ void usage(char *progname) {
 		printf(_("%s reads a paradox file and outputs the file in CSV format."), progname);
 	} else if(!strcmp(progname, "px2sql")) {
 		printf(_("%s reads a paradox file and outputs the file in SQL format."), progname);
+	} else if(!strcmp(progname, "px2html")) {
+		printf(_("%s reads a paradox file and outputs the file in HTML format."), progname);
 	} else {
-		printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV or SQL format."), progname);
+		printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV, HTML or SQL format."), progname);
 	}
 	printf("\n\n");
 	printf(_("Usage: %s [OPTIONS] FILE"), progname);
@@ -54,6 +56,8 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  -s, --sql           dump records in SQL format."));
 		printf("\n");
+		printf(_("  -x, --html          dump records in HTML format."));
+		printf("\n");
 		printf(_("  -t, --shema         output schema of database."));
 		printf("\n");
 		printf(_("  --mode=MODE         set output mode (csv, sql, or schema)."));
@@ -67,7 +71,7 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  -r, --recode=ENCODING sets the target encoding."));
 	printf("\n");
-	if(strcmp(progname, "px2sql")) {
+	if(!strcmp(progname, "px2csv")) {
 		printf(_("  --separator=CHAR    character used to separate field values."));
 		printf("\n");
 		printf(_("  --enclosure=CHAR    character used to enclose field values."));
@@ -79,29 +83,30 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  --output-deleted    output also records which were deleted."));
 	printf("\n");
-	if(strcmp(progname, "px2csv")) {
+	if(strcmp(progname, "px2sql") && strcmp(progname, "px2html")) {
 		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
+	}
+	if(!strcmp(progname, "px2sql")) {
 		printf(_("  --delete-table      delete existing sql database table."));
 		printf("\n");
 	}
 	printf("\n");
 	if(!strcmp(progname, "pxview")) {
-		printf(_("If you do not specify any of the options -i, -c, -s, or -t\nthen -i will be used."));
-		printf("\n\n");
-	}
-	if(strcmp(progname, "px2sql")) {
-		printf(_("The options --separator and --enclosure will only affect csv output."));
+		printf(_("If you do not specify any of the options -i, -c, -s, -x, or -t\nthen -i will be used."));
 		printf("\n\n");
 	}
 	if(!strcmp(progname, "pxview")) {
-		printf(_("The option --fields will only affect csv and sql output."));
+		printf(_("The option --fields will only affect csv, html and sql output."));
+		printf("\n\n");
+		printf(_("The options --separator and --enclosure will only affect csv output."));
 		printf("\n\n");
 	}
-	if(strcmp(progname, "px2sql")) {
+	if(!strcmp(progname, "px2csv")) {
 		printf(_("If exporting csv format fields will be separated by tabulator\nand enclosed into \"."));
 		printf("\n\n");
 	}
+
 	recode = PX_has_recode_support();
 	switch(recode) {
 		case 1:
@@ -133,6 +138,7 @@ int main(int argc, char *argv[]) {
 	int i, j, c; // general counters
 	int first; // used to indicate if output has started or not
 	int outputcsv = 0;
+	int outputhtml = 0;
 	int outputinfo = 0;
 	int outputsql = 0;
 	int outputschema = 0;
@@ -167,6 +173,7 @@ int main(int argc, char *argv[]) {
 			{"info", 0, 0, 'i'},
 			{"csv", 0, 0, 'c'},
 			{"sql", 0, 0, 's'},
+			{"html", 0, 0, 'x'},
 			{"schema", 0, 0, 't'},
 			{"verbose", 0, 0, 'v'},
 			{"blobfile", 1, 0, 'b'},
@@ -187,7 +194,7 @@ int main(int argc, char *argv[]) {
 			{"mode", 1, 0, 4},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icsvtf:b:r:p:o:h",
+		c = getopt_long (argc, argv, "icsxvtf:b:r:p:o:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -209,6 +216,8 @@ int main(int argc, char *argv[]) {
 					outputcsv = 1;
 				} else if(!strcmp(optarg, "sql")) {
 					outputsql = 1;
+				} else if(!strcmp(optarg, "html")) {
+					outputhtml = 1;
 				} else if(!strcmp(optarg, "schema")) {
 					outputschema = 1;
 				} else if(!strcmp(optarg, "debug")) {
@@ -255,6 +264,9 @@ int main(int argc, char *argv[]) {
 			case 's':
 				outputsql = 1;
 				break;
+			case 'x':
+				outputhtml = 1;
+				break;
 		}
 	}
 
@@ -263,15 +275,23 @@ int main(int argc, char *argv[]) {
 		outputcsv = 0;
 		outputschema = 0;
 		outputsql = 1;
+		outputhtml = 0;
 	} else if(!strcmp(progname, "px2csv")) {
 		outputinfo = 0;
 		outputcsv = 1;
 		outputschema = 0;
 		outputsql = 0;
+		outputhtml = 0;
+	} else if(!strcmp(progname, "px2html")) {
+		outputinfo = 0;
+		outputcsv = 0;
+		outputschema = 0;
+		outputsql = 0;
+		outputhtml = 1;
 	}
 
 	/* if none the output modes is selected then display info */
-	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0 && outputdebug == 0)
+	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0 && outputdebug == 0 && outputhtml == 0)
 		outputinfo = 1;
 
 	if (optind < argc) {
@@ -548,7 +568,7 @@ int main(int argc, char *argv[]) {
 	/* Check which fields shall be shown in sql or csv output */
 	if(fieldregex) {
 		regex_t preg;
-		if(regcomp(&preg, fieldregex, REG_NOSUB|REG_EXTENDED)) {
+		if(regcomp(&preg, fieldregex, REG_NOSUB|REG_EXTENDED|REG_ICASE)) {
 			fprintf(stderr, _("Could not compile regular expression to select fields."));
 			PX_close(pxdoc);
 			exit(1);
@@ -728,6 +748,194 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr, _("Couldn't get record\n"));
 			}
 		}
+		px_free(pxdoc, data);
+	}
+
+	/* output HTML Table */
+	if(outputhtml) {
+		int numrecords;
+		int isdeleted;
+		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+			if(selectedfields)
+				px_free(pxdoc, selectedfields);
+			PX_close(pxdoc);
+			exit(1);
+		}
+
+		if(outputdeleted) {
+			numrecords = pxh->px_theonumrecords;
+			isdeleted = 1;
+		} else {
+			numrecords = pxh->px_numrecords;
+			isdeleted = 0;
+		}
+
+		fprintf(outfp, "<table>\n");
+		fprintf(outfp, " <caption>%s</caption>\n", pxh->px_tablename);
+		fprintf(outfp, " <tr>\n");
+
+		/* output field name */
+		pxf = pxh->px_fields;
+		for(i=0; i<pxh->px_numfields; i++) {
+			if(fieldregex == NULL ||  selectedfields[i]) {
+				fprintf(outfp, "  <td><b>");
+				switch(pxf->px_ftype) {
+					case pxfAlpha:
+					case pxfDate:
+					case pxfShort:
+					case pxfLong:
+					case pxfAutoInc:
+					case pxfTime:
+					case pxfCurrency:
+					case pxfNumber:
+					case pxfLogical:
+					case pxfBCD:
+					case pxfTimestamp:
+					case pxfBytes:
+						fprintf(outfp, "%s", pxf->px_fname);
+						break;
+					case pxfMemoBLOb:
+					case pxfBLOb:
+					case pxfFmtMemoBLOb:
+					case pxfGraphic:
+						fprintf(outfp, "%s", pxf->px_fname);
+						break;
+				}
+				fprintf(outfp, "</b></td>\n");
+			}
+			pxf++;
+		}
+		fprintf(outfp, " </tr>\n");
+
+		for(j=0; j<numrecords; j++) {
+			int offset;
+			int ret;
+			ret = PX_get_record2(pxdoc, j, data, &isdeleted, NULL);
+			if(ret) {
+				pxf = pxh->px_fields;
+				offset = 0;
+				fprintf(outfp, " <tr valign=\"top\">\n");
+				for(i=0; i<pxh->px_numfields; i++) {
+					if(fieldregex == NULL || selectedfields[i]) {
+						fprintf(outfp, "  <td>");
+						switch(pxf->px_ftype) {
+							case pxfAlpha: {
+								char *value;
+								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%s", value);
+								}
+								break;
+							}
+							case pxfDate: {
+								long value;
+								int year, month, day;
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									PX_SdnToGregorian(value+1721425, &year, &month, &day);
+									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+								}
+								break;
+								}
+							case pxfShort: {
+								short int value;
+								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%d", value);
+								}
+								break;
+								}
+							case pxfAutoInc:
+							case pxfLong: {
+								long value;
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%ld", value);
+								}
+								break;
+								}
+							case pxfTime: {
+								long value;
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+								}
+								break;
+								}
+							case pxfCurrency:
+							case pxfNumber: {
+								double value;
+								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%f", value);
+								} 
+								break;
+								} 
+							case pxfLogical:
+								if(*((char *)(&data[offset])) & 0x80) {
+									data[offset] &= 0x7f;
+									if(data[offset])
+										fprintf(outfp, "1");
+									else
+										fprintf(outfp, "0");
+								}
+								break;
+							case pxfGraphic:
+							case pxfBLOb:
+								if(pxblob) {
+									char *blobdata;
+									char filename[200];
+									FILE *fp;
+									size_t size, boffset, mod_nr;
+									size = get_long_le(&data[offset+4]);
+									boffset = get_long_le(&data[offset]) & 0xffffff00;
+									mod_nr = get_short_le(&data[offset+8]);
+									fprintf(outfp, "offset=%ld ", boffset);
+									fprintf(outfp, "size=%ld ", size);
+									fprintf(outfp, "mod_nr=%d ", mod_nr);
+									blobdata = PX_read_blobdata(pxblob, boffset, size);
+									if(blobdata) {
+										sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+										fp = fopen(filename, "w");
+										if(fp) {
+											fwrite(blobdata, size, 1, fp);
+											fclose(fp);
+										} else {
+											fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+										}
+										fprintf(outfp, "%s", filename);
+									} else {
+										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+									}
+
+								} else {
+									fprintf(outfp, "offset=%ld ", get_long_le(&data[offset]) & 0xffffff00);
+									fprintf(outfp, "size=%ld ", get_long_le(&data[offset+4]));
+									fprintf(outfp, "mod_nr=%d", get_short_le(&data[offset+8]));
+								}
+								break;
+							default:
+								fprintf(outfp, "");
+						}
+						fprintf(outfp, "</td>\n");
+					}
+					offset += pxf->px_flen;
+					pxf++;
+				}
+				if(pxh->px_filetype == pxfFileTypPrimIndex) {
+					short int value;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "  <td>%d</td>\n", value);
+					}
+					offset += 2;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "  <td>%d</td>\n", value);
+					}
+					offset += 2;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "  <td>%d</td>\n", value);
+					}
+				}
+				fprintf(outfp, " <tr>\n");
+			} else {
+				fprintf(stderr, _("Couldn't get record\n"));
+			}
+		}
+		fprintf(outfp, "</table>\n");
 		px_free(pxdoc, data);
 	}
 
