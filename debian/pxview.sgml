@@ -68,7 +68,10 @@ manpage.1: manpage.sgml
       <arg><option>-i | --info <replaceable></replaceable></option></arg>
       <arg><option>-c | --csv <replaceable></replaceable></option></arg>
       <arg><option>-s | --sql <replaceable></replaceable></option></arg>
+      <arg><option>-t | --schema <replaceable></replaceable></option></arg>
       <arg><option>-o FILE | --output=FILE <replaceable></replaceable></option></arg>
+      <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
+      <arg><option>-p PREFIX | --blobprefix=PREFIX <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -120,7 +123,17 @@ manpage.1: manpage.sgml
           <option>--info</option>
         </term>
         <listitem>
-          <para>Show information about Paradox file.</para>
+          <para>Show information about Paradox file. If no other output format
+					 is specified this will be the default.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-t</option>
+          <option>--schema</option>
+        </term>
+        <listitem>
+          <para>Dump schema of database as it is created by the official
+					 Paradox software, when a database is exported in CSV format.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -147,6 +160,29 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Dump records into given file instead of stdout.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-b FILE</option>
+          <option>--blobfile=FILE</option>
+        </term>
+        <listitem>
+          <para>If the database files references blobs (binary large objects)
+					 then read them from the
+					 given file and write each blob into a single file. The filename will
+					 be constructed from the blobprefix option, an underscore, the
+					 internal number of the blob and the extension .blob.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-p PREFIX</option>
+          <option>--blobprefix=PREFIX</option>
+        </term>
+        <listitem>
+          <para>Use this prefix for each filename of a blob. You can write
+				   all blobs into a single directory by specifying a valid directory
+					 path name. You will have to make sure the directory exists before
+					 running &dhpackage;.</para>
         </listitem>
       </varlistentry>
     </variablelist>
