@@ -656,11 +656,9 @@ int main(int argc, char *argv[]) {
 		}
 		for(j=0; j<numrecords; j++) {
 			int offset;
-			int ret;
 			pxdatablockinfo_t pxdbinfo;
 			isdeleted = presetdeleted;
-			ret = PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo);
-			if(ret) {
+			if(NULL != PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
 				pxf = pxh->px_fields;
 				offset = 0;
 				first = 0;  // set to 1 when first field has been output
@@ -879,10 +877,8 @@ int main(int argc, char *argv[]) {
 
 		for(j=0; j<numrecords; j++) {
 			int offset;
-			int ret;
 			isdeleted = presetdeleted;
-			ret = PX_get_record2(pxdoc, j, data, &isdeleted, NULL);
-			if(ret) {
+			if(NULL != PX_get_record2(pxdoc, j, data, &isdeleted, NULL)) {
 				pxf = pxh->px_fields;
 				offset = 0;
 				fprintf(outfp, " <tr valign=\"top\">\n");
