@@ -1,11 +1,19 @@
+Version 0.2.0
+	- fixed reading of blob files (needs at least pxlib >= 0.2.11)
+
+Version 0.1.13
+	- several updates of manual page
+	- added new option --empty-string-is-null
+	- fixed some typos in this ChangeLog file
+
 Version 0.1.12
 	- added new option --set-sql-type
 	- added new option --short-insert
 
 Version 0.1.11
-	- exit configure if sqlite support is requested by header file is not found
+	- exit configure if sqlite support is requested but header file is not found
 	- new option skip-schema to omit sql command to create table structure
-	- output of sqlite is much more saver in terms of buffer overflows
+	- output of sqlite is much saver in terms of buffer overflows
 
 Version 0.1.10
 	- added reading of fields of type pxfGraphic in csv mode
