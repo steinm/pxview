@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 	pxdoc_t *pxdoc = NULL;
 	pxblob_t *pxblob = NULL;
 	char *progname = NULL;
-	char *selectedfields;
+	char *selectedfields = NULL;
 	char *data, *buffer = NULL;
 	int i, j, c; // general counters
 	int first; // used to indicate if output has started or not
