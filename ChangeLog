@@ -1,4 +1,6 @@
 Version 0.2.2
+	- No need to specify a blob file if all blobs are contained in the
+	  db file.
 	- Use PX_get_data_blob()
 	- fixed endless loop in str_buffer_printmask()
 	- sql type for time and timestamp can be both set on the command line
