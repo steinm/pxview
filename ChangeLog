@@ -1,5 +1,7 @@
 Version 0.1.5
 	- support for sqlite output
+	- added first line to csv ouput with field name, type and size
+	- added type and size to table header line of html output
 
 Version 0.1.4
 	- support for gsf library
