@@ -1,4 +1,7 @@
 Version 0.0.6
+	- put field values into enclosing char only if the delimeter is in
+	  the field value
+	- added option -v to output more header information
 	- added spec file to create rpms
 	- don't use enclosure characters in sql output
 
