@@ -43,6 +43,138 @@ void strrep(char *str, char c1, char c2) {
 }
 /* }}} */
 
+struct str_buffer {
+	char *buffer;
+	size_t cur;
+	size_t size;
+};
+
+/* str_buffer_new() {{{
+ * Create a new string buffer with the given initial size
+ */
+struct str_buffer *str_buffer_new(pxdoc_t *pxdoc, size_t size) {
+	struct str_buffer *sb;
+	if(NULL == (sb = pxdoc->malloc(pxdoc, sizeof(struct str_buffer), _("Allocate memory for string buffer"))))
+		return NULL;
+	if(size > 0) {
+		if(NULL == (sb->buffer = pxdoc->malloc(pxdoc, size, _("Allocate memory for string buffer")))) {
+			pxdoc->free(pxdoc, sb);
+			return NULL;
+		}
+		sb->buffer[0] = '\0';
+	} else {
+		sb->buffer = NULL;
+	}
+	sb->size = size;
+	sb->cur = 0;
+	return(sb);
+}
+/* }}} */
+
+/* str_buffer_delete() {{{
+ * Frees the memory occupied by the string buffer
+ */
+void str_buffer_delete(pxdoc_t *pxdoc, struct str_buffer *sb) {
+	if(sb->buffer)
+		pxdoc->free(pxdoc, sb->buffer);
+	pxdoc->free(pxdoc, sb);
+}
+/* }}} */
+
+#define MSG_BUFSIZE 256
+/* str_buffer_print() {{{
+ * print a string at the end of a buffer
+ */
+void str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ...) {
+	char msg[MSG_BUFSIZE];
+	va_list ap;
+	int written;
+
+	va_start(ap, fmt);
+	written = vsnprintf(msg, MSG_BUFSIZE, fmt, ap);
+	if(written >= MSG_BUFSIZE) {
+		fprintf(stderr, "Fatal Error: Format string is to short\n");
+		exit(1);
+	}
+
+	/* Enlarge memory for buffer
+	 * Enlarging it MSG_BUFSIZE ensure that the space is in any case
+	 * sufficient to add the new string.
+	 */
+	if((sb->cur + written + 1) > sb->size) {
+		sb->buffer = pxdoc->realloc(pxdoc, sb->buffer, sb->size+MSG_BUFSIZE, _("Get more memory for string buffer."));
+		sb->size += MSG_BUFSIZE;
+	}
+	strcpy(&(sb->buffer[sb->cur]), msg);
+	sb->cur += written;
+
+	va_end(ap);
+}
+/* }}} */
+#undef MSG_BUFSIZE
+
+/* str_buffer_get() {{{
+ * Returns a pointer to current buffer
+ */
+const char *str_buffer_get(pxdoc_t *pxdoc, struct str_buffer *sb) {
+	return(sb->buffer);
+}
+/* }}} */
+
+/* str_buffer_len() {{{
+ * Returns len of string buffer
+ */
+size_t str_buffer_len(pxdoc_t *pxdoc, struct str_buffer *sb) {
+	return(sb->cur);
+}
+/* }}} */
+
+/* str_buffer_clear() {{{
+ * Clears the string buffer but will not free the memory
+ */
+void str_buffer_clear(pxdoc_t *pxdoc, struct str_buffer *sb) {
+	sb->cur = 0;
+	sb->buffer[0] = '\0';
+}
+/* }}} */
+
+/* str_buffer_printmask() {{{
+ * Prints str to buffer and masks each occurence of c1 with c2.
+ * Returns the number of written chars.
+ */
+int str_buffer_printmask(pxdoc_t *pxdoc, struct str_buffer *sb, char *str, char c1, char c2 ) {
+	char *ptr, *dst;
+	int len = 0;
+	int c = 0;
+
+	/* Count occurences of c1 */
+	ptr = str;
+	while(*ptr != '\0') {
+		if(*ptr == c1)
+			c++;
+	}
+
+	c += sb->cur + strlen(str) + 1;
+	if(c > sb->size) {
+		 sb->buffer = pxdoc->realloc(pxdoc, sb->buffer, c, _("Get more memory for string buffer."));
+		 sb->size += c;
+	}
+	dst = &(sb->buffer[sb->cur]);
+	ptr = str;
+	while(*ptr != '\0') {
+		if(*ptr == c1) {
+			*dst++ = c2;
+			len ++;
+		} 
+		*dst++ = *ptr++;
+		len++;
+	}
+	*dst = '\0';
+	sb->cur += len;
+	return(len);
+}
+/* }}} */
+
 /* printmask() {{{
  * Prints str and masks each occurence of c1 with c2.
  * Returns the number of written chars.
@@ -59,43 +191,6 @@ int printmask(FILE *outfp, char *str, char c1, char c2 ) {
 		fprintf(outfp, "%c", *ptr);
 		len++;
 		ptr++;
-	}
-	return(len);
-}
-/* }}} */
-
-/* pbuffer() {{{
- * print a string at the end of a buffer
- */
-void pbuffer(char *buffer, const char *fmt, ...) {
-	char msg[256];
-	va_list ap;
-
-	va_start(ap, fmt);
-	vsprintf(msg, fmt, ap);
-
-	strcat(buffer, msg);
-
-	va_end(ap);
-}
-/* }}} */
-
-/* pbuffermask() {{{
- * Prints str to buffer and masks each occurence of c1 with c2.
- * Returns the number of written chars.
- */
-int pbuffermask(char *buffer, char *str, char c1, char c2 ) {
-	char *ptr, *dst;
-	int len = 0;
-	ptr = str;
-	dst = buffer + strlen(buffer);
-	while(*ptr != '\0') {
-		if(*ptr == c1) {
-			*dst++ = c2;
-			len ++;
-		} 
-		*dst++ = *ptr++;
-		len++;
 	}
 	return(len);
 }
@@ -1263,7 +1358,7 @@ int main(int argc, char *argv[]) {
 	if(outputsqlite) {
 		int numrecords;
 		sqlite *sql;
-		char *buffer;
+		struct str_buffer *sbuf;
 		char *sqlerror;
 
 		if((pxh->px_filetype != pxfFileTypIndexDB) && 
@@ -1281,8 +1376,9 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		/* Allocate memory for string buffer */
-		if((buffer = (char *) pxdoc->malloc(pxdoc, 2*pxh->px_recordsize, _("Could not allocate memory for string buffer."))) == NULL) {
+		/* Allocate memory for string buffer.
+		 */
+		if((sbuf = str_buffer_new(pxdoc, 20)) == NULL) {
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -1298,11 +1394,11 @@ int main(int argc, char *argv[]) {
 
 		/* check if existing table shall be delete */
 		if(deletetable) {
-			sprintf(buffer, "DROP TABLE %s;\n", tablename);
-			if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+			str_buffer_print(pxdoc, sbuf, "DROP TABLE %s;\n", tablename);
+			if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
 				fprintf(stderr, "%s\n", sqlerror);
 				sqlite_close(sql);
-				pxdoc->free(pxdoc, buffer);
+				str_buffer_delete(pxdoc, sbuf);
 				pxdoc->free(pxdoc, data);
 				if(selectedfields)
 					pxdoc->free(pxdoc, selectedfields);
@@ -1311,15 +1407,15 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		/* Output table schema */
-		buffer[0] = '\0';
-		pbuffer(buffer, "CREATE TABLE %s (\n", tablename);
+		str_buffer_clear(pxdoc, sbuf);
+		str_buffer_print(pxdoc, sbuf, "CREATE TABLE %s (", tablename);
 		first = 0;  // set to 1 when first field has been output
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				strrep(pxf->px_fname, ' ', '_');
 				if(first == 1)
-					pbuffer(buffer, ",\n");
+					str_buffer_print(pxdoc, sbuf, ", ");
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
 					case pxfDate:
@@ -1333,7 +1429,7 @@ int main(int argc, char *argv[]) {
 					case pxfTimestamp:
 					case pxfBCD:
 					case pxfBytes:
-						pbuffer(buffer, "  %s ", pxf->px_fname);
+						str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
 						first = 1;
 						break;
 					case pxfMemoBLOb:
@@ -1341,7 +1437,7 @@ int main(int argc, char *argv[]) {
 					case pxfFmtMemoBLOb:
 					case pxfGraphic:
 						if(includeblobs) {
-							pbuffer(buffer, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
 							first = 1;
 						} else {
 							first = 0;
@@ -1350,59 +1446,59 @@ int main(int argc, char *argv[]) {
 				}
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
-						pbuffer(buffer, "char(%d)", pxf->px_flen);
+						str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
 						break;
 					case pxfDate:
-						pbuffer(buffer, "date");
+						str_buffer_print(pxdoc, sbuf, "date");
 						break;
 					case pxfShort:
-						pbuffer(buffer, "smallint");
+						str_buffer_print(pxdoc, sbuf, "smallint");
 						break;
 					case pxfLong:
 					case pxfAutoInc:
-						pbuffer(buffer, "integer");
+						str_buffer_print(pxdoc, sbuf, "integer");
 						break;
 					case pxfCurrency:
 					case pxfNumber:
-						pbuffer(buffer, "decimal(20,2)");
+						str_buffer_print(pxdoc, sbuf, "decimal(20,2)");
 						break;
 					case pxfLogical:
-						pbuffer(buffer, "boolean");
+						str_buffer_print(pxdoc, sbuf, "boolean");
 						break;
 					case pxfMemoBLOb:
 					case pxfBLOb:
 					case pxfFmtMemoBLOb:
 					case pxfGraphic:
 						if(includeblobs)
-							pbuffer(buffer, "oid");
+							str_buffer_print(pxdoc, sbuf, "oid");
 						break;
 					case pxfOLE:
 						break;
 					case pxfTime:
-						pbuffer(buffer, "time");
+						str_buffer_print(pxdoc, sbuf, "time");
 						break;
 					case pxfTimestamp:
-						pbuffer(buffer, "timestamp");
+						str_buffer_print(pxdoc, sbuf, "timestamp");
 						break;
 					case pxfBCD:
-						pbuffer(buffer, "decimal(34,%d)", pxf->px_flen);
+						str_buffer_print(pxdoc, sbuf, "decimal(34,%d)", pxf->px_flen);
 						break;
 					case pxfBytes:
-						pbuffer(buffer, "char(%d)", pxf->px_flen);
+						str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
 						break;
 					default:
 						break;
 				}
 				if(i < pxh->px_primarykeyfields)
-					pbuffer(buffer, " unique");
+					str_buffer_print(pxdoc, sbuf, " unique");
 			}
 			pxf++;
 		}
-		pbuffer(buffer, "\n);\n");
-		if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+		str_buffer_print(pxdoc, sbuf, ");");
+		if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
 			sqlite_close(sql);
 			fprintf(stderr, "%s\n", sqlerror);
-			pxdoc->free(pxdoc, buffer);
+			str_buffer_delete(pxdoc, sbuf);
 			pxdoc->free(pxdoc, data);
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
@@ -1415,12 +1511,12 @@ int main(int argc, char *argv[]) {
 		for(i=0; i<pxh->px_primarykeyfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				strrep(pxf->px_fname, ' ', '_');
-				buffer[0] = '\0';
-				pbuffer(buffer, "CREATE INDEX %s_%s_index on %s (%s);", tablename, pxf->px_fname, tablename, pxf->px_fname);
-				if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+				str_buffer_clear(pxdoc, sbuf);
+				str_buffer_print(pxdoc, sbuf, "CREATE INDEX %s_%s_index on %s (%s);", tablename, pxf->px_fname, tablename, pxf->px_fname);
+				if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
 					sqlite_close(sql);
 					fprintf(stderr, "%s\n", sqlerror);
-					pxdoc->free(pxdoc, buffer);
+					str_buffer_delete(pxdoc, sbuf);
 					pxdoc->free(pxdoc, data);
 					if(selectedfields)
 						pxdoc->free(pxdoc, selectedfields);
@@ -1442,8 +1538,8 @@ int main(int argc, char *argv[]) {
 
 			for(j=0; j<pxh->px_numrecords; j++) {
 				int offset;
-				buffer[0] = '\0';
-				pbuffer(buffer, "INSERT INTO %s VALUES (", tablename);
+				str_buffer_clear(pxdoc, sbuf);
+				str_buffer_print(pxdoc, sbuf, "INSERT INTO %s VALUES (", tablename);
 				if(PX_get_record(pxdoc, j, data)) {
 					first = 0;  // set to 1 when first field has been output
 					offset = 0;
@@ -1451,20 +1547,20 @@ int main(int argc, char *argv[]) {
 					for(i=0; i<pxh->px_numfields; i++) {
 						if(fieldregex == NULL ||  selectedfields[i]) {
 							if(first == 1)
-								pbuffer(buffer, ",");
+								str_buffer_print(pxdoc, sbuf, ",");
 							switch(pxf->px_ftype) {
 								case pxfAlpha: {
 									char *value;
 									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										if(strchr(value, '\'')) {
-											pbuffer(buffer, "'");
-											pbuffermask(buffer, value, '\'', '\\');
-											pbuffer(buffer, "'");
+											str_buffer_print(pxdoc, sbuf, "'");
+											str_buffer_printmask(pxdoc, sbuf, value, '\'', '\\');
+											str_buffer_print(pxdoc, sbuf, "'");
 										} else
-											pbuffer(buffer, "'%s'", value);
+											str_buffer_print(pxdoc, sbuf, "'%s'", value);
 										pxdoc->free(pxdoc, value);
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 
@@ -1473,9 +1569,9 @@ int main(int argc, char *argv[]) {
 								case pxfDate: {
 									long value;
 									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "%ld", value);
+										str_buffer_print(pxdoc, sbuf, "%ld", value);
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 									break;
@@ -1483,9 +1579,9 @@ int main(int argc, char *argv[]) {
 								case pxfShort: {
 									short int value;
 									if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "%d", value);
+										str_buffer_print(pxdoc, sbuf, "%d", value);
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 									break;
@@ -1495,9 +1591,9 @@ int main(int argc, char *argv[]) {
 								case pxfLong: {
 									long value;
 									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "%ld", value);
+										str_buffer_print(pxdoc, sbuf, "%ld", value);
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 									break;
@@ -1505,9 +1601,9 @@ int main(int argc, char *argv[]) {
 								case pxfTime: {
 									long value;
 									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+										str_buffer_print(pxdoc, sbuf, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 									break;
@@ -1516,9 +1612,9 @@ int main(int argc, char *argv[]) {
 								case pxfNumber: {
 									double value;
 									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "%g", value);
+										str_buffer_print(pxdoc, sbuf, "%g", value);
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 									break;
@@ -1527,11 +1623,11 @@ int main(int argc, char *argv[]) {
 									char value;
 									if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										if(value)
-											pbuffer(buffer, "TRUE");
+											str_buffer_print(pxdoc, sbuf, "TRUE");
 										else
-											pbuffer(buffer, "FALSE");
+											str_buffer_print(pxdoc, sbuf, "FALSE");
 									} else {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
 									first = 1;
 									break;
@@ -1541,31 +1637,31 @@ int main(int argc, char *argv[]) {
 								case pxfFmtMemoBLOb:
 								case pxfGraphic:
 									if(includeblobs) {
-										pbuffer(buffer, "NULL");
+										str_buffer_print(pxdoc, sbuf, "NULL");
 										first = 1;
 									} else {
 										first = 0;
 									}
 									break;
 								case pxfBCD:
-									pbuffer(buffer, "NULL");
+									str_buffer_print(pxdoc, sbuf, "NULL");
 									break;
 								default:
-									pbuffer(buffer, "NULL");
+									str_buffer_print(pxdoc, sbuf, "NULL");
 							}
 						}
 						offset += pxf->px_flen;
 						pxf++;
 					}
-					pbuffer(buffer, ");\n");
+					str_buffer_print(pxdoc, sbuf, ");\n");
 				} else {
 					fprintf(stderr, _("Couldn't get record number %d\n"), j);
 				}
 
-				if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+				if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
 					sqlite_close(sql);
 					fprintf(stderr, "%s\n", sqlerror);
-					pxdoc->free(pxdoc, buffer);
+					str_buffer_delete(pxdoc, sbuf);
 					pxdoc->free(pxdoc, data);
 					if(selectedfields)
 						pxdoc->free(pxdoc, selectedfields);
@@ -1574,7 +1670,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
-		pxdoc->free(pxdoc, buffer);
+		str_buffer_delete(pxdoc, sbuf);
 		pxdoc->free(pxdoc, data);
 
 		sqlite_close(sql);
