@@ -893,8 +893,12 @@ int main(int argc, char *argv[]) {
 		PX_set_targetencoding(pxdoc, targetencoding);
 
 	/* Set tablename to the one in the header if it wasn't set before */
-	if(tablename == NULL)
-		tablename = pxh->px_tablename;
+	/* The memory for tablename must be freed later on, which isn't done yet. */
+	if(tablename == NULL) {
+		PX_get_parameter(pxdoc, "tablename", &tablename);
+		tablename = strdup(tablename);
+//		tablename = pxh->px_tablename;
+	}
 	strrep(tablename, '.', '_');
 	strrep(tablename, ' ', '_');
 
@@ -953,9 +957,9 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(outfp, "\n");
 		fprintf(outfp, _("Tablename:               %s\n"), pxh->px_tablename);
-		fprintf(outfp, _("Num. of Records:         %d\n"), pxh->px_numrecords);
+		fprintf(outfp, _("Num. of Records:         %d\n"), PX_get_num_records(pxdoc));
 		fprintf(outfp, _("Theor. Num. of Rec.:     %d\n"), pxh->px_theonumrecords);
-		fprintf(outfp, _("Num. of Fields:          %d\n"), pxh->px_numfields);
+		fprintf(outfp, _("Num. of Fields:          %d\n"), PX_get_num_fields(pxdoc));
 		fprintf(outfp, _("Header size:             %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
 		fprintf(outfp, _("Max. Table size:         %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
 		fprintf(outfp, _("Num. of Data Blocks:     %d\n"), pxh->px_fileblocks);
@@ -990,9 +994,9 @@ int main(int argc, char *argv[]) {
 
 		fprintf(outfp, _("Fieldname          | Type\n"));
 		fprintf(outfp, "------------------------------------\n");
-		pxf = pxh->px_fields;
+		pxf = PX_get_fields(pxdoc);
 		reclen = 0;
-		for(i=0; i<pxh->px_numfields; i++) {
+		for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 			reclen += pxf->px_flen;
 			fprintf(outfp, "%18s | ", pxf->px_fname);
 			switch(pxf->px_ftype) {
@@ -1075,8 +1079,8 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, "Delimiter=%c\n", enclosure);
 		fprintf(outfp, "Separator=%c\n", delimiter);
 		fprintf(outfp, "CharSet=ANSIINTL\n");
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_numfields; i++) {
+		pxf = PX_get_fields(pxdoc);
+		for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 			switch(pxf->px_ftype) {
 				case pxfAlpha:
 				case pxfDate:
@@ -1165,13 +1169,13 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 		/* allocate memory for selected field array */
-		if((selectedfields = (char *) pxdoc->malloc(pxdoc, pxh->px_numfields, _("Could not allocate memory for array of selected fields."))) == NULL) {
+		if((selectedfields = (char *) pxdoc->malloc(pxdoc, PX_get_num_fields(pxdoc), _("Could not allocate memory for array of selected fields."))) == NULL) {
 			PX_close(pxdoc);
 			exit(1);
 		}
-		memset(selectedfields, '\0', pxh->px_numfields);
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_numfields; i++) {
+		memset(selectedfields, '\0', PX_get_num_fields(pxdoc));
+		pxf = PX_get_fields(pxdoc);
+		for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 			if(0 == regexec(&preg, pxf->px_fname, 0, NULL, 0)) {
 				selectedfields[i] = 1;
 			}
@@ -1188,8 +1192,8 @@ int main(int argc, char *argv[]) {
 		/* Output first line with column names */
 		if(!withouthead) {
 			first = 0;  // set to 1 when first field has been output
-			pxf = pxh->px_fields;
-			for(i=0; i<pxh->px_numfields; i++) {
+			pxf = PX_get_fields(pxdoc);
+			for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 				if(fieldregex == NULL || selectedfields[i]) {
 					if(first == 1)
 						fprintf(outfp, "%c", delimiter);
@@ -1306,7 +1310,7 @@ int main(int argc, char *argv[]) {
 			numrecords = pxh->px_theonumrecords;
 			presetdeleted = 1;
 		} else {
-			numrecords = pxh->px_numrecords;
+			numrecords = PX_get_num_records(pxdoc);
 			presetdeleted = 0;
 		}
 		/* Output records */
@@ -1315,10 +1319,10 @@ int main(int argc, char *argv[]) {
 			pxdatablockinfo_t pxdbinfo;
 			isdeleted = presetdeleted;
 			if(NULL != PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
-				pxf = pxh->px_fields;
+				pxf = PX_get_fields(pxdoc);
 				offset = 0;
 				first = 0;  // set to 1 when first field has been output
-				for(i=0; i<pxh->px_numfields; i++) {
+				for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 					if(fieldregex == NULL || selectedfields[i]) {
 						if(first == 1)
 							fprintf(outfp, "%c", delimiter);
@@ -1504,7 +1508,7 @@ int main(int argc, char *argv[]) {
 		}
 		/* Print sum over all records */
 		if(pxh->px_filetype == pxfFileTypPrimIndex) {
-			for(i=0; i<pxh->px_numfields; i++)
+			for(i=0; i<PX_get_num_fields(pxdoc); i++)
 				fprintf(outfp, "%c", delimiter);
 			fprintf(outfp, "%c", delimiter);
 			fprintf(outfp, "%d", ireccounter);
@@ -1574,8 +1578,8 @@ int main(int argc, char *argv[]) {
 			str_buffer_clear(pxdoc, sbuf);
 			str_buffer_print(pxdoc, sbuf, "CREATE TABLE %s (\n", tablename);
 			first = 0;  // set to 1 when first field has been output
-			pxf = pxh->px_fields;
-			for(i=0; i<pxh->px_numfields; i++) {
+			pxf = PX_get_fields(pxdoc);
+			for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 				if(fieldregex == NULL ||  selectedfields[i]) {
 					strrep(pxf->px_fname, ' ', '_');
 					if(first == 1)
@@ -1629,7 +1633,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* Create the indexes */
-			pxf = pxh->px_fields;
+			pxf = PX_get_fields(pxdoc);
 			for(i=0; i<pxh->px_primarykeyfields; i++) {
 				if(fieldregex == NULL ||  selectedfields[i]) {
 					strrep(pxf->px_fname, ' ', '_');
@@ -1651,7 +1655,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* Only output data if we have at least one record */
-		if(pxh->px_numrecords > 0) {
+		if(PX_get_num_records(pxdoc) > 0) {
 			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 				if(selectedfields)
 					pxdoc->free(pxdoc, selectedfields);
@@ -1659,15 +1663,15 @@ int main(int argc, char *argv[]) {
 				exit(1);
 			}
 
-			for(j=0; j<pxh->px_numrecords; j++) {
+			for(j=0; j<PX_get_num_records(pxdoc); j++) {
 				int offset;
 				str_buffer_clear(pxdoc, sbuf);
 				str_buffer_print(pxdoc, sbuf, "INSERT INTO %s VALUES (", tablename);
 				if(PX_get_record(pxdoc, j, data)) {
 					first = 0;  // set to 1 when first field has been output
 					offset = 0;
-					pxf = pxh->px_fields;
-					for(i=0; i<pxh->px_numfields; i++) {
+					pxf = PX_get_fields(pxdoc);
+					for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 						if(fieldregex == NULL ||  selectedfields[i]) {
 							if(first == 1)
 								str_buffer_print(pxdoc, sbuf, ",");
@@ -1875,7 +1879,7 @@ int main(int argc, char *argv[]) {
 			numrecords = pxh->px_theonumrecords;
 			presetdeleted = 1;
 		} else {
-			numrecords = pxh->px_numrecords;
+			numrecords = PX_get_num_records(pxdoc);
 			presetdeleted = 0;
 		}
 
@@ -1884,8 +1888,8 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, " <tr>\n");
 
 		/* output field name */
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_numfields; i++) {
+		pxf = PX_get_fields(pxdoc);
+		for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				fprintf(outfp, "  <th>");
 				if(strlen(pxf->px_fname))
@@ -1958,10 +1962,10 @@ int main(int argc, char *argv[]) {
 			int offset;
 			isdeleted = presetdeleted;
 			if(NULL != PX_get_record2(pxdoc, j, data, &isdeleted, NULL)) {
-				pxf = pxh->px_fields;
+				pxf = PX_get_fields(pxdoc);
 				offset = 0;
 				fprintf(outfp, " <tr valign=\"top\">\n");
-				for(i=0; i<pxh->px_numfields; i++) {
+				for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 					if(fieldregex == NULL || selectedfields[i]) {
 						fprintf(outfp, "  <td>");
 						switch(pxf->px_ftype) {
@@ -2133,8 +2137,8 @@ int main(int argc, char *argv[]) {
 		if(!skipschema) {
 			fprintf(outfp, "CREATE TABLE %s (\n", tablename);
 			first = 0;  // set to 1 when first field has been output
-			pxf = pxh->px_fields;
-			for(i=0; i<pxh->px_numfields; i++) {
+			pxf = PX_get_fields(pxdoc);
+			for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 				if(fieldregex == NULL ||  selectedfields[i]) {
 					strrep(pxf->px_fname, ' ', '_');
 					if(first == 1)
@@ -2174,7 +2178,7 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, "\n);\n");
 
 			/* Create the indexes */
-			pxf = pxh->px_fields;
+			pxf = PX_get_fields(pxdoc);
 			for(i=0; i<pxh->px_primarykeyfields; i++) {
 				if(fieldregex == NULL ||  selectedfields[i]) {
 					strrep(pxf->px_fname, ' ', '_');
@@ -2185,7 +2189,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* Only output data if we have at least one record */
-		if(pxh->px_numrecords > 0) {
+		if(PX_get_num_records(pxdoc) > 0) {
 			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 				if(selectedfields)
 					pxdoc->free(pxdoc, selectedfields);
@@ -2196,9 +2200,9 @@ int main(int argc, char *argv[]) {
 			if(usecopy) {
 				fprintf(outfp, "COPY %s (", tablename);
 				first = 0;  // set to 1 when first field has been output
-				pxf = pxh->px_fields;
+				pxf = PX_get_fields(pxdoc);
 				/* output field name */
-				for(i=0; i<pxh->px_numfields; i++) {
+				for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 					if(fieldregex == NULL ||  selectedfields[i]) {
 						if(first == 1)
 							fprintf(outfp, ", ");
@@ -2228,13 +2232,13 @@ int main(int argc, char *argv[]) {
 					pxf++;
 				}
 				fprintf(outfp, ") FROM stdin;\n");
-				for(j=0; j<pxh->px_numrecords; j++) {
+				for(j=0; j<PX_get_num_records(pxdoc); j++) {
 					int offset;
 					if(PX_get_record(pxdoc, j, data)) {
 						first = 0;  // set to 1 when first field has been output
 						offset = 0;
-						pxf = pxh->px_fields;
-						for(i=0; i<pxh->px_numfields; i++) {
+						pxf = PX_get_fields(pxdoc);
+						for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 							if(fieldregex == NULL ||  selectedfields[i]) {
 								if(first == 1)
 									fprintf(outfp, "\t");
@@ -2416,9 +2420,9 @@ int main(int argc, char *argv[]) {
 					}
 					str_buffer_print(pxdoc, sbuf, "(");
 					first = 0;  // set to 1 when first field has been output
-					pxf = pxh->px_fields;
+					pxf = PX_get_fields(pxdoc);
 					/* output field name */
-					for(i=0; i<pxh->px_numfields; i++) {
+					for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 						if(fieldregex == NULL ||  selectedfields[i]) {
 							if(first == 1)
 								str_buffer_print(pxdoc, sbuf, ", ");
@@ -2449,7 +2453,7 @@ int main(int argc, char *argv[]) {
 					}
 					str_buffer_print(pxdoc, sbuf, ")");
 				}
-				for(j=0; j<pxh->px_numrecords; j++) {
+				for(j=0; j<PX_get_num_records(pxdoc); j++) {
 					int offset;
 					if(PX_get_record(pxdoc, j, data)) {
 						first = 0;  // set to 1 when first field has been output
@@ -2458,8 +2462,8 @@ int main(int argc, char *argv[]) {
 							fprintf(outfp, "insert into %s values (", tablename);
 						else
 							fprintf(outfp, "insert into %s %s values (", tablename, str_buffer_get(pxdoc, sbuf));
-						pxf = pxh->px_fields;
-						for(i=0; i<pxh->px_numfields; i++) {
+						pxf = PX_get_fields(pxdoc);
+						for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 							if(fieldregex == NULL ||  selectedfields[i]) {
 								if(first == 1)
 									fprintf(outfp, ", ");
@@ -2660,7 +2664,7 @@ int main(int argc, char *argv[]) {
 			numrecords = pxh->px_theonumrecords;
 			presetdeleted = 1;
 		} else {
-			numrecords = pxh->px_numrecords;
+			numrecords = PX_get_num_records(pxdoc);
 			presetdeleted = 0;
 		}
 
@@ -2689,10 +2693,10 @@ int main(int argc, char *argv[]) {
 					fprintf(outfp, _("Record deleted: "));
 					fprintf(outfp, "%d\n", isdeleted);
 				}
-				pxf = pxh->px_fields;
+				pxf = PX_get_fields(pxdoc);
 				offset = 0;
 				first = 0;  // set to 1 when first field has been output
-				for(i=0; i<pxh->px_numfields; i++) {
+				for(i=0; i<PX_get_num_fields(pxdoc); i++) {
 					if(fieldregex == NULL || selectedfields[i]) {
 						fprintf(outfp, "%s: ", pxf->px_fname);
 						hex_dump(outfp, &data[offset], pxf->px_flen);
