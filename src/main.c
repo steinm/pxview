@@ -1405,46 +1405,42 @@ int main(int argc, char *argv[]) {
 							case pxfBLOb:
 							case pxfFmtMemoBLOb:
 							case pxfMemoBLOb:
-							case pxfOLE:
-								if(PX_has_blob_file(pxdoc)) {
-									char *blobdata;
-									char filename[200];
-									FILE *fp;
-									int mod_nr, size;
-									if(pxf->px_ftype == pxfGraphic)
-										PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-									else
-										PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-									if(size) {
-										if(blobdata) {
-											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
-												int i;
-												for(i=0; i<size; i++) {
-													fputc(blobdata[i], outfp);
-												}
-											} else {
-												sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
-												fp = fopen(filename, "w");
-												if(fp) {
-													fwrite(blobdata, size, 1, fp);
-													fclose(fp);
-													fprintf(outfp, "%s", filename);
-												} else {
-													fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
-												}
+							case pxfOLE: {
+								char *blobdata;
+								char filename[200];
+								FILE *fp;
+								int mod_nr, size, ret;
+								if(pxf->px_ftype == pxfGraphic)
+									ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+								else
+									ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+								if(ret > 0) {
+									if(blobdata) {
+										if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
+											int i;
+											for(i=0; i<size; i++) {
+												fputc(blobdata[i], outfp);
 											}
 										} else {
-											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+											sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
+											fp = fopen(filename, "w");
+											if(fp) {
+												fwrite(blobdata, size, 1, fp);
+												fclose(fp);
+												fprintf(outfp, "%s", filename);
+											} else {
+												fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+											}
 										}
-									}
-									if(blobdata)
 										pxdoc->free(pxdoc, blobdata);
-
-								} else {
-									hex_dump(outfp, &data[offset], pxf->px_flen);
+									} else {
+										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+									}
 								}
+
 								first = 1;
 								break;
+							}
 							case pxfBytes:
 								hex_dump(outfp, &data[offset], pxf->px_flen);
 								first = 1;
@@ -1599,13 +1595,9 @@ int main(int argc, char *argv[]) {
 						case pxfFmtMemoBLOb:
 						case pxfGraphic:
 						case pxfOLE:
-							if(PX_has_blob_file(pxdoc)) {
-								str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
-								str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
-								first = 1;
-							} else {
-								first = 0;
-							}
+							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
+							first = 1;
 							break;
 					}
 					if(i < pxh->px_primarykeyfields)
@@ -1756,51 +1748,47 @@ int main(int argc, char *argv[]) {
 								case pxfBLOb:
 								case pxfFmtMemoBLOb:
 								case pxfGraphic:
-								case pxfOLE:
-									if(PX_has_blob_file(pxdoc)) {
-										char *blobdata;
-										char filename[200];
-										FILE *fp;
-										int mod_nr, size;
-										if(pxf->px_ftype == pxfGraphic)
-											PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-										else
-											PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-										str_buffer_print(pxdoc, sbuf, "'");
-										if(size) {
-											if(blobdata) {
-												if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
-													int i;
-													for(i=0; i<size; i++) {
-														if(blobdata[i] == '\'')
+								case pxfOLE: {
+									char *blobdata;
+									char filename[200];
+									FILE *fp;
+									int mod_nr, size, ret;
+									if(pxf->px_ftype == pxfGraphic)
+										ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+									else
+										ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+									str_buffer_print(pxdoc, sbuf, "'");
+									if(ret > 0) {
+										if(blobdata) {
+											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
+												int i;
+												for(i=0; i<size; i++) {
+													if(blobdata[i] == '\'')
 
-															str_buffer_print(pxdoc, sbuf, "'");
-														str_buffer_print(pxdoc, sbuf, "%c", blobdata[i]);
-													}
-												} else {
-													sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
-													fp = fopen(filename, "w");
-													if(fp) {
-														fwrite(blobdata, size, 1, fp);
-														fclose(fp);
-														str_buffer_print(pxdoc, sbuf, "%s", filename);
-													} else {
-														fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
-													}
+														str_buffer_print(pxdoc, sbuf, "'");
+													str_buffer_print(pxdoc, sbuf, "%c", blobdata[i]);
 												}
 											} else {
-												fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+												sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
+												fp = fopen(filename, "w");
+												if(fp) {
+													fwrite(blobdata, size, 1, fp);
+													fclose(fp);
+													str_buffer_print(pxdoc, sbuf, "%s", filename);
+												} else {
+													fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+												}
 											}
-										}
-										str_buffer_print(pxdoc, sbuf, "'");
-										if(blobdata)
 											pxdoc->free(pxdoc, blobdata);
-										first = 1;
-
-									} else {
-										first = 0;
+										} else {
+											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+										}
 									}
+									str_buffer_print(pxdoc, sbuf, "'");
+									first = 1;
+
 									break;
+								}
 								case pxfBCD: {
 									char *value;
 									int ret;
@@ -2016,45 +2004,40 @@ int main(int argc, char *argv[]) {
 							case pxfBLOb:
 							case pxfFmtMemoBLOb:
 							case pxfMemoBLOb:
-							case pxfOLE:
-								if(PX_has_blob_file(pxdoc)) {
-									char *blobdata;
-									char filename[200];
-									FILE *fp;
-									int mod_nr, size;
-									if(pxf->px_ftype == pxfGraphic)
-										PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-									else
-										PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-									if(size) {
-										if(blobdata) {
-											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
-												int i;
-												for(i=0; i<size; i++) {
-													fputc(blobdata[i], outfp);
-												}
-											} else {
-												sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
-												fp = fopen(filename, "w");
-												if(fp) {
-													fwrite(blobdata, size, 1, fp);
-													fclose(fp);
-													fprintf(outfp, "%s", filename);
-												} else {
-													fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
-												}
+							case pxfOLE: {
+								char *blobdata;
+								char filename[200];
+								FILE *fp;
+								int mod_nr, size, ret;
+								if(pxf->px_ftype == pxfGraphic)
+									ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+								else
+									ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+								if(ret > 0) {
+									if(blobdata) {
+										if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
+											int i;
+											for(i=0; i<size; i++) {
+												fputc(blobdata[i], outfp);
 											}
 										} else {
-											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+											sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
+											fp = fopen(filename, "w");
+											if(fp) {
+												fwrite(blobdata, size, 1, fp);
+												fclose(fp);
+												fprintf(outfp, "%s", filename);
+											} else {
+												fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+											}
 										}
-									}
-									if(blobdata)
 										pxdoc->free(pxdoc, blobdata);
-
-								} else {
-									hex_dump(outfp, &data[offset], pxf->px_flen);
+									} else {
+										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+									}
 								}
 								break;
+							}
 							case pxfBCD: {
 								char *value;
 								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
@@ -2136,6 +2119,11 @@ int main(int argc, char *argv[]) {
 						case pxfTime:
 						case pxfTimestamp:
 						case pxfBytes:
+						case pxfMemoBLOb:
+						case pxfBLOb:
+						case pxfFmtMemoBLOb:
+						case pxfGraphic:
+						case pxfOLE:
 							fprintf(outfp, "  %s ", pxf->px_fname);
 							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 							first = 1;
@@ -2144,19 +2132,6 @@ int main(int argc, char *argv[]) {
 							fprintf(outfp, "  %s ", pxf->px_fname);
 							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
 							first = 1;
-							break;
-						case pxfMemoBLOb:
-						case pxfBLOb:
-						case pxfFmtMemoBLOb:
-						case pxfGraphic:
-						case pxfOLE:
-							if(PX_has_blob_file(pxdoc)) {
-								fprintf(outfp, "  %s ", pxf->px_fname);
-								fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
-								first = 1;
-							} else {
-								first = 0;
-							}
 							break;
 					}
 					if(i < pxh->px_primarykeyfields)
@@ -2208,20 +2183,13 @@ int main(int argc, char *argv[]) {
 							case pxfBCD:
 							case pxfTimestamp:
 							case pxfBytes:
-								fprintf(outfp, "%s", pxf->px_fname);
-								first = 1;
-								break;
 							case pxfMemoBLOb:
 							case pxfBLOb:
 							case pxfFmtMemoBLOb:
 							case pxfGraphic:
 							case pxfOLE:
-								if(PX_has_blob_file(pxdoc)) {
-									fprintf(outfp, "%s", pxf->px_fname);
-									first = 1;
-								} else {
-									first = 0;
-								}
+								fprintf(outfp, "%s", pxf->px_fname);
+								first = 1;
 								break;
 						}
 					}
@@ -2327,46 +2295,42 @@ int main(int argc, char *argv[]) {
 									case pxfGraphic:
 									case pxfOLE:
 									case pxfMemoBLOb:
-									case pxfFmtMemoBLOb:
-										if(PX_has_blob_file(pxdoc)) {
-											char *blobdata;
-											char filename[200];
-											FILE *fp;
-											int mod_nr, size;
-											if(pxf->px_ftype == pxfGraphic)
-												PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-											else
-												PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-											if(size) {
-												if(blobdata) {
-													if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
-														int i;
-														for(i=0; i<size; i++) {
-															fputc(blobdata[i], outfp);
-														}
-													} else {
-														sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
-														fp = fopen(filename, "w");
-														if(fp) {
-															fwrite(blobdata, size, 1, fp);
-															fclose(fp);
-															fprintf(outfp, "%s", filename);
-														} else {
-															fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
-														}
+									case pxfFmtMemoBLOb: {
+										char *blobdata;
+										char filename[200];
+										FILE *fp;
+										int mod_nr, size, ret;
+										if(pxf->px_ftype == pxfGraphic)
+											ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+										else
+											ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+										if(ret > 0) {
+											if(blobdata) {
+												if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
+													int i;
+													for(i=0; i<size; i++) {
+														fputc(blobdata[i], outfp);
 													}
 												} else {
-													fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+													sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
+													fp = fopen(filename, "w");
+													if(fp) {
+														fwrite(blobdata, size, 1, fp);
+														fclose(fp);
+														fprintf(outfp, "%s", filename);
+													} else {
+														fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+													}
 												}
-											}
-											if(blobdata)
 												pxdoc->free(pxdoc, blobdata);
-											first = 1;
-
-										} else {
-											first = 0;
+											} else {
+												fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+											}
 										}
+										first = 1;
+
 										break;
+									}
 									case pxfBCD: {
 										char *value;
 										int ret;
@@ -2427,20 +2391,13 @@ int main(int argc, char *argv[]) {
 								case pxfBCD:
 								case pxfTimestamp:
 								case pxfBytes:
-									str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
-									first = 1;
-									break;
 								case pxfMemoBLOb:
 								case pxfFmtMemoBLOb:
 								case pxfBLOb:
 								case pxfGraphic:
 								case pxfOLE:
-									if(PX_has_blob_file(pxdoc)) {
-										str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
-										first = 1;
-									} else {
-										first = 0;
-									}
+									str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
+									first = 1;
 									break;
 							}
 						}
@@ -2555,48 +2512,44 @@ int main(int argc, char *argv[]) {
 									case pxfGraphic:
 									case pxfOLE:
 									case pxfMemoBLOb:
-									case pxfFmtMemoBLOb:
-										if(PX_has_blob_file(pxdoc)) {
-											char *blobdata;
-											char filename[200];
-											FILE *fp;
-											int mod_nr, size;
-											if(pxf->px_ftype == pxfGraphic)
-												PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-											else
-												PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-											fputc('\'', outfp);
-											if(size) {
-												if(blobdata) {
-													if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
-														int i;
-														for(i=0; i<size; i++) {
-															fputc(blobdata[i], outfp);
-														}
-													} else {
-														sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
-														fp = fopen(filename, "w");
-														if(fp) {
-															fwrite(blobdata, size, 1, fp);
-															fclose(fp);
-															fprintf(outfp, "%s", filename);
-														} else {
-															fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
-														}
+									case pxfFmtMemoBLOb: {
+										char *blobdata;
+										char filename[200];
+										FILE *fp;
+										int mod_nr, size, ret;
+										if(pxf->px_ftype == pxfGraphic)
+											ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+										else
+											ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+										fputc('\'', outfp);
+										if(ret > 0) {
+											if(blobdata) {
+												if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
+													int i;
+													for(i=0; i<size; i++) {
+														fputc(blobdata[i], outfp);
 													}
 												} else {
-													fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+													sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
+													fp = fopen(filename, "w");
+													if(fp) {
+														fwrite(blobdata, size, 1, fp);
+														fclose(fp);
+														fprintf(outfp, "%s", filename);
+													} else {
+														fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+													}
 												}
-											}
-											if(blobdata)
 												pxdoc->free(pxdoc, blobdata);
-											fputc('\'', outfp);
-											first = 1;
-
-										} else {
-											first = 0;
+											} else {
+												fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+											}
 										}
+										fputc('\'', outfp);
+										first = 1;
+
 										break;
+									}
 									case pxfBCD: {
 										char *value;
 										int ret;
