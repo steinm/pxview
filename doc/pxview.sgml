@@ -77,9 +77,10 @@ manpage.1: manpage.sgml
       <arg><option>-r ENCODING | --recode=ENCODING <replaceable></replaceable></option></arg>
       <arg><option>--separator=CHAR <replaceable></replaceable></option></arg>
       <arg><option>--enclosure=CHAR <replaceable></replaceable></option></arg>
-      <arg><option>--includeblobs <replaceable></replaceable></option></arg>
+      <arg><option>--include-blobs <replaceable></replaceable></option></arg>
       <arg><option>--fields=REGEX <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
+      <arg><option>--delete-tablename <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -256,7 +257,7 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>--includeblobs</option>
+        <term><option>--include-blobs</option>
         </term>
         <listitem>
           <para>Includes blob fields in sql output. The field value itself
@@ -276,7 +277,21 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>--deletetable</option>
+        <term><option>--output-deleted</option>
+        </term>
+        <listitem>
+          <para>Output even those records that has been deleted. Paradox
+					  does not mark a record as deleted, but rather marks a complete
+						data block (which usually contains several records) or sets
+						its size to a lower value. If this option is active, then
+						&dhpackage; will assume each data block is filled with its
+						maximum number of records. This assumption may not always be true,
+						especially for the last data block. Therefore you should handle
+						the output with care.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--delete-table</option>
         </term>
         <listitem>
           <para>Adds a sql command at the begining of the sql output to delete
