@@ -1037,7 +1037,7 @@ int main(int argc, char *argv[]) {
 					fprintf(outfp, "autoinc(%d)\n", pxf->px_flen);
 					break;
 				case pxfBCD:
-					fprintf(outfp, "decimal(34,%d)\n", pxf->px_flen);
+					fprintf(outfp, "decimal(%d,%d)\n", pxf->px_flen*2, pxf->px_fdc);
 					break;
 				case pxfBytes:
 					fprintf(outfp, "bytes(%d)\n", pxf->px_flen);
@@ -1134,8 +1134,9 @@ int main(int argc, char *argv[]) {
 					sumlen += 11;
 					break;
 				case pxfBCD:
-					fprintf(outfp, "Float,17,%d,%d\n", pxf->px_flen, sumlen);
-					sumlen += 17;
+					/* Paradox uses only 20 digits though bcd fields can be 34 */
+					fprintf(outfp, "Float,20,%d,%d\n", pxf->px_fdc, sumlen);
+					sumlen += 20;
 					break;
 				case pxfBytes:
 					fprintf(outfp, "Char,%d,00,%d\n", pxf->px_flen, sumlen);
@@ -1243,7 +1244,7 @@ int main(int argc, char *argv[]) {
 							fprintf(outfp, ",Y,%d", pxf->px_flen);
 							break;
 						case pxfBCD:
-							fprintf(outfp, ",#,%d", pxf->px_flen);
+							fprintf(outfp, ",#,%d,%d", pxf->px_flen*2, pxf->px_fdc);
 							break;
 					}
 					if(delimiter == ',')
@@ -1441,10 +1442,18 @@ int main(int argc, char *argv[]) {
 								hex_dump(outfp, &data[offset], pxf->px_flen);
 								first = 1;
 								break;
-							case pxfBCD:
-								hex_dump(outfp, &data[offset], pxf->px_flen);
+							case pxfBCD: {
+								char *value;
+								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%s", value);
+									pxdoc->free(pxdoc, value);
+								}
 								first = 1;
 								break;
+							}
+						//		hex_dump(outfp, &data[offset], pxf->px_flen);
+						//		first = 1;
+						//		break;
 							default:
 								fprintf(outfp, "");
 						}
@@ -1571,6 +1580,10 @@ int main(int argc, char *argv[]) {
 						case pxfTime:
 						case pxfTimestamp:
 						case pxfBCD:
+							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
+							first = 1;
+							break;
 						case pxfBytes:
 							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
 							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
@@ -1904,7 +1917,7 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, ",Y,%d", pxf->px_flen);
 						break;
 					case pxfBCD:
-						fprintf(outfp, ",#,%d", pxf->px_flen);
+						fprintf(outfp, ",#,%d,%d", pxf->px_flen*2, pxf->px_fdc);
 						break;
 				}
 				fprintf(outfp, "</th>\n");
@@ -2096,6 +2109,10 @@ int main(int argc, char *argv[]) {
 						case pxfTime:
 						case pxfTimestamp:
 						case pxfBCD:
+							fprintf(outfp, "  %s ", pxf->px_fname);
+							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
+							first = 1;
+							break;
 						case pxfBytes:
 							fprintf(outfp, "  %s ", pxf->px_fname);
 							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
