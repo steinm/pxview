@@ -1655,12 +1655,29 @@ int main(int argc, char *argv[]) {
 							first = 1;
 							break;
 					}
-					if(i < primarykeyfields)
-						str_buffer_print(pxdoc, sbuf, " unique");
+//					if(i < primarykeyfields)
+//						str_buffer_print(pxdoc, sbuf, " unique");
 				}
 				pxf++;
 			}
+			if(primarykeyfields) {
+				first = 0;  // set to 1 when first field has been output
+				pxf = PX_get_fields(pxdoc);
+				str_buffer_print(pxdoc, sbuf, ",\n  unique(");
+				for(i=0; i<primarykeyfields; i++) {
+					if(fieldregex == NULL ||  selectedfields[i]) {
+						strrep(pxf->px_fname, ' ', '_');
+						if(first == 1)
+							str_buffer_print(pxdoc, sbuf, ",");
+						str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
+						first = 1;
+					}
+					pxf++;
+				}
+				str_buffer_print(pxdoc, sbuf, ")");
+			}
 			str_buffer_print(pxdoc, sbuf, ");");
+
 			if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
 				sqlite_close(sql);
 				fprintf(stderr, "%s\n", sqlerror);
@@ -2210,10 +2227,26 @@ int main(int argc, char *argv[]) {
 							first = 1;
 							break;
 					}
-					if(i < primarykeyfields)
-						fprintf(outfp, " unique");
+//					if(i < primarykeyfields)
+//						fprintf(outfp, " unique");
 				}
 				pxf++;
+			}
+			if(primarykeyfields) {
+				first = 0;  // set to 1 when first field has been output
+				pxf = PX_get_fields(pxdoc);
+				fprintf(outfp, ",\n  unique(");
+				for(i=0; i<primarykeyfields; i++) {
+					if(fieldregex == NULL ||  selectedfields[i]) {
+						strrep(pxf->px_fname, ' ', '_');
+						if(first == 1)
+							fprintf(outfp, ",");
+						fprintf(outfp, "%s", pxf->px_fname);
+						first = 1;
+					}
+					pxf++;
+				}
+				fprintf(outfp, ")");
 			}
 			fprintf(outfp, "\n);\n");
 
