@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-08-15 09:25+0200\n"
+"POT-Creation-Date: 2003-08-20 13:23+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -102,41 +102,51 @@ msgid "  -p, --blobprefix=PREFIX prefix for all created files with blob data."
 msgstr "  -p, --blobprefix=PRÄFIX Präfix für erzeugte Blob-Dateien."
 
 #: src/main.c:72
+msgid "  -n, --primary-index-file=FILE read primary index from file."
+msgstr "  -n, --primary-index-file=DATEI lese Primärindex aus Datei."
+
+#: src/main.c:74
 msgid "  -r, --recode=ENCODING sets the target encoding."
 msgstr "  -r, --recode=ENCODING setzt Zielkodierung"
 
-#: src/main.c:75
+#: src/main.c:77
 msgid "  --separator=CHAR    character used to separate field values."
 msgstr ""
 "  --separator=CHAR    Zeichen, das zur Trennung von Feldern benutzt wird."
 
-#: src/main.c:77
+#: src/main.c:79
 msgid "  --enclosure=CHAR    character used to enclose field values."
 msgstr ""
 "  --enclosure=CHAR    Zeichen, das zum Einschließen von Feldern benutzt wird."
 
-#: src/main.c:80
+#: src/main.c:83
+msgid "  --mark-deleted      add extra column with 1 for deleted records."
+msgstr ""
+"  --mark-deleted      Ausgabe einer zusätzlichen Spalte mit 1 für gelöschte "
+"DS"
+
+#: src/main.c:86
 msgid "  --include-blobs     add blob fields in sql output."
 msgstr "  --include-blobs     berücksichtige Blobs beim der SQL-Ausgabe."
 
-#: src/main.c:82
+#: src/main.c:88
 msgid "  --fields=REGEX      extended regular expression to select fields."
 msgstr ""
 "  --fields=REGEX      erweiterter regulärer Ausdruck zur Auswahl von Feldern."
 
-#: src/main.c:84
+#: src/main.c:90
 msgid "  --output-deleted    output also records which were deleted."
 msgstr "  --output-deleted    gebe auch gelöschte Datensätze aus."
 
-#: src/main.c:87
+#: src/main.c:93
 msgid "  --tablename=NAME    overwrite name of database table."
 msgstr "  --tablename=NAME    überschreibe den Namen der Datenbanktable."
 
-#: src/main.c:91
+#: src/main.c:97
 msgid "  --delete-table      delete existing sql database table."
 msgstr "  --delete-table      lösche bestehende SQL Datenbanktable."
 
-#: src/main.c:96
+#: src/main.c:102
 msgid ""
 "If you do not specify any of the options -i, -c, -s, -x, or -t\n"
 "then -i will be used."
@@ -144,16 +154,19 @@ msgstr ""
 "Wenn Sie keine der Optionen -i, -c, -s, -x oder -t angeben,\n"
 "dann wird die Option -i verwendet."
 
-#: src/main.c:100
+#: src/main.c:106
 msgid "The option --fields will only affect csv, html and sql output."
 msgstr "Die Option --fields beeinflusst nur die CSV-, HTML- und SQL-Ausgabe."
 
-#: src/main.c:102
-msgid "The options --separator and --enclosure will only affect csv output."
+#: src/main.c:108
+msgid ""
+"The options --separator, --enclosure and --mark-deleted will only affect csv "
+"output."
 msgstr ""
-"Die Optionen --separator und --enclosure beeinflussen nur die CSV-Ausgabe."
+"Die Optionen --separator, --enclosure und --mark-deleted beeinflussen nur "
+"die CSV-Ausgabe."
 
-#: src/main.c:106
+#: src/main.c:112
 msgid ""
 "If exporting csv format fields will be separated by tabulator\n"
 "and enclosed into \"."
@@ -161,210 +174,254 @@ msgstr ""
 "Beim Export im CSV-Format werden Felder standardmäßig mit einem\n"
 "Tabulator getrennt und durch Anführungsstriche eingeschlossen."
 
-#: src/main.c:113
+#: src/main.c:119
 msgid "libpx uses librecode for recoding."
 msgstr "libpx benutzt librecode zum reencodieren."
 
-#: src/main.c:116
+#: src/main.c:122
 msgid "libpx uses iconv for recoding."
 msgstr "libpx benutzt iconv zum reencodieren."
 
-#: src/main.c:119
+#: src/main.c:125
 msgid "libpx has no support for recoding."
 msgstr "libpx unterstützt nicht das reencodieren."
 
-#: src/main.c:124
+#: src/main.c:130
 msgid "libpx has been compiled for big endian architecture."
 msgstr "libpx wurde für Architekturen mit big endian übersetzt."
 
-#: src/main.c:126
+#: src/main.c:132
 msgid "libpx has been compiled for little endian architecture."
 msgstr "libpx wurde für Architekturen mit little endian übersetzt."
 
-#: src/main.c:302
+#: src/main.c:320
 msgid "You must at least specify an input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:312
+#: src/main.c:330
 msgid "Could not open output file."
 msgstr "Konnte Ausgabedate nicht öffnen."
 
-#: src/main.c:322
+#: src/main.c:340
 msgid "Could not open input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:334
+#: src/main.c:347
+msgid "Could not open primary index file."
+msgstr "Konnte die Primärindexdatei nicht öffnen."
+
+#: src/main.c:352
+msgid "Could not read primary index file."
+msgstr "Konnte die Primärindexdatei nicht lesen."
+
+#: src/main.c:357
+msgid "Could not add primary index file."
+msgstr "Konnte den Primärindex nicht hinzufügen."
+
+#: src/main.c:371
 msgid "Could not open blob file."
 msgstr "Konte Blob-Datei nicht öffnen."
 
-#: src/main.c:343
+#: src/main.c:380
 #, c-format
 msgid "File Version:            %1.1f\n"
 msgstr "Datei Version:           %1.1f\n"
 
-#: src/main.c:344
+#: src/main.c:381
 msgid "File Type:               "
 msgstr "Dateityp:                "
 
-#: src/main.c:347
+#: src/main.c:384
 msgid "indexed .DB data file"
 msgstr "indizierte .DB Datendatei"
 
-#: src/main.c:350
+#: src/main.c:387
 msgid "primary index .PX file"
 msgstr "Primärindex .PX Datei"
 
-#: src/main.c:353
+#: src/main.c:390
 msgid "non-indexed .DB data file"
 msgstr "Nicht-indizierte .DB Datendatei"
 
-#: src/main.c:356
+#: src/main.c:393
 msgid "non-incrementing secondary index .Xnn file"
 msgstr "Nicht inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:359
+#: src/main.c:396
 msgid "secondary index .Ynn file (inc or non-inc)"
 msgstr "Sekundre Index .Ynn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:362
+#: src/main.c:399
 msgid "incrementing secondary index .Xnn file"
 msgstr "Inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:365
+#: src/main.c:402
 msgid "non-incrementing secondary index .XGn file"
 msgstr "Nicht inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:368
+#: src/main.c:405
 msgid "secondary index .YGn file (inc or non inc)"
 msgstr "Sekundre Index .YGn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:371
+#: src/main.c:408
 msgid "incrementing secondary index .XGn file"
 msgstr "Inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:375
+#: src/main.c:412
 #, c-format
 msgid "Tablename:               %s\n"
 msgstr "Tabellenname:            %s\n"
 
-#: src/main.c:376
+#: src/main.c:413
 #, c-format
 msgid "Num. of Records:         %d\n"
 msgstr "Anz. der Datensätze:     %d\n"
 
-#: src/main.c:377
+#: src/main.c:414
 #, c-format
 msgid "Theor. Num. of Rec.:     %d\n"
 msgstr "Theo. Anz. der Datensätze: %d\n"
 
-#: src/main.c:378
+#: src/main.c:415
 #, c-format
 msgid "Num. of Fields:          %d\n"
 msgstr "Anz. der Felder:         %d\n"
 
-#: src/main.c:379
+#: src/main.c:416
 #, c-format
 msgid "Header size:             %d (0x%X)\n"
 msgstr "Größe der Präambel:      %d (0x%X)\n"
 
-#: src/main.c:380
+#: src/main.c:417
 #, c-format
 msgid "Max. Table size:         %d (0x%X)\n"
 msgstr "Max. Tabellengröße:      %d (0x%X)\n"
 
-#: src/main.c:381
+#: src/main.c:418
 #, c-format
 msgid "Num. of Data Blocks:     %d\n"
 msgstr "Anz. der Datenblöcke:     %d\n"
 
-#: src/main.c:384
+#: src/main.c:421
 #, c-format
 msgid "Num. of Index Field:     %d\n"
 msgstr "Num. des Indexfeldes:     %d\n"
 
-#: src/main.c:385
+#: src/main.c:422
 #, c-format
 msgid "Sort order of Field:     %d\n"
 msgstr "Sortierung des Feldes:     %d\n"
 
-#: src/main.c:389
+#: src/main.c:426
 #, c-format
 msgid "Num. of prim. Key fields: %d\n"
 msgstr "Anz. der Primärschl.felder: %d\n"
 
-#: src/main.c:390
+#: src/main.c:427
 #, c-format
 msgid "Next auto inc. value:    %d\n"
 msgstr "Näch. Auto ink. Wert:    %d\n"
 
-#: src/main.c:392
+#: src/main.c:429
 #, c-format
 msgid "Write protected:         %d\n"
 msgstr "Schreibschutz:           %d\n"
 
-#: src/main.c:393
+#: src/main.c:430
 #, c-format
 msgid "Code Page:               %d (0x%X)\n"
 msgstr "Code Page:               %d (0x%X)\n"
 
-#: src/main.c:395
+#: src/main.c:432
 #, c-format
 msgid "Record size:             %d (0x%X)\n"
 msgstr "Größe eines Datens.:     %d (0x%X)\n"
 
-#: src/main.c:396
+#: src/main.c:433
 #, c-format
 msgid "Sort order:              %d (0x%X)\n"
 msgstr "Sortierreihenfolge:      %d (0x%X)\n"
 
-#: src/main.c:397
+#: src/main.c:434
 #, c-format
 msgid "Auto increment:          %d (0x%X)\n"
 msgstr "Auto inkrement:          %d (0x%X)\n"
 
-#: src/main.c:398
+#: src/main.c:435
 #, c-format
 msgid "Modified Flags 1:        %d (0x%X)\n"
 msgstr "Modifiziert Flags 1:     %d (0x%X)\n"
 
-#: src/main.c:399
+#: src/main.c:436
 #, c-format
 msgid "Modified Flags 2:        %d (0x%X)\n"
 msgstr "Modifiziert Flags 2      %d (0x%X)\n"
 
-#: src/main.c:403
+#: src/main.c:440
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
 
-#: src/main.c:468
+#: src/main.c:505
 #, c-format
 msgid "     Record length | %d (0x%X)\n"
 msgstr "Größe eines Datens.: %d (0x%X)\n"
 
-#: src/main.c:476
+#: src/main.c:513
 msgid "Schema output is only reasonable for DB files."
 msgstr "Schema-Ausgabe macht nur bei DB-Dateien Sinn."
 
-#: src/main.c:572
+#: src/main.c:609
 msgid "Could not compile regular expression to select fields."
 msgstr "Konnte regulären Ausdruck nicht übersetzen."
 
 #. allocate memory for selected field array
-#: src/main.c:577
+#: src/main.c:614
 msgid "Could not allocate memory for array of selected fields."
 msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 
-#: src/main.c:595 src/main.c:758 src/main.c:1053 src/main.c:1220
+#: src/main.c:632 src/main.c:810 src/main.c:1112 src/main.c:1281
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:748 src/main.c:935 src/main.c:1211 src/main.c:1244
+#: src/main.c:791 src/main.c:994 src/main.c:1270 src/main.c:1333
 msgid "Couldn't get record\n"
 msgstr "Konnte auf Datensatz nicht zugreifen.\n"
 
-#: src/main.c:946
+#: src/main.c:1005
 msgid "SQL output is only reasonable for DB files."
 msgstr "SQL-Ausgabe macht nur bei DB-Dateien Sinn."
 
-#~ msgid "  -f, --file=FILE     read input data from file."
-#~ msgstr "  -f, --file=DATEI    lese aus Eingabedatei."
+#: src/main.c:1301
+msgid "Block number according to header: "
+msgstr "Blocknummer gemäß Header: "
+
+#: src/main.c:1303
+msgid "Real block number in file: "
+msgstr "Tatsächliche Datensatznummer innerhalb des Blocks: "
+
+#: src/main.c:1305
+msgid "Block size: "
+msgstr "Blockgröße: "
+
+#: src/main.c:1307
+msgid "Record number in block: "
+msgstr "Datensatznummer innerhalb des Blocks: "
+
+#: src/main.c:1309
+msgid "Number of records in block: "
+msgstr "Anzahl der Datensätze im Block: "
+
+#: src/main.c:1311
+msgid "Block position in file: "
+msgstr "Blockposition in der Datei: "
+
+#: src/main.c:1313
+msgid "Record position in file: "
+msgstr "Datensatzposition in der Datei: "
+
+#: src/main.c:1316
+msgid "Record deleted: "
+msgstr "Datensatz gelöscht: "
+
+#~ msgid "Block number: "
+#~ msgstr "Blocknummer: "
