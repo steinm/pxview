@@ -1,4 +1,6 @@
 Version 0.0.7
+	- program returns 1 in case of error else 0
+	- better sql output
 	- fixed potential segm fault
 	- moved manpage into section 1
 
