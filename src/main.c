@@ -299,6 +299,8 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  --delete-table      delete existing sql database table."));
 		printf("\n");
+		printf(_("  --skip-schema       do not output database table schema."));
+		printf("\n");
 	}
 	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
 		printf("\n");
@@ -387,6 +389,7 @@ int main(int argc, char *argv[]) {
 	int outputdebug = 0;
 	int includeblobs = 0;
 	int deletetable = 0;
+	int skipschema = 0;
 	int outputdeleted = 0;
 	int markdeleted = 0;
 	int usecopy = 0;
@@ -451,6 +454,7 @@ int main(int argc, char *argv[]) {
 			{"use-gsf", 0, 0, 8},
 			{"use-copy", 0, 0, 9},
 			{"without-head", 0, 0, 10},
+			{"skip-schema", 0, 0, 12},
 			{"primary-index-file", 1, 0, 'n'},
 			{"version", 0, 0, 11},
 			{0, 0, 0, 0}
@@ -515,6 +519,9 @@ int main(int argc, char *argv[]) {
 			case 11:
 				fprintf(stdout, "%s\n", VERSION);
 				exit(0);
+				break;
+			case 12:
+				skipschema = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -1407,124 +1414,126 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		/* Output table schema */
-		str_buffer_clear(pxdoc, sbuf);
-		str_buffer_print(pxdoc, sbuf, "CREATE TABLE %s (", tablename);
-		first = 0;  // set to 1 when first field has been output
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_numfields; i++) {
-			if(fieldregex == NULL ||  selectedfields[i]) {
-				strrep(pxf->px_fname, ' ', '_');
-				if(first == 1)
-					str_buffer_print(pxdoc, sbuf, ", ");
-				switch(pxf->px_ftype) {
-					case pxfAlpha:
-					case pxfDate:
-					case pxfShort:
-					case pxfLong:
-					case pxfAutoInc:
-					case pxfCurrency:
-					case pxfNumber:
-					case pxfLogical:
-					case pxfTime:
-					case pxfTimestamp:
-					case pxfBCD:
-					case pxfBytes:
-						str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
-						first = 1;
-						break;
-					case pxfMemoBLOb:
-					case pxfBLOb:
-					case pxfFmtMemoBLOb:
-					case pxfGraphic:
-						if(includeblobs) {
+		if(!skipschema) {
+			str_buffer_clear(pxdoc, sbuf);
+			str_buffer_print(pxdoc, sbuf, "CREATE TABLE %s (", tablename);
+			first = 0;  // set to 1 when first field has been output
+			pxf = pxh->px_fields;
+			for(i=0; i<pxh->px_numfields; i++) {
+				if(fieldregex == NULL ||  selectedfields[i]) {
+					strrep(pxf->px_fname, ' ', '_');
+					if(first == 1)
+						str_buffer_print(pxdoc, sbuf, ", ");
+					switch(pxf->px_ftype) {
+						case pxfAlpha:
+						case pxfDate:
+						case pxfShort:
+						case pxfLong:
+						case pxfAutoInc:
+						case pxfCurrency:
+						case pxfNumber:
+						case pxfLogical:
+						case pxfTime:
+						case pxfTimestamp:
+						case pxfBCD:
+						case pxfBytes:
 							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
 							first = 1;
-						} else {
-							first = 0;
-						}
-						break;
+							break;
+						case pxfMemoBLOb:
+						case pxfBLOb:
+						case pxfFmtMemoBLOb:
+						case pxfGraphic:
+							if(includeblobs) {
+								str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+								first = 1;
+							} else {
+								first = 0;
+							}
+							break;
+					}
+					switch(pxf->px_ftype) {
+						case pxfAlpha:
+							str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
+							break;
+						case pxfDate:
+							str_buffer_print(pxdoc, sbuf, "date");
+							break;
+						case pxfShort:
+							str_buffer_print(pxdoc, sbuf, "smallint");
+							break;
+						case pxfLong:
+						case pxfAutoInc:
+							str_buffer_print(pxdoc, sbuf, "integer");
+							break;
+						case pxfCurrency:
+						case pxfNumber:
+							str_buffer_print(pxdoc, sbuf, "decimal(20,2)");
+							break;
+						case pxfLogical:
+							str_buffer_print(pxdoc, sbuf, "boolean");
+							break;
+						case pxfMemoBLOb:
+						case pxfBLOb:
+						case pxfFmtMemoBLOb:
+						case pxfGraphic:
+							if(includeblobs)
+								str_buffer_print(pxdoc, sbuf, "oid");
+							break;
+						case pxfOLE:
+							break;
+						case pxfTime:
+							str_buffer_print(pxdoc, sbuf, "time");
+							break;
+						case pxfTimestamp:
+							str_buffer_print(pxdoc, sbuf, "timestamp");
+							break;
+						case pxfBCD:
+							str_buffer_print(pxdoc, sbuf, "decimal(34,%d)", pxf->px_flen);
+							break;
+						case pxfBytes:
+							str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
+							break;
+						default:
+							break;
+					}
+					if(i < pxh->px_primarykeyfields)
+						str_buffer_print(pxdoc, sbuf, " unique");
 				}
-				switch(pxf->px_ftype) {
-					case pxfAlpha:
-						str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
-						break;
-					case pxfDate:
-						str_buffer_print(pxdoc, sbuf, "date");
-						break;
-					case pxfShort:
-						str_buffer_print(pxdoc, sbuf, "smallint");
-						break;
-					case pxfLong:
-					case pxfAutoInc:
-						str_buffer_print(pxdoc, sbuf, "integer");
-						break;
-					case pxfCurrency:
-					case pxfNumber:
-						str_buffer_print(pxdoc, sbuf, "decimal(20,2)");
-						break;
-					case pxfLogical:
-						str_buffer_print(pxdoc, sbuf, "boolean");
-						break;
-					case pxfMemoBLOb:
-					case pxfBLOb:
-					case pxfFmtMemoBLOb:
-					case pxfGraphic:
-						if(includeblobs)
-							str_buffer_print(pxdoc, sbuf, "oid");
-						break;
-					case pxfOLE:
-						break;
-					case pxfTime:
-						str_buffer_print(pxdoc, sbuf, "time");
-						break;
-					case pxfTimestamp:
-						str_buffer_print(pxdoc, sbuf, "timestamp");
-						break;
-					case pxfBCD:
-						str_buffer_print(pxdoc, sbuf, "decimal(34,%d)", pxf->px_flen);
-						break;
-					case pxfBytes:
-						str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
-						break;
-					default:
-						break;
-				}
-				if(i < pxh->px_primarykeyfields)
-					str_buffer_print(pxdoc, sbuf, " unique");
+				pxf++;
 			}
-			pxf++;
-		}
-		str_buffer_print(pxdoc, sbuf, ");");
-		if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
-			sqlite_close(sql);
-			fprintf(stderr, "%s\n", sqlerror);
-			str_buffer_delete(pxdoc, sbuf);
-			pxdoc->free(pxdoc, data);
-			if(selectedfields)
-				pxdoc->free(pxdoc, selectedfields);
-			PX_close(pxdoc);
-			exit(1);
-		}
+			str_buffer_print(pxdoc, sbuf, ");");
+			if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
+				sqlite_close(sql);
+				fprintf(stderr, "%s\n", sqlerror);
+				str_buffer_delete(pxdoc, sbuf);
+				pxdoc->free(pxdoc, data);
+				if(selectedfields)
+					pxdoc->free(pxdoc, selectedfields);
+				PX_close(pxdoc);
+				exit(1);
+			}
 
-		/* Create the indexes */
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_primarykeyfields; i++) {
-			if(fieldregex == NULL ||  selectedfields[i]) {
-				strrep(pxf->px_fname, ' ', '_');
-				str_buffer_clear(pxdoc, sbuf);
-				str_buffer_print(pxdoc, sbuf, "CREATE INDEX %s_%s_index on %s (%s);", tablename, pxf->px_fname, tablename, pxf->px_fname);
-				if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
-					sqlite_close(sql);
-					fprintf(stderr, "%s\n", sqlerror);
-					str_buffer_delete(pxdoc, sbuf);
-					pxdoc->free(pxdoc, data);
-					if(selectedfields)
-						pxdoc->free(pxdoc, selectedfields);
-					PX_close(pxdoc);
-					exit(1);
+			/* Create the indexes */
+			pxf = pxh->px_fields;
+			for(i=0; i<pxh->px_primarykeyfields; i++) {
+				if(fieldregex == NULL ||  selectedfields[i]) {
+					strrep(pxf->px_fname, ' ', '_');
+					str_buffer_clear(pxdoc, sbuf);
+					str_buffer_print(pxdoc, sbuf, "CREATE INDEX %s_%s_index on %s (%s);", tablename, pxf->px_fname, tablename, pxf->px_fname);
+					if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
+						sqlite_close(sql);
+						fprintf(stderr, "%s\n", sqlerror);
+						str_buffer_delete(pxdoc, sbuf);
+						pxdoc->free(pxdoc, data);
+						if(selectedfields)
+							pxdoc->free(pxdoc, selectedfields);
+						PX_close(pxdoc);
+						exit(1);
+					}
 				}
+				pxf++;
 			}
-			pxf++;
 		}
 
 		/* Only output data if we have at least one record */
@@ -1928,102 +1937,104 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, "DROP TABLE %s;\n", tablename);
 		}
 		/* Output table schema */
-		fprintf(outfp, "CREATE TABLE %s (\n", tablename);
-		first = 0;  // set to 1 when first field has been output
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_numfields; i++) {
-			if(fieldregex == NULL ||  selectedfields[i]) {
-				strrep(pxf->px_fname, ' ', '_');
-				if(first == 1)
-					fprintf(outfp, ",\n");
-				switch(pxf->px_ftype) {
-					case pxfAlpha:
-					case pxfDate:
-					case pxfShort:
-					case pxfLong:
-					case pxfAutoInc:
-					case pxfCurrency:
-					case pxfNumber:
-					case pxfLogical:
-					case pxfTime:
-					case pxfTimestamp:
-					case pxfBCD:
-					case pxfBytes:
-						fprintf(outfp, "  %s ", pxf->px_fname);
-						first = 1;
-						break;
-					case pxfMemoBLOb:
-					case pxfBLOb:
-					case pxfFmtMemoBLOb:
-					case pxfGraphic:
-						if(includeblobs) {
+		if(!skipschema) {
+			fprintf(outfp, "CREATE TABLE %s (\n", tablename);
+			first = 0;  // set to 1 when first field has been output
+			pxf = pxh->px_fields;
+			for(i=0; i<pxh->px_numfields; i++) {
+				if(fieldregex == NULL ||  selectedfields[i]) {
+					strrep(pxf->px_fname, ' ', '_');
+					if(first == 1)
+						fprintf(outfp, ",\n");
+					switch(pxf->px_ftype) {
+						case pxfAlpha:
+						case pxfDate:
+						case pxfShort:
+						case pxfLong:
+						case pxfAutoInc:
+						case pxfCurrency:
+						case pxfNumber:
+						case pxfLogical:
+						case pxfTime:
+						case pxfTimestamp:
+						case pxfBCD:
+						case pxfBytes:
 							fprintf(outfp, "  %s ", pxf->px_fname);
 							first = 1;
-						} else {
-							first = 0;
-						}
-						break;
+							break;
+						case pxfMemoBLOb:
+						case pxfBLOb:
+						case pxfFmtMemoBLOb:
+						case pxfGraphic:
+							if(includeblobs) {
+								fprintf(outfp, "  %s ", pxf->px_fname);
+								first = 1;
+							} else {
+								first = 0;
+							}
+							break;
+					}
+					switch(pxf->px_ftype) {
+						case pxfAlpha:
+							fprintf(outfp, "char(%d)", pxf->px_flen);
+							break;
+						case pxfDate:
+							fprintf(outfp, "date");
+							break;
+						case pxfShort:
+							fprintf(outfp, "smallint");
+							break;
+						case pxfLong:
+						case pxfAutoInc:
+							fprintf(outfp, "integer");
+							break;
+						case pxfCurrency:
+						case pxfNumber:
+							fprintf(outfp, "double");
+							break;
+						case pxfLogical:
+							fprintf(outfp, "boolean");
+							break;
+						case pxfMemoBLOb:
+						case pxfBLOb:
+						case pxfFmtMemoBLOb:
+						case pxfGraphic:
+							if(includeblobs)
+								fprintf(outfp, "oid");
+							break;
+						case pxfOLE:
+							break;
+						case pxfTime:
+							fprintf(outfp, "time");
+							break;
+						case pxfTimestamp:
+							fprintf(outfp, "timestamp");
+							break;
+						case pxfBCD:
+							fprintf(outfp, "decimal(34,%d)", pxf->px_flen);
+							break;
+						case pxfBytes:
+							fprintf(outfp, "char(%d)", pxf->px_flen);
+							break;
+						default:
+							break;
+					}
+					if(i < pxh->px_primarykeyfields)
+						fprintf(outfp, " unique");
 				}
-				switch(pxf->px_ftype) {
-					case pxfAlpha:
-						fprintf(outfp, "char(%d)", pxf->px_flen);
-						break;
-					case pxfDate:
-						fprintf(outfp, "date");
-						break;
-					case pxfShort:
-						fprintf(outfp, "smallint");
-						break;
-					case pxfLong:
-					case pxfAutoInc:
-						fprintf(outfp, "integer");
-						break;
-					case pxfCurrency:
-					case pxfNumber:
-						fprintf(outfp, "double");
-						break;
-					case pxfLogical:
-						fprintf(outfp, "boolean");
-						break;
-					case pxfMemoBLOb:
-					case pxfBLOb:
-					case pxfFmtMemoBLOb:
-					case pxfGraphic:
-						if(includeblobs)
-							fprintf(outfp, "oid");
-						break;
-					case pxfOLE:
-						break;
-					case pxfTime:
-						fprintf(outfp, "time");
-						break;
-					case pxfTimestamp:
-						fprintf(outfp, "timestamp");
-						break;
-					case pxfBCD:
-						fprintf(outfp, "decimal(34,%d)", pxf->px_flen);
-						break;
-					case pxfBytes:
-						fprintf(outfp, "char(%d)", pxf->px_flen);
-						break;
-					default:
-						break;
-				}
-				if(i < pxh->px_primarykeyfields)
-					fprintf(outfp, " unique");
+				pxf++;
 			}
-			pxf++;
-		}
-		fprintf(outfp, "\n);\n");
+			fprintf(outfp, "\n);\n");
 
-		/* Create the indexes */
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_primarykeyfields; i++) {
-			if(fieldregex == NULL ||  selectedfields[i]) {
-				strrep(pxf->px_fname, ' ', '_');
-				fprintf(outfp, "CREATE INDEX %s_%s_index on %s (%s);\n", tablename, pxf->px_fname, tablename, pxf->px_fname);
+			/* Create the indexes */
+			pxf = pxh->px_fields;
+			for(i=0; i<pxh->px_primarykeyfields; i++) {
+				if(fieldregex == NULL ||  selectedfields[i]) {
+					strrep(pxf->px_fname, ' ', '_');
+					fprintf(outfp, "CREATE INDEX %s_%s_index on %s (%s);\n", tablename, pxf->px_fname, tablename, pxf->px_fname);
+				}
+				pxf++;
 			}
-			pxf++;
 		}
 
 		/* Only output data if we have at least one record */

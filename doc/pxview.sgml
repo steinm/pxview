@@ -84,6 +84,7 @@ manpage.1: manpage.sgml
       <arg><option>--fields=REGEX <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
       <arg><option>--delete-table <replaceable></replaceable></option></arg>
+      <arg><option>--skip-schema <replaceable></replaceable></option></arg>
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg><option>--output-deleted <replaceable></replaceable></option></arg>
       <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
@@ -343,6 +344,16 @@ manpage.1: manpage.sgml
           <para>Adds a sql command at the begining of the sql output to delete
 					 an existing table before creating the new one. If used in sqlite
 					 mode it will drop the table before creating a new one.
+					 This option only affects sql and sqlite output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--skip-schema</option>
+        </term>
+        <listitem>
+          <para>Do not add at the beginning of the sql output the commands
+					 to create the table schema. This is useful if an existing table
+					 shall be populated with new records.
 					 This option only affects sql and sqlite output.</para>
         </listitem>
       </varlistentry>
