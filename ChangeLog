@@ -1,5 +1,6 @@
 Version 0.0.7
 	- fixed potential segm fault
+	- moved manpage into section 1
 
 Version 0.0.6
 	- output sql data only if num records > 0
