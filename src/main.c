@@ -867,7 +867,7 @@ int main(int argc, char *argv[]) {
 		/* Allocate memory for record */
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
@@ -1050,7 +1050,7 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, "%c", delimiter);
 			fprintf(outfp, "\n");
 		}
-		px_free(pxdoc, data);
+		pxdoc->free(pxdoc, data);
 	}
 	/* }}} */
 
@@ -1073,7 +1073,7 @@ int main(int argc, char *argv[]) {
 
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
@@ -1081,14 +1081,14 @@ int main(int argc, char *argv[]) {
 		/* Allocate memory for string buffer */
 		if((buffer = (char *) pxdoc->malloc(pxdoc, 2*pxh->px_recordsize, _("Could not allocate memory for string buffer."))) == NULL) {
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
 
 		if((sql = sqlite_open(outputfile, 0, NULL)) == NULL) {
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
@@ -1099,10 +1099,10 @@ int main(int argc, char *argv[]) {
 			if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
 				fprintf(stderr, "%s\n", sqlerror);
 				sqlite_close(sql);
-				px_free(pxdoc, buffer);
-				px_free(pxdoc, data);
+				pxdoc->free(pxdoc, buffer);
+				pxdoc->free(pxdoc, data);
 				if(selectedfields)
-					px_free(pxdoc, selectedfields);
+					pxdoc->free(pxdoc, selectedfields);
 				PX_close(pxdoc);
 				exit(1);
 			}
@@ -1199,10 +1199,10 @@ int main(int argc, char *argv[]) {
 		if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
 			sqlite_close(sql);
 			fprintf(stderr, "%s\n", sqlerror);
-			px_free(pxdoc, buffer);
-			px_free(pxdoc, data);
+			pxdoc->free(pxdoc, buffer);
+			pxdoc->free(pxdoc, data);
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
@@ -1217,10 +1217,10 @@ int main(int argc, char *argv[]) {
 				if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
 					sqlite_close(sql);
 					fprintf(stderr, "%s\n", sqlerror);
-					px_free(pxdoc, buffer);
-					px_free(pxdoc, data);
+					pxdoc->free(pxdoc, buffer);
+					pxdoc->free(pxdoc, data);
 					if(selectedfields)
-						px_free(pxdoc, selectedfields);
+						pxdoc->free(pxdoc, selectedfields);
 					PX_close(pxdoc);
 					exit(1);
 				}
@@ -1232,7 +1232,7 @@ int main(int argc, char *argv[]) {
 		if(pxh->px_numrecords > 0) {
 			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 				if(selectedfields)
-					px_free(pxdoc, selectedfields);
+					pxdoc->free(pxdoc, selectedfields);
 				PX_close(pxdoc);
 				exit(1);
 			}
@@ -1356,17 +1356,17 @@ int main(int argc, char *argv[]) {
 				if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
 					sqlite_close(sql);
 					fprintf(stderr, "%s\n", sqlerror);
-					px_free(pxdoc, buffer);
-					px_free(pxdoc, data);
+					pxdoc->free(pxdoc, buffer);
+					pxdoc->free(pxdoc, data);
 					if(selectedfields)
-						px_free(pxdoc, selectedfields);
+						pxdoc->free(pxdoc, selectedfields);
 					PX_close(pxdoc);
 					exit(1);
 				}
 			}
 		}
-		px_free(pxdoc, buffer);
-		px_free(pxdoc, data);
+		pxdoc->free(pxdoc, buffer);
+		pxdoc->free(pxdoc, data);
 
 		sqlite_close(sql);
 	}
@@ -1382,7 +1382,7 @@ int main(int argc, char *argv[]) {
 		/* Allocate memory for record data */
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
@@ -1599,7 +1599,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		fprintf(outfp, "</table>\n");
-		px_free(pxdoc, data);
+		pxdoc->free(pxdoc, data);
 	}
 	/* }}} */
 
@@ -1721,7 +1721,7 @@ int main(int argc, char *argv[]) {
 		if(pxh->px_numrecords > 0) {
 			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 				if(selectedfields)
-					px_free(pxdoc, selectedfields);
+					pxdoc->free(pxdoc, selectedfields);
 				PX_close(pxdoc);
 				exit(1);
 			}
@@ -1880,7 +1880,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			fprintf(outfp, "\\.\n");
-			px_free(pxdoc, data);
+			pxdoc->free(pxdoc, data);
 		}
 	}
 	/* }}} */
@@ -1892,7 +1892,7 @@ int main(int argc, char *argv[]) {
 		int isdeleted, presetdeleted;
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
-				px_free(pxdoc, selectedfields);
+				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
 			exit(1);
 		}
@@ -1947,14 +1947,14 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr, _("Couldn't get record number %d\n"), j);
 			}
 		}
-		px_free(pxdoc, data);
+		pxdoc->free(pxdoc, data);
 	}
 	/* }}} */
 
 	/* Free resources and close files {{{
 	 */
 	if(selectedfields)
-		px_free(pxdoc, selectedfields);
+		pxdoc->free(pxdoc, selectedfields);
 
 	if(pindexfile) {
 		PX_close(pindexdoc);
