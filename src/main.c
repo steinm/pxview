@@ -43,7 +43,7 @@ void strrep(char *str, char c1, char c2) {
 }
 /* }}} */
 
-/* strrep() {{{
+/* printmask() {{{
  * Prints str and masks each occurence of c1 with c2.
  * Returns the number of written chars.
  */
@@ -77,6 +77,27 @@ void pbuffer(char *buffer, const char *fmt, ...) {
 	strcat(buffer, msg);
 
 	va_end(ap);
+}
+/* }}} */
+
+/* pbuffermask() {{{
+ * Prints str to buffer and masks each occurence of c1 with c2.
+ * Returns the number of written chars.
+ */
+int pbuffermask(char *buffer, char *str, char c1, char c2 ) {
+	char *ptr, *dst;
+	int len = 0;
+	ptr = str;
+	dst = buffer + strlen(buffer);
+	while(*ptr != '\0') {
+		if(*ptr == c1) {
+			*dst++ = c2;
+			len ++;
+		} 
+		*dst++ = *ptr++;
+		len++;
+	}
+	return(len);
 }
 /* }}} */
 
@@ -484,6 +505,7 @@ int main(int argc, char *argv[]) {
 	if((outputfile == NULL) || !strcmp(outputfile, "-")) {
 		if(outputsqlite) {
 			fprintf(stderr, _("sqlite database cannot be written to stdout."));
+			fprintf(stderr, "\n");
 			exit(1);
 		} else {
 			outfp = stdout;
@@ -1371,7 +1393,12 @@ int main(int argc, char *argv[]) {
 								case pxfAlpha: {
 									char *value;
 									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "'%s'", value);
+										if(strchr(value, '\'')) {
+											pbuffer(buffer, "'");
+											pbuffermask(buffer, value, '\'', '\\');
+											pbuffer(buffer, "'");
+										} else
+											pbuffer(buffer, "'%s'", value);
 										pxdoc->free(pxdoc, value);
 									} else {
 										pbuffer(buffer, "NULL");
@@ -1904,7 +1931,10 @@ int main(int argc, char *argv[]) {
 									case pxfAlpha: {
 										char *value;
 										if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%s", value);
+											if(strchr(value, '\t'))
+												printmask(outfp, value, '\t', '\\');
+											else
+												fprintf(outfp, "%s", value);
 											pxdoc->free(pxdoc, value);
 										}
 										first = 1;
@@ -2023,7 +2053,12 @@ int main(int argc, char *argv[]) {
 									case pxfAlpha: {
 										char *value;
 										if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "'%s'", value);
+											if(strchr(value, '\'')) {
+												fprintf(outfp, "'");
+												printmask(outfp, value, '\'', '\\');
+												fprintf(outfp, "'");
+											} else
+												fprintf(outfp, "'%s'", value);
 											pxdoc->free(pxdoc, value);
 										} else {
 											fprintf(outfp, "''", value);

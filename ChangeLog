@@ -1,4 +1,5 @@
 Version 0.1.9
+	- mask ' and tabulator in sql and sqlite output
 	- use ',' as the default separator for fields in csv output
 	- Mask the enclosure char in csv output if it occurs in a field value
 	- pxfCurrency and pxfNumber are mapped to double in sql output
