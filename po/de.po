@@ -68,9 +68,8 @@ msgid "  -h, --help          this usage information."
 msgstr "  -h, --help          diese Hilfe."
 
 #: src/main.c:90
-#, fuzzy
 msgid "  --version           show version information."
-msgstr "  -i, --info          zeige Informationen über eine Datei."
+msgstr "  --version           zeige Programmversion."
 
 #: src/main.c:92
 msgid "  -v, --verbose       be more verbose."
