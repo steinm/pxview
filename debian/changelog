@@ -1,9 +1,8 @@
-pxview (0.1.6-1) unstable; urgency=low
+pxview (0.1.7-1) unstable; urgency=low
 
   * New upstream version.
-  * require at least pxlib 0.2.2
 
- -- Uwe Steinmann <uwe@steinmann.cx>  Mon, 17 Nov 2003 06:33:13 +0200
+ -- Uwe Steinmann <uwe@steinmann.cx>  Tue, 09 Dec 2003 17:45:31 +0200
 
 pxview (0.1.5-1) unstable; urgency=low
 
