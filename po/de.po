@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
-"POT-Creation-Date: 2003-04-30 11:19+0200\n"
+"POT-Creation-Date: 2003-04-30 20:42+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -160,3 +160,11 @@ msgstr "Code Page:           %d (0x%X)\n"
 #: src/main.c:153
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
+
+#: src/main.c:218
+msgid "Could not allocate memory for record."
+msgstr "Konnte Speicher für Datensatz nicht allozieren."
+
+#: src/main.c:263
+msgid "Couldn't get record\n"
+msgstr "Konnte auf Datensatz nicht zugreifen.\n"
