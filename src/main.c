@@ -2,13 +2,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 #include <getopt.h>
 #include <libintl.h>
 #include <sys/types.h>
 #include <regex.h>
 #include <libgen.h>
-#include <paradox-gsf.h>
 #include "config.h"
+#ifdef HAVE_GSF
+#include <paradox-gsf.h>
+#else
+#include <paradox.h>
+#endif
+#ifdef HAVE_SQLITE
+#include <sqlite.h>
+#endif
 #define _(String) gettext(String)
 
 void strrep(char *str, char c1, char c2) {
@@ -20,6 +28,22 @@ void strrep(char *str, char c1, char c2) {
 		ptr++;
 	}
 }
+
+/* pbuffer() {{{
+ * print a string at the end of a buffer
+ */
+void pbuffer(char *buffer, const char *fmt, ...) {
+	char msg[256];
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsprintf(msg, fmt, ap);
+
+	strcat(buffer, msg);
+
+	va_end(ap);
+}
+/* }}} */
 
 void errorhandler(pxdoc_t *p, int error, const char *str, void *data) {
 	  fprintf(stderr, "PXLib: %s\n", str);
@@ -38,8 +62,10 @@ void usage(char *progname) {
 		printf(_("%s reads a paradox file and outputs the file in SQL format."), progname);
 	} else if(!strcmp(progname, "px2html")) {
 		printf(_("%s reads a paradox file and outputs the file in HTML format."), progname);
+	} else if(!strcmp(progname, "px2sqlite")) {
+		printf(_("%s reads a paradox file and writes the output into a sqlite database."), progname);
 	} else {
-		printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV, HTML or SQL format."), progname);
+		printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV, HTML, SQL or sqlite format."), progname);
 	}
 	printf("\n\n");
 	printf(_("Usage: %s [OPTIONS] FILE"), progname);
@@ -57,11 +83,13 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  -s, --sql           dump records in SQL format."));
 		printf("\n");
+		printf(_("  -q, --sqlite        dump records into sqlite database."));
+		printf("\n");
 		printf(_("  -x, --html          dump records in HTML format."));
 		printf("\n");
 		printf(_("  -t, --shema         output schema of database."));
 		printf("\n");
-		printf(_("  --mode=MODE         set output mode (csv, sql, or schema)."));
+		printf(_("  --mode=MODE         set output mode (csv, sql, sqlite, html or schema)."));
 		printf("\n");
 	}
 	printf(_("  -o, --output-file=FILE output data into file instead of stdout."));
@@ -96,23 +124,23 @@ void usage(char *progname) {
 		printf("\n");
 	}
 #endif
-	if(strcmp(progname, "px2sql") && strcmp(progname, "px2html")) {
+	if(strcmp(progname, "px2csv") && strcmp(progname, "px2html")) {
 		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
 	}
-	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
+	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview") || !strcmp(progname, "px2sqlite")) {
 		printf(_("  --delete-table      delete existing sql database table."));
 		printf("\n");
 	}
 	printf("\n");
 	if(!strcmp(progname, "pxview")) {
-		printf(_("If you do not specify any of the options -i, -c, -s, -x, or -t\nthen -i will be used."));
+		printf(_("If you do not specify any of the options -i, -c, -s, -x, -q or -t\nthen -i will be used."));
 		printf("\n\n");
 	}
 	if(!strcmp(progname, "pxview")) {
-		printf(_("The option --fields will only affect csv, html and sql output."));
+		printf(_("The option --fields will only affect csv, html, sql and sqlite output."));
 		printf("\n\n");
-		printf(_("The options --separator, --enclosure and --mark-deleted will only affect csv output."));
+		printf(_("The options --separator, --enclosure and --mark-deleted will only\naffect csv output."));
 		printf("\n\n");
 	}
 	if(!strcmp(progname, "px2csv")) {
@@ -120,6 +148,14 @@ void usage(char *progname) {
 		printf("\n\n");
 	}
 
+	printf(_("Supported output formats: "));
+	printf(_("csv")); printf(" ");
+	printf(_("html")); printf(" ");
+	printf(_("sql")); printf(" ");
+#ifdef HAVE_SQLITE
+	printf(_("sqlite")); printf(" ");
+#endif
+	printf("\n\n");
 	recode = PX_has_recode_support();
 	switch(recode) {
 		case 1:
@@ -132,14 +168,14 @@ void usage(char *progname) {
 			printf(_("libpx has no support for recoding."));
 			break;
 	}
-	printf("\n\n");
+	printf("\n");
 	if(PX_is_bigendian())
 		printf(_("libpx has been compiled for big endian architecture."));
 	else
 		printf(_("libpx has been compiled for little endian architecture."));
-	printf("\n\n");
+	printf("\n");
 	printf(_("libpx has gsf support: %s"), PX_has_gsf_support() == 1 ? _("Yes") : _("No"));
-	printf("\n\n");
+	printf("\n");
 	printf(_("libpx has version: %d.%d.%d"), PX_get_majorversion(), PX_get_minorversion(), PX_get_subminorversion());
 	printf("\n\n");
 }
@@ -159,6 +195,7 @@ int main(int argc, char *argv[]) {
 	int outputhtml = 0;
 	int outputinfo = 0;
 	int outputsql = 0;
+	int outputsqlite = 0;
 	int outputschema = 0;
 	int outputdebug = 0;
 	int includeblobs = 0;
@@ -186,6 +223,8 @@ int main(int argc, char *argv[]) {
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
+	/* Handle program options {{{
+	 */
 	progname = basename(strdup(argv[0]));
 	while(1) {
 		int this_option_optind = optind ? optind : 1;
@@ -196,6 +235,7 @@ int main(int argc, char *argv[]) {
 			{"sql", 0, 0, 's'},
 			{"html", 0, 0, 'x'},
 			{"schema", 0, 0, 't'},
+			{"sqlite", 0, 0, 'q'},
 			{"verbose", 0, 0, 'v'},
 			{"blobfile", 1, 0, 'b'},
 			{"blobprefix", 1, 0, 'p'},
@@ -219,7 +259,7 @@ int main(int argc, char *argv[]) {
 			{"primary-index-file", 1, 0, 'n'},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icsxvtf:b:r:p:o:n:h",
+		c = getopt_long (argc, argv, "icsxqvtf:b:r:p:o:n:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -241,6 +281,13 @@ int main(int argc, char *argv[]) {
 					outputcsv = 1;
 				} else if(!strcmp(optarg, "sql")) {
 					outputsql = 1;
+				} else if(!strcmp(optarg, "sqlite")) {
+#ifdef HAVE_SQLITE
+					outputsqlite = 1;
+#else
+					printf(_("No sqlite support available."));
+					exit(1);
+#endif
 				} else if(!strcmp(optarg, "html")) {
 					outputhtml = 1;
 				} else if(!strcmp(optarg, "schema")) {
@@ -298,35 +345,19 @@ int main(int argc, char *argv[]) {
 			case 'x':
 				outputhtml = 1;
 				break;
+			case 'q':
+#ifdef HAVE_SQLITE
+				outputsqlite = 1;
+#else
+				printf(_("No sqlite support available."));
+				exit(1);
+#endif
+				break;
 			case 'n':
 				pindexfile = strdup(optarg);
 				break;
 		}
 	}
-
-	if(!strcmp(progname, "px2sql")) {
-		outputinfo = 0;
-		outputcsv = 0;
-		outputschema = 0;
-		outputsql = 1;
-		outputhtml = 0;
-	} else if(!strcmp(progname, "px2csv")) {
-		outputinfo = 0;
-		outputcsv = 1;
-		outputschema = 0;
-		outputsql = 0;
-		outputhtml = 0;
-	} else if(!strcmp(progname, "px2html")) {
-		outputinfo = 0;
-		outputcsv = 0;
-		outputschema = 0;
-		outputsql = 0;
-		outputhtml = 1;
-	}
-
-	/* if none the output modes is selected then display info */
-	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0 && outputdebug == 0 && outputhtml == 0)
-		outputinfo = 1;
 
 	if (optind < argc) {
 		inputfile = strdup(argv[optind]);
@@ -339,18 +370,68 @@ int main(int argc, char *argv[]) {
 		usage(progname);
 		exit(1);
 	}
+	/* }}} */
 
+	/* Handle different program names {{{
+	 */
+	if(!strcmp(progname, "px2sql")) {
+		outputinfo = 0;
+		outputcsv = 0;
+		outputschema = 0;
+		outputsql = 1;
+		outputsqlite = 0;
+		outputhtml = 0;
+	} else if(!strcmp(progname, "px2csv")) {
+		outputinfo = 0;
+		outputcsv = 1;
+		outputschema = 0;
+		outputsql = 0;
+		outputsqlite = 0;
+		outputhtml = 0;
+	} else if(!strcmp(progname, "px2html")) {
+		outputinfo = 0;
+		outputcsv = 0;
+		outputschema = 0;
+		outputsql = 0;
+		outputsqlite = 0;
+		outputhtml = 1;
+	} else if(!strcmp(progname, "px2sqlite")) {
+		outputinfo = 0;
+		outputcsv = 0;
+		outputschema = 0;
+		outputsql = 0;
+		outputsqlite = 1;
+		outputhtml = 0;
+	}
+	/* }}} */
+
+	/* if none the output modes is selected then display info */
+	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0 && outputdebug == 0 && outputhtml == 0 && outputsqlite == 0)
+		outputinfo = 1;
+
+	/* Create output file {{{
+	 */
 	if((outputfile == NULL) || !strcmp(outputfile, "-")) {
-		outfp = stdout;
-	} else {
-		outfp = fopen(outputfile, "w");
-		if(outfp == NULL) {
-			fprintf(stderr, _("Could not open output file."));
-			fprintf(stderr, "\n");
+		if(outputsqlite) {
+			fprintf(stderr, _("sqlite database cannot be written to stdout."));
 			exit(1);
+		} else {
+			outfp = stdout;
+		}
+	} else {
+		if(!outputsqlite) {
+			outfp = fopen(outputfile, "w");
+			if(outfp == NULL) {
+				fprintf(stderr, _("Could not open output file."));
+				fprintf(stderr, "\n");
+				exit(1);
+			}
 		}
 	}
+	/* }}} */
 
+	/* Open input file {{{
+	 */
 	if(NULL == (pxdoc = PX_new2(errorhandler, NULL, NULL, NULL))) {
 		fprintf(stderr, _("Could not create new paradox instance."));
 		fprintf(stderr, "\n");
@@ -394,7 +475,10 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_GSF
 	}
 #endif
+	/* }}} */
 
+	/* Open primary index file {{{
+	 */
 	if(pindexfile) {
 		pindexdoc = PX_new2(errorhandler, NULL, NULL, NULL);
 		if(0 > PX_open_file(pindexdoc, pindexfile)) {
@@ -413,12 +497,20 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	}
+	/* }}} */
 
 	pxh = pxdoc->px_head;
 	if(targetencoding != NULL)
 		PX_set_targetencoding(pxdoc, targetencoding);
 
-	/* Open the file containing the blobs if one is given */
+	/* Set tablename to the one in the header if it wasn't set before */
+	if(tablename == NULL)
+		tablename = pxh->px_tablename;
+	strrep(tablename, '.', '_');
+	strrep(tablename, ' ', '_');
+
+	/* Open the file containing the blobs if one is given {{{
+	 */
 	if(blobfile) {
 		pxblob = PX_new_blob(pxdoc);
 		if(0 > PX_open_blob_file(pxblob, blobfile)) {
@@ -428,7 +520,10 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	}
+	/* }}} */
 
+	/* Output info {{{
+	 */
 	if(outputinfo) {
 		int reclen;
 		struct tm time_tm;
@@ -563,7 +658,10 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, "------------------------------------\n");
 		fprintf(outfp, _("     Record length | %d (0x%X)\n"), reclen, reclen);
 	}
+	/* }}} */
 
+	/* Output Schema {{{
+	 */
 	if(outputschema) {
 		int sumlen = 0;
 
@@ -575,10 +673,7 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		if(tablename)
-			fprintf(outfp, "[%s]\n", tablename);
-		else
-			fprintf(outfp, "[%s]\n", pxh->px_tablename);
+		fprintf(outfp, "[%s]\n", tablename);
 		fprintf(outfp, "Filetype=Delimited\n");
 		fprintf(outfp, "Delimiter=%c\n", enclosure);
 		fprintf(outfp, "Separator=%c\n", delimiter);
@@ -660,8 +755,10 @@ int main(int argc, char *argv[]) {
 			pxf++;
 		}
 	}
+	/* }}} *?
 
-	/* Check which fields shall be shown in sql or csv output */
+	/* Check which fields shall be shown in sql or csv output {{{
+	 */
 	if(fieldregex) {
 		regex_t preg;
 		if(regcomp(&preg, fieldregex, REG_NOSUB|REG_EXTENDED|REG_ICASE)) {
@@ -683,11 +780,25 @@ int main(int argc, char *argv[]) {
 			pxf++;
 		}
 	}
+	/* }}} */
 
-	/* Output data as comma separated values */
-	if(outputcsv) {
-		int numrecords, ireccounter = 0;
-		int isdeleted, presetdeleted;
+#ifdef HAVE_SQLITE
+	/* Output data as comma separated values {{{
+	 */
+	if(outputsqlite) {
+		int numrecords;
+		sqlite *sql;
+		char *buffer;
+		char *sqlerror;
+
+		if((pxh->px_filetype != pxfFileTypIndexDB) && 
+		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
+			fprintf(stderr, _("SQL output is only reasonable for DB files."));
+			fprintf(stderr, "\n");
+			PX_close(pxdoc);
+			exit(1);
+		}
+
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -695,177 +806,303 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		if(outputdeleted) {
-			numrecords = pxh->px_theonumrecords;
-			presetdeleted = 1;
-		} else {
-			numrecords = pxh->px_numrecords;
-			presetdeleted = 0;
+		/* Allocate memory for string buffer */
+		if((buffer = (char *) pxdoc->malloc(pxdoc, 2*pxh->px_recordsize, _("Could not allocate memory for string buffer."))) == NULL) {
+			if(selectedfields)
+				px_free(pxdoc, selectedfields);
+			PX_close(pxdoc);
+			exit(1);
 		}
-		for(j=0; j<numrecords; j++) {
-			int offset;
-			pxdatablockinfo_t pxdbinfo;
-			isdeleted = presetdeleted;
-			if(NULL != PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
-				pxf = pxh->px_fields;
-				offset = 0;
-				first = 0;  // set to 1 when first field has been output
-				for(i=0; i<pxh->px_numfields; i++) {
-					if(fieldregex == NULL || selectedfields[i]) {
-						if(first == 1)
-							fprintf(outfp, "%c", delimiter);
-						switch(pxf->px_ftype) {
-							case pxfAlpha: {
-								char *value;
-								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									if(enclosure && strchr(value, delimiter))
-										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
-									else
-										fprintf(outfp, "%s", value);
-								}
-								first = 1;
-								break;
-							}
-							case pxfDate: {
-								long value;
-								int year, month, day;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									PX_SdnToGregorian(value+1721425, &year, &month, &day);
-									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
-								}
-								first = 1;
-								break;
-								}
-							case pxfShort: {
-								short int value;
-								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%d", value);
-								}
-								first = 1;
-								break;
-								}
-							case pxfAutoInc:
-							case pxfTimestamp:
-							case pxfLong: {
-								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%ld", value);
-								}
-								first = 1;
-								break;
-								}
-							case pxfTime: {
-								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
-								}
-								first = 1;
-								break;
-								}
-							case pxfCurrency:
-							case pxfNumber: {
-								double value;
-								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%f", value);
-								} 
-								first = 1;
-								break;
-								} 
-							case pxfLogical: {
-								char value;
-								if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									if(value)
-										fprintf(outfp, "1");
-									else
-										fprintf(outfp, "0");
-								}
-								first = 1;
-								break;
-								}
-							case pxfGraphic:
-							case pxfBLOb:
-								if(pxblob) {
-									char *blobdata;
-									char filename[200];
-									FILE *fp;
-									size_t size, boffset, mod_nr;
-									size = get_long_le(&data[offset+4]);
-									boffset = get_long_le(&data[offset]) & 0xffffff00;
-									mod_nr = get_short_le(&data[offset+8]);
-									fprintf(outfp, "offset=%ld ", boffset);
-									fprintf(outfp, "size=%ld ", size);
-									fprintf(outfp, "mod_nr=%d ", mod_nr);
-									blobdata = PX_read_blobdata(pxblob, boffset, size);
-									if(blobdata) {
-										sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
-										fp = fopen(filename, "w");
-										if(fp) {
-											fwrite(blobdata, size, 1, fp);
-											fclose(fp);
-										} else {
-											fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
-										}
-									} else {
-										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
-									}
 
-								} else {
-									fprintf(outfp, "offset=%ld ", get_long_le(&data[offset]) & 0xffffff00);
-									fprintf(outfp, "size=%ld ", get_long_le(&data[offset+4]));
-									fprintf(outfp, "mod_nr=%d ", get_short_le(&data[offset+8]));
-									hex_dump(outfp, &data[offset], pxf->px_flen);
-								}
-								first = 1;
-								break;
-							default:
-								fprintf(outfp, "");
-						}
-					}
-					offset += pxf->px_flen;
-					pxf++;
-				}
-				if(pxh->px_filetype == pxfFileTypPrimIndex) {
-					short int value;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
-						fprintf(outfp, "%c", delimiter);
-						fprintf(outfp, "%d", value);
-					}
-					offset += 2;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
-						fprintf(outfp, "%c", delimiter);
-						fprintf(outfp, "%d", value);
-						ireccounter += value;
-					}
-					offset += 2;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
-						fprintf(outfp, "%c", delimiter);
-						fprintf(outfp, "%d", value);
-					}
-					fprintf(outfp, "%c", delimiter);
-					fprintf(outfp, "%d", pxdbinfo.number);
-				}
-				if(markdeleted) {
-					fprintf(outfp, "%c", delimiter);
-					fprintf(outfp, "%d", isdeleted);
-				}
-				fprintf(outfp, "\n");
-			} else {
-				fprintf(stderr, _("Couldn't get record number %d\n"), j);
+		if((sql = sqlite_open(outputfile, 0, NULL)) == NULL) {
+			if(selectedfields)
+				px_free(pxdoc, selectedfields);
+			PX_close(pxdoc);
+			exit(1);
+		}
+
+		/* check if existing table shall be delete */
+		if(deletetable) {
+			sprintf(buffer, "DROP TABLE %s;\n", tablename);
+			if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+				fprintf(stderr, "%s\n", sqlerror);
+				sqlite_close(sql);
+				px_free(pxdoc, buffer);
+				px_free(pxdoc, data);
+				if(selectedfields)
+					px_free(pxdoc, selectedfields);
+				PX_close(pxdoc);
+				exit(1);
 			}
 		}
-		/* Print sum over all records */
-		if(pxh->px_filetype == pxfFileTypPrimIndex) {
-			for(i=0; i<pxh->px_numfields; i++)
-				fprintf(outfp, "%c", delimiter);
-			fprintf(outfp, "%c", delimiter);
-			fprintf(outfp, "%d", ireccounter);
-			fprintf(outfp, "%c", delimiter);
-			fprintf(outfp, "\n");
+		/* Output table schema */
+		buffer[0] = '\0';
+		pbuffer(buffer, "CREATE TABLE %s (\n", tablename);
+		first = 0;  // set to 1 when first field has been output
+		pxf = pxh->px_fields;
+		for(i=0; i<pxh->px_numfields; i++) {
+			if(fieldregex == NULL ||  selectedfields[i]) {
+				strrep(pxf->px_fname, ' ', '_');
+				if(first == 1)
+					pbuffer(buffer, ",\n");
+				switch(pxf->px_ftype) {
+					case pxfAlpha:
+					case pxfDate:
+					case pxfShort:
+					case pxfLong:
+					case pxfAutoInc:
+					case pxfCurrency:
+					case pxfNumber:
+					case pxfLogical:
+					case pxfTime:
+					case pxfTimestamp:
+					case pxfBCD:
+					case pxfBytes:
+						pbuffer(buffer, "  %s ", pxf->px_fname);
+						first = 1;
+						break;
+					case pxfMemoBLOb:
+					case pxfBLOb:
+					case pxfFmtMemoBLOb:
+					case pxfGraphic:
+						if(includeblobs) {
+							pbuffer(buffer, "  %s ", pxf->px_fname);
+							first = 1;
+						} else {
+							first = 0;
+						}
+						break;
+				}
+				switch(pxf->px_ftype) {
+					case pxfAlpha:
+						pbuffer(buffer, "char(%d)", pxf->px_flen);
+						break;
+					case pxfDate:
+						pbuffer(buffer, "date");
+						break;
+					case pxfShort:
+						pbuffer(buffer, "smallint");
+						break;
+					case pxfLong:
+					case pxfAutoInc:
+						pbuffer(buffer, "integer");
+						break;
+					case pxfCurrency:
+					case pxfNumber:
+						pbuffer(buffer, "decimal(20,2)");
+						break;
+					case pxfLogical:
+						pbuffer(buffer, "boolean");
+						break;
+					case pxfMemoBLOb:
+					case pxfBLOb:
+					case pxfFmtMemoBLOb:
+					case pxfGraphic:
+						if(includeblobs)
+							pbuffer(buffer, "oid");
+						break;
+					case pxfOLE:
+						break;
+					case pxfTime:
+						pbuffer(buffer, "time");
+						break;
+					case pxfTimestamp:
+						pbuffer(buffer, "timestamp");
+						break;
+					case pxfBCD:
+						pbuffer(buffer, "decimal(17,%d)", pxf->px_flen);
+						break;
+					case pxfBytes:
+						pbuffer(buffer, "char(%d)", pxf->px_flen);
+						break;
+					default:
+						break;
+				}
+				if(i < pxh->px_primarykeyfields)
+					pbuffer(buffer, " unique");
+			}
+			pxf++;
 		}
-		px_free(pxdoc, data);
-	}
+		pbuffer(buffer, "\n);\n");
+		if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+			sqlite_close(sql);
+			fprintf(stderr, "%s\n", sqlerror);
+			px_free(pxdoc, buffer);
+			px_free(pxdoc, data);
+			if(selectedfields)
+				px_free(pxdoc, selectedfields);
+			PX_close(pxdoc);
+			exit(1);
+		}
 
-	/* output HTML Table */
+		/* Create the indexes */
+		pxf = pxh->px_fields;
+		for(i=0; i<pxh->px_primarykeyfields; i++) {
+			if(fieldregex == NULL ||  selectedfields[i]) {
+				strrep(pxf->px_fname, ' ', '_');
+				buffer[0] = '\0';
+				pbuffer(buffer, "CREATE INDEX %s_%s_index on %s (%s);", tablename, pxf->px_fname, tablename, pxf->px_fname);
+				if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+					sqlite_close(sql);
+					fprintf(stderr, "%s\n", sqlerror);
+					px_free(pxdoc, buffer);
+					px_free(pxdoc, data);
+					if(selectedfields)
+						px_free(pxdoc, selectedfields);
+					PX_close(pxdoc);
+					exit(1);
+				}
+			}
+			pxf++;
+		}
+
+		/* Only output data if we have at least one record */
+		if(pxh->px_numrecords > 0) {
+			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+				if(selectedfields)
+					px_free(pxdoc, selectedfields);
+				PX_close(pxdoc);
+				exit(1);
+			}
+
+			for(j=0; j<pxh->px_numrecords; j++) {
+				int offset;
+				buffer[0] = '\0';
+				pbuffer(buffer, "INSERT INTO %s VALUES (", tablename);
+				if(PX_get_record(pxdoc, j, data)) {
+					first = 0;  // set to 1 when first field has been output
+					offset = 0;
+					pxf = pxh->px_fields;
+					for(i=0; i<pxh->px_numfields; i++) {
+						if(fieldregex == NULL ||  selectedfields[i]) {
+							if(first == 1)
+								pbuffer(buffer, ",");
+							switch(pxf->px_ftype) {
+								case pxfAlpha: {
+									char *value;
+									if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										pbuffer(buffer, "'%s'", value);
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+
+									break;
+								}
+								case pxfDate: {
+									long value;
+									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										pbuffer(buffer, "%ld", value);
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfShort: {
+									short int value;
+									if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										pbuffer(buffer, "%d", value);
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfAutoInc:
+								case pxfTimestamp:
+								case pxfLong: {
+									long value;
+									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										pbuffer(buffer, "%ld", value);
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfTime: {
+									long value;
+									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										pbuffer(buffer, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfCurrency:
+								case pxfNumber: {
+									double value;
+									if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										pbuffer(buffer, "%f", value);
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfLogical: {
+									char value;
+									if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										if(value)
+											pbuffer(buffer, "TRUE");
+										else
+											pbuffer(buffer, "FALSE");
+									} else {
+										pbuffer(buffer, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfMemoBLOb:
+								case pxfBLOb:
+								case pxfFmtMemoBLOb:
+								case pxfGraphic:
+									if(includeblobs) {
+										pbuffer(buffer, "NULL");
+										first = 1;
+									} else {
+										first = 0;
+									}
+									break;
+								case pxfBCD:
+									pbuffer(buffer, "NULL");
+									break;
+								default:
+									pbuffer(buffer, "NULL");
+							}
+						}
+						offset += pxf->px_flen;
+						pxf++;
+					}
+					pbuffer(buffer, ");\n");
+				} else {
+					fprintf(stderr, _("Couldn't get record number %d\n"), j);
+				}
+
+				if(SQLITE_OK != sqlite_exec(sql, buffer, NULL, NULL, &sqlerror)) {
+					sqlite_close(sql);
+					fprintf(stderr, "%s\n", sqlerror);
+					px_free(pxdoc, buffer);
+					px_free(pxdoc, data);
+					if(selectedfields)
+						px_free(pxdoc, selectedfields);
+					PX_close(pxdoc);
+					exit(1);
+				}
+			}
+		}
+		px_free(pxdoc, buffer);
+		px_free(pxdoc, data);
+
+		sqlite_close(sql);
+	}
+	/* }}} */
+#endif
+
+	/* Output HTML Table {{{
+	 */
 	if(outputhtml) {
 		int numrecords;
 		int isdeleted, presetdeleted;
@@ -1058,8 +1295,10 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, "</table>\n");
 		px_free(pxdoc, data);
 	}
+	/* }}} */
 
-	/* Output data as sql statements */
+	/* Output data as sql statements {{{
+	 */
 	if(outputsql) {
 		if((pxh->px_filetype != pxfFileTypIndexDB) && 
 		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
@@ -1071,16 +1310,10 @@ int main(int argc, char *argv[]) {
 
 		/* check if existing table shall be delete */
 		if(deletetable) {
-			if(tablename)
-				fprintf(outfp, "DELETE TABLE %s;\n", tablename);
-			else
-				fprintf(outfp, "DELETE TABLE %s;\n", pxh->px_tablename);
+			fprintf(outfp, "DROP TABLE %s;\n", tablename);
 		}
 		/* Output table schema */
-		if(tablename)
-			fprintf(outfp, "CREATE TABLE %s (\n", tablename);
-		else
-			fprintf(outfp, "CREATE TABLE %s (\n", pxh->px_tablename);
+		fprintf(outfp, "CREATE TABLE %s (\n", tablename);
 		first = 0;  // set to 1 when first field has been output
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
@@ -1166,7 +1399,17 @@ int main(int argc, char *argv[]) {
 			}
 			pxf++;
 		}
-		fprintf(outfp, "\n);\n\n");
+		fprintf(outfp, "\n);\n");
+
+		/* Create the indexes */
+		pxf = pxh->px_fields;
+		for(i=0; i<pxh->px_primarykeyfields; i++) {
+			if(fieldregex == NULL ||  selectedfields[i]) {
+				strrep(pxf->px_fname, ' ', '_');
+				fprintf(outfp, "CREATE INDEX %s_%s_index on %s (%s);\n", tablename, pxf->px_fname, tablename, pxf->px_fname);
+			}
+			pxf++;
+		}
 
 		/* Only output data if we have at least one record */
 		if(pxh->px_numrecords > 0) {
@@ -1177,10 +1420,7 @@ int main(int argc, char *argv[]) {
 				exit(1);
 			}
 
-			if(tablename)
-				fprintf(outfp, "COPY %s (", tablename);
-			else
-				fprintf(outfp, "COPY %s (", pxh->px_tablename);
+			fprintf(outfp, "COPY %s (", tablename);
 			first = 0;  // set to 1 when first field has been output
 			pxf = pxh->px_fields;
 			/* output field name */
@@ -1336,7 +1576,10 @@ int main(int argc, char *argv[]) {
 			px_free(pxdoc, data);
 		}
 	}
+	/* }}} */
 
+	/* Output debug {{{
+	 */
 	if(outputdebug) {
 		int numrecords;
 		int isdeleted, presetdeleted;
@@ -1399,7 +1642,10 @@ int main(int argc, char *argv[]) {
 		}
 		px_free(pxdoc, data);
 	}
+	/* }}} */
 
+	/* Free resources and close files {{{
+	 */
 	if(selectedfields)
 		px_free(pxdoc, selectedfields);
 
@@ -1416,6 +1662,7 @@ int main(int argc, char *argv[]) {
 		gsf_shutdown();
 	}
 #endif
+	/* }}} */
 
 	exit(0);
 }
