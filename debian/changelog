@@ -1,6 +1,7 @@
 pxview (0.0.7-1) unstable; urgency=low
 
   * New maintainers version.
+  * added symlinks px2csv and px2sql -> pxview
 
  -- Uwe Steinmann <uwe@steinmann.cx>  Wed, 06 Aug 2003 19:00:01 +0200
 
