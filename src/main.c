@@ -1926,7 +1926,7 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, ",F,%d", pxf->px_flen);
 						break;
 					case pxfMemoBLOb:
-						fprintf(outfp, ",F,%d", pxf->px_flen);
+						fprintf(outfp, ",M,%d", pxf->px_flen);
 						break;
 					case pxfBytes:
 						fprintf(outfp, ",Y,%d", pxf->px_flen);
