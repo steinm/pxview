@@ -1130,12 +1130,12 @@ int main(int argc, char *argv[]) {
 				case pxfGraphic:
 					break;
 				case pxfTime:
-					fprintf(outfp, "ATime,11,00,%d\n", sumlen);
-					sumlen += 11;
+					fprintf(outfp, "Time,10,00,%d\n", sumlen);
+					sumlen += 10;
 					break;
 				case pxfTimestamp:
-					fprintf(outfp, "ATimestamp,11,00,%d\n", sumlen);
-					sumlen += 11;
+					fprintf(outfp, "Timestamp,30,00,%d\n", sumlen);
+					sumlen += 30;
 					break;
 				case pxfBCD:
 					/* Paradox uses only 20 digits though bcd fields can be 34 */
@@ -1364,12 +1364,26 @@ int main(int argc, char *argv[]) {
 								break;
 								}
 							case pxfAutoInc:
-							case pxfTimestamp:
 							case pxfLong: {
 								long value;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%ld", value);
 								}
+								first = 1;
+								break;
+								}
+							case pxfTimestamp: {
+								double value;
+								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									int days;
+									int year, month, day, secs;
+									value = value / 1000.0;
+									days = (int) (value / 86400);
+									secs = ((long long) value) % 86400;
+									PX_SdnToGregorian(days+1721425, &year, &month, &day);
+									fprintf(outfp, "%02d:%02d:%02d, ", secs/3600, secs/60%60, secs%60);
+									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+								} 
 								first = 1;
 								break;
 								}
@@ -1385,7 +1399,7 @@ int main(int argc, char *argv[]) {
 							case pxfNumber: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%g", value);
+									fprintf(outfp, "%lf", value);
 								} 
 								first = 1;
 								break;
@@ -1699,11 +1713,26 @@ int main(int argc, char *argv[]) {
 									break;
 								}
 								case pxfAutoInc:
-								case pxfTimestamp:
 								case pxfLong: {
 									long value;
 									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										str_buffer_print(pxdoc, sbuf, "%ld", value);
+									} else {
+										str_buffer_print(pxdoc, sbuf, "NULL");
+									}
+									first = 1;
+									break;
+								}
+								case pxfTimestamp: {
+									double value;
+									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										int year, month, day, secs, days;
+										value = value / 1000.0;
+										days = (int) (value / 86400);
+										secs = ((long long) value) % 86400;
+										PX_SdnToGregorian(days+1721425, &year, &month, &day);
+										str_buffer_print(pxdoc, sbuf, "%04d-%02d-%02d ", year, month, day);
+										str_buffer_print(pxdoc, sbuf, "%02d:%02d:%02d", secs/3600, secs/60%60, secs%60);
 									} else {
 										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
@@ -1990,6 +2019,19 @@ int main(int argc, char *argv[]) {
 								} 
 								break;
 							} 
+							case pxfTimestamp: {
+								double value;
+								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									int year, month, day, secs, days;
+									value = value / 1000.0;
+									days = (int) (value / 86400);
+									secs = ((long long) value) % 86400;
+									PX_SdnToGregorian(days+1721425, &year, &month, &day);
+									fprintf(outfp, "%04d-%02d-%02d ", year, month, day);
+									fprintf(outfp, "%02d:%02d:%02d", secs/3600, secs/60%60, secs%60);
+								} 
+								break;
+							} 
 							case pxfLogical: {
 								char value;
 								if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
@@ -2246,11 +2288,26 @@ int main(int argc, char *argv[]) {
 										break;
 									}
 									case pxfAutoInc:
-									case pxfTimestamp:
 									case pxfLong: {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 											fprintf(outfp, "%ld", value);
+										} else {
+											fprintf(outfp, "\\N");
+										}
+										first = 1;
+										break;
+									}
+									case pxfTimestamp: {
+										double value;
+										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											int year, month, day, secs, days;
+											value = value / 1000.0;
+											days = (int) (value / 86400);
+											secs = ((long long) value) % 86400;
+											PX_SdnToGregorian(days+1721425, &year, &month, &day);
+											fprintf(outfp, "%04d-%02d-%02d ", year, month, day);
+											fprintf(outfp, "%02d:%02d:%02d", secs/3600, secs/60%60, secs%60);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -2463,11 +2520,26 @@ int main(int argc, char *argv[]) {
 										break;
 									}
 									case pxfAutoInc:
-									case pxfTimestamp:
 									case pxfLong: {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 											fprintf(outfp, "%ld", value);
+										} else {
+											fprintf(outfp, "NULL");
+										}
+										first = 1;
+										break;
+									}
+									case pxfTimestamp: {
+										double value;
+										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+											int year, month, day, secs, days;
+											value = value / 1000.0;
+											days = (int) (value / 86400);
+											secs = ((long long) value) % 86400;
+											PX_SdnToGregorian(days+1721425, &year, &month, &day);
+											fprintf(outfp, "'%04d-%02d-%02d ", year, month, day);
+											fprintf(outfp, "%02d:%02d:%02d'", secs/3600, secs/60%60, secs%60);
 										} else {
 											fprintf(outfp, "NULL");
 										}
