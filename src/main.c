@@ -1381,7 +1381,7 @@ int main(int argc, char *argv[]) {
 //									fprintf(outfp, "%d ", days);
 									secs = ((long long) value) % 86400;
 									PX_SdnToGregorian(days+1721425, &year, &month, &day);
-									fprintf(outfp, "%02d:%02d:%02d, ", secs/3600, secs/60%60, secs%60);
+									fprintf(outfp, "%02d:%02d:%02d ", secs/3600, secs/60%60, secs%60);
 									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
 								} 
 								first = 1;
