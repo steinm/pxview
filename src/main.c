@@ -423,6 +423,8 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, _("Header size:             %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
 		fprintf(outfp, _("Max. Table size:         %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
 		fprintf(outfp, _("Num. of Data Blocks:     %d\n"), pxh->px_fileblocks);
+		fprintf(outfp, _("Num. of 1st Data Block:  %d\n"), pxh->px_firstblock);
+		fprintf(outfp, _("Num. of last Data Block: %d\n"), pxh->px_lastblock);
 		if((pxh->px_filetype == pxfFileTypNonIncSecIndex) ||
 		   (pxh->px_filetype == pxfFileTypIncSecIndex)) {
 			fprintf(outfp, _("Num. of Index Field:     %d\n"), pxh->px_indexfieldnumber);
@@ -655,8 +657,9 @@ int main(int argc, char *argv[]) {
 		for(j=0; j<numrecords; j++) {
 			int offset;
 			int ret;
+			pxdatablockinfo_t pxdbinfo;
 			isdeleted = presetdeleted;
-			ret = PX_get_record2(pxdoc, j, data, &isdeleted, NULL);
+			ret = PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo);
 			if(ret) {
 				pxf = pxh->px_fields;
 				offset = 0;
@@ -791,6 +794,8 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, "%c", delimiter);
 						fprintf(outfp, "%d", value);
 					}
+					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%d", pxdbinfo.number);
 				}
 				if(markdeleted) {
 					fprintf(outfp, "%c", delimiter);
