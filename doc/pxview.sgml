@@ -86,6 +86,7 @@ manpage.1: manpage.sgml
       <arg><option>--delete-table <replaceable></replaceable></option></arg>
       <arg><option>--skip-schema <replaceable></replaceable></option></arg>
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
+      <arg><option>--short-insert <replaceable></replaceable></option></arg>
       <arg><option>--output-deleted <replaceable></replaceable></option></arg>
       <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
@@ -365,6 +366,22 @@ manpage.1: manpage.sgml
 					 default INSERT. Using COPY is usually faster when the data is
 					 imported into a database, but less supported
 					 by databases. This option only affects sql output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--short-insert</option>
+        </term>
+        <listitem>
+          <para>Use a short version of INSERT statements in the sql output.
+					 This will skip the list of field names which are being affected
+					 by the insert statement,
+					 but uses a form like 'insert into tablename values (...)'.
+					 Such statements will only work if the table has the same number
+					 of fields in the same sequence as the INSERT statement lists the
+					 field values. This option will mostly not be appropriate if you
+					 want to extract some fields from a larger table (--fields) and
+					 populate an existing sql table whose schema is not identical to
+					 the paradox file.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
