@@ -83,6 +83,8 @@ manpage.1: manpage.sgml
       <arg><option>--fields=REGEX <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
       <arg><option>--delete-tablename <replaceable></replaceable></option></arg>
+      <arg><option>--output-deleted <replaceable></replaceable></option></arg>
+      <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -399,7 +401,7 @@ manpage.1: manpage.sgml
   <refsect1>
     <title>SEE ALSO</title>
 
-    <para>recode(1), iconv(1)</para>
+    <para>pxwrite(1), recode(1), iconv(1)</para>
 
   </refsect1>
   <refsect1>
