@@ -908,7 +908,7 @@ int main(int argc, char *argv[]) {
 						switch(pxf->px_ftype) {
 							case pxfAlpha: {
 								char *value;
-								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									if(enclosure && strchr(value, delimiter))
 										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
 									else
@@ -921,7 +921,7 @@ int main(int argc, char *argv[]) {
 							case pxfDate: {
 								long value;
 								int year, month, day;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									PX_SdnToGregorian(value+1721425, &year, &month, &day);
 									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
 								}
@@ -930,7 +930,7 @@ int main(int argc, char *argv[]) {
 								}
 							case pxfShort: {
 								short int value;
-								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%d", value);
 								}
 								first = 1;
@@ -940,7 +940,7 @@ int main(int argc, char *argv[]) {
 							case pxfTimestamp:
 							case pxfLong: {
 								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%ld", value);
 								}
 								first = 1;
@@ -948,7 +948,7 @@ int main(int argc, char *argv[]) {
 								}
 							case pxfTime: {
 								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								}
 								first = 1;
@@ -957,7 +957,7 @@ int main(int argc, char *argv[]) {
 							case pxfCurrency:
 							case pxfNumber: {
 								double value;
-								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%f", value);
 								} 
 								first = 1;
@@ -965,7 +965,7 @@ int main(int argc, char *argv[]) {
 								} 
 							case pxfLogical: {
 								char value;
-								if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									if(value)
 										fprintf(outfp, "1");
 									else
@@ -1028,18 +1028,18 @@ int main(int argc, char *argv[]) {
 				}
 				if(pxh->px_filetype == pxfFileTypPrimIndex) {
 					short int value;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "%c", delimiter);
 						fprintf(outfp, "%d", value);
 					}
 					offset += 2;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "%c", delimiter);
 						fprintf(outfp, "%d", value);
 						ireccounter += value;
 					}
 					offset += 2;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "%c", delimiter);
 						fprintf(outfp, "%d", value);
 					}
@@ -1266,7 +1266,7 @@ int main(int argc, char *argv[]) {
 							switch(pxf->px_ftype) {
 								case pxfAlpha: {
 									char *value;
-									if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "'%s'", value);
 										pxdoc->free(pxdoc, value);
 									} else {
@@ -1278,7 +1278,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfDate: {
 									long value;
-									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "%ld", value);
 									} else {
 										pbuffer(buffer, "NULL");
@@ -1288,7 +1288,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfShort: {
 									short int value;
-									if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "%d", value);
 									} else {
 										pbuffer(buffer, "NULL");
@@ -1300,7 +1300,7 @@ int main(int argc, char *argv[]) {
 								case pxfTimestamp:
 								case pxfLong: {
 									long value;
-									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "%ld", value);
 									} else {
 										pbuffer(buffer, "NULL");
@@ -1310,7 +1310,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfTime: {
 									long value;
-									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 									} else {
 										pbuffer(buffer, "NULL");
@@ -1321,7 +1321,7 @@ int main(int argc, char *argv[]) {
 								case pxfCurrency:
 								case pxfNumber: {
 									double value;
-									if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "%f", value);
 									} else {
 										pbuffer(buffer, "NULL");
@@ -1331,7 +1331,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfLogical: {
 									char value;
-									if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										if(value)
 											pbuffer(buffer, "TRUE");
 										else
@@ -1495,7 +1495,7 @@ int main(int argc, char *argv[]) {
 						switch(pxf->px_ftype) {
 							case pxfAlpha: {
 								char *value;
-								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%s", value);
 									pxdoc->free(pxdoc, value);
 								}
@@ -1504,7 +1504,7 @@ int main(int argc, char *argv[]) {
 							case pxfDate: {
 								long value;
 								int year, month, day;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									PX_SdnToGregorian(value+1721425, &year, &month, &day);
 									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
 								}
@@ -1512,7 +1512,7 @@ int main(int argc, char *argv[]) {
 								}
 							case pxfShort: {
 								short int value;
-								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%d", value);
 								}
 								break;
@@ -1520,14 +1520,14 @@ int main(int argc, char *argv[]) {
 							case pxfAutoInc:
 							case pxfLong: {
 								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%ld", value);
 								}
 								break;
 							}
 							case pxfTime: {
 								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								}
 								break;
@@ -1535,14 +1535,14 @@ int main(int argc, char *argv[]) {
 							case pxfCurrency:
 							case pxfNumber: {
 								double value;
-								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%f", value);
 								} 
 								break;
 							} 
 							case pxfLogical: {
 								char value;
-								if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									if(value)
 										fprintf(outfp, "1");
 									else
@@ -1594,15 +1594,15 @@ int main(int argc, char *argv[]) {
 				}
 				if(pxh->px_filetype == pxfFileTypPrimIndex) {
 					short int value;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "  <td>%d</td>\n", value);
 					}
 					offset += 2;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "  <td>%d</td>\n", value);
 					}
 					offset += 2;
-					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "  <td>%d</td>\n", value);
 					}
 				}
@@ -1795,7 +1795,7 @@ int main(int argc, char *argv[]) {
 							switch(pxf->px_ftype) {
 								case pxfAlpha: {
 									char *value;
-									if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "%s", value);
 										pxdoc->free(pxdoc, value);
 									}
@@ -1805,7 +1805,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfDate: {
 									long value;
-									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "%ld", value);
 									} else {
 										fprintf(outfp, "\\N");
@@ -1815,7 +1815,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfShort: {
 									short int value;
-									if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "%d", value);
 									} else {
 										fprintf(outfp, "\\N");
@@ -1827,7 +1827,7 @@ int main(int argc, char *argv[]) {
 								case pxfTimestamp:
 								case pxfLong: {
 									long value;
-									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "%ld", value);
 									} else {
 										fprintf(outfp, "\\N");
@@ -1837,7 +1837,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfTime: {
 									long value;
-									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 									} else {
 										fprintf(outfp, "\\N");
@@ -1848,7 +1848,7 @@ int main(int argc, char *argv[]) {
 								case pxfCurrency:
 								case pxfNumber: {
 									double value;
-									if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "%f", value);
 									} else {
 										fprintf(outfp, "\\N");
@@ -1858,7 +1858,7 @@ int main(int argc, char *argv[]) {
 								}
 								case pxfLogical: {
 									char value;
-									if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(0 < PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										if(value)
 											fprintf(outfp, "TRUE");
 										else
