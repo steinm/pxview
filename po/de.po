@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-09-24 22:10+0200\n"
+"POT-Creation-Date: 2003-09-25 18:45+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -304,17 +304,17 @@ msgstr "Max. Tabellengröße:      %d (0x%X)\n"
 #: src/main.c:425
 #, c-format
 msgid "Num. of Data Blocks:     %d\n"
-msgstr "Anz. der Datenblöcke:     %d\n"
+msgstr "Anz. der Datenblöcke:    %d\n"
 
 #: src/main.c:428
 #, c-format
 msgid "Num. of Index Field:     %d\n"
-msgstr "Num. des Indexfeldes:     %d\n"
+msgstr "Num. des Indexfeldes:    %d\n"
 
 #: src/main.c:429
 #, c-format
 msgid "Sort order of Field:     %d\n"
-msgstr "Sortierung des Feldes:     %d\n"
+msgstr "Sortierung des Feldes:   %d\n"
 
 #: src/main.c:433
 #, c-format
