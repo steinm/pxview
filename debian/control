@@ -2,12 +2,12 @@ Source: pxview
 Section: misc 
 Priority: optional
 Maintainer: Uwe Steinmann <uwe@steinmann.cx>
-Build-Depends: debhelper (>> 4.0.0)
-Standards-Version: 3.5.8
+Build-Depends: debhelper (>> 4.0.0), pxlib-dev (>= 0.1.2)
+Standards-Version: 3.6.1
 
 Package: pxview
 Architecture: any
-Depends: ${shlibs:Depends} ${misc:Depends}
+Depends: ${shlibs:Depends}
 Description: Display information about Paradox files
  Displays information about various Paradox files (mostly
  DB files). It can also dump the data in CSV and SQL format.
