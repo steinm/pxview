@@ -4,3 +4,4 @@ Version 0.0.4
 	- added option --deletetable
 	- updated manual page
 	- calling pxview as px2sql or px2csv will set the appropriate options
+	- moved data conversion routines to pxlib
