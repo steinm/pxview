@@ -71,6 +71,7 @@ manpage.1: manpage.sgml
       <arg><option>-r ENCODING | --recode=ENCODING <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
       <arg><option>--delete-table <replaceable></replaceable></option></arg>
+      <arg><option>--skip-schema <replaceable></replaceable></option></arg>
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
