@@ -696,6 +696,10 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
 			fprintf(outfp, _("Next auto inc. value:    %d\n"), pxh->px_autoinc);
 		}
+		if(pxh->px_filetype == pxfFileTypPrimIndex) {
+			fprintf(outfp, _("Root index block number:  %d\n"), pxh->px_indexroot);
+			fprintf(outfp, _("Num. of index levels:     %d\n"), pxh->px_numindexlevels);
+		}
 		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
 		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
 		localtime_r((time_t *) &(pxh->px_fileupdatetime), &time_tm);
@@ -1123,6 +1127,41 @@ int main(int argc, char *argv[]) {
 								break;
 								}
 							case pxfGraphic:
+								if(pxblob) {
+									char *blobdata;
+									char filename[200];
+									FILE *fp;
+									size_t size, boffset, mod_nr;
+									size = get_long_le(&data[offset+9]);
+									boffset = get_long_le(&data[offset+5]) & 0xffffff00;
+									mod_nr = get_short_le(&data[offset+13]);
+									fprintf(outfp, "offset=%ld ", boffset);
+									fprintf(outfp, "size=%ld ", size);
+									fprintf(outfp, "mod_nr=%d ", mod_nr);
+									if(size > 0) {
+										blobdata = PX_read_blobdata(pxblob, boffset, size);
+										if(blobdata) {
+											sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+											fp = fopen(filename, "w");
+											if(fp) {
+												fwrite(blobdata, size, 1, fp);
+												fclose(fp);
+											} else {
+												fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+											}
+										} else {
+											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+										}
+									}
+
+								} else {
+									fprintf(outfp, "offset=%ld ", get_long_le(&data[offset+5]) & 0xffffff00);
+									fprintf(outfp, "size=%ld ", get_long_le(&data[offset+9]));
+									fprintf(outfp, "mod_nr=%d ", get_short_le(&data[offset+13]));
+									hex_dump(outfp, &data[offset], pxf->px_flen);
+								}
+								first = 1;
+								break;
 							case pxfBLOb:
 							case pxfFmtMemoBLOb:
 							case pxfOLE:
@@ -1137,18 +1176,20 @@ int main(int argc, char *argv[]) {
 									fprintf(outfp, "offset=%ld ", boffset);
 									fprintf(outfp, "size=%ld ", size);
 									fprintf(outfp, "mod_nr=%d ", mod_nr);
-									blobdata = PX_read_blobdata(pxblob, boffset, size);
-									if(blobdata) {
-										sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
-										fp = fopen(filename, "w");
-										if(fp) {
-											fwrite(blobdata, size, 1, fp);
-											fclose(fp);
+									if(size > 0) {
+										blobdata = PX_read_blobdata(pxblob, boffset, size);
+										if(blobdata) {
+											sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+											fp = fopen(filename, "w");
+											if(fp) {
+												fwrite(blobdata, size, 1, fp);
+												fclose(fp);
+											} else {
+												fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+											}
 										} else {
-											fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
 										}
-									} else {
-										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
 									}
 
 								} else {
