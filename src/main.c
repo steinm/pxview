@@ -8,6 +8,10 @@
 #define _(String) gettext(String)
 
 void usage(char *progname) {
+	printf(_("Version: %s %s http://sourceforge.net/projects/pxlib"), progname, VERSION);
+	printf("\n");
+	printf(_("Copyright: Copyright (C) 2003 Uwe Steinmann <uwe@steinmann.cx>"));
+	printf("\n\n");
 	printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV format.\n\n"), progname);
 	printf(_("Usage: %s [OPTIONS] [PARADOX FILE]"), progname);
 	printf("\n\n");
@@ -21,13 +25,17 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  -s, --sql           dump records in SQL format."));
 	printf("\n");
-	printf(_("  -o, --output=FILE   output dump into file instead of stdout."));
+	printf(_("  -t, --shema         output schema of database."));
+	printf("\n");
+	printf(_("  -o, --output=FILE   output data into file instead of stdout."));
 	printf("\n");
 	printf(_("  -f, --file=FILE     read input data from file."));
 	printf("\n");
 	printf(_("  -b, --blobfile=FILE read blob data from file."));
 	printf("\n");
-	printf(_("  -p, --blobprefix=FILE prefix for all created files with blob data."));
+	printf(_("  -p, --blobprefix=PREFIX prefix for all created files with blob data."));
+	printf("\n\n");
+	printf(_("If you do not specify any of the options -i, -c, -s, or -t\nthen -i will be used."));
 	printf("\n");
 }
 
@@ -39,8 +47,9 @@ int main(int argc, char *argv[]) {
 	char *data, buffer[1000];
 	int i, j, c;
 	int outputcsv = 0;
-	int outputinfo = 1;
+	int outputinfo = 0;
 	int outputsql = 0;
+	int outputschema = 0;
 	char delimiter = ';';
 	char enclosure = '"';
 	char *inputfile = NULL;
@@ -61,13 +70,14 @@ int main(int argc, char *argv[]) {
 			{"csv", 0, 0, 'c'},
 			{"sql", 0, 0, 's'},
 			{"file", 1, 0, 'f'},
+			{"schema", 0, 0, 't'},
 			{"blobfile", 1, 0, 'b'},
 			{"blobprefix", 1, 0, 'p'},
 			{"output", 1, 0, 'o'},
 			{"help", 0, 0, 'h'},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icsf:b:p:o:h",
+		c = getopt_long (argc, argv, "icstf:b:p:o:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -78,6 +88,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'f':
 				inputfile = strdup(optarg);
+				break;
+			case 't':
+				outputschema = 1;
 				break;
 			case 'b':
 				blobfile = strdup(optarg);
@@ -92,14 +105,17 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'c':
 				outputcsv = 1;
-				outputinfo = 0;
 				break;
 			case 's':
 				outputsql = 1;
-				outputinfo = 0;
 				break;
 		}
 	}
+
+	/* if none the output modes is selected then display info */
+	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0)
+		outputinfo = 1;
+
 	if (optind < argc) {
 		inputfile = strdup(argv[optind]);
 	}
@@ -227,16 +243,100 @@ int main(int argc, char *argv[]) {
 					printf("timestamp(%d)\n", pxf->px_flen);
 					break;
 				case pxfAutoInc:
-					printf("timestamp(%d)\n", pxf->px_flen);
+					printf("autoinc(%d)\n", pxf->px_flen);
 					break;
 				case pxfBCD:
-					printf("timestamp(%d)\n", pxf->px_flen);
+					printf("decimal(17,%d)\n", pxf->px_flen);
 					break;
 				case pxfBytes:
-					printf("timestamp(%d)\n", pxf->px_flen);
+					printf("bytes(%d)\n", pxf->px_flen);
 					break;
 				default:
 					printf("%c(%d)\n", pxf->px_ftype, pxf->px_flen);
+			}
+			pxf++;
+		}
+	}
+
+	if(outputschema) {
+		int sumlen = 0;
+		printf("[%s]\n", pxh->px_tablename);
+		printf("Filetype=Delimited\n");
+		printf("Delimiter=%c\n", enclosure);
+		printf("Separator=%c\n", delimiter);
+		printf("CharSet=ANSIINTL\n");
+		pxf = pxh->px_fields;
+		for(i=0; i<pxh->px_numfields; i++) {
+			switch(pxf->px_ftype) {
+				case pxfAlpha:
+				case pxfDate:
+				case pxfShort:
+				case pxfLong:
+				case pxfCurrency:
+				case pxfNumber:
+				case pxfLogical:
+				case pxfTime:
+				case pxfTimestamp:
+				case pxfBCD:
+				case pxfBytes:
+					printf("Field%d=", i+1);
+					printf("%s,", pxf->px_fname);
+					break;
+			}
+			switch(pxf->px_ftype) {
+				case pxfAlpha:
+					printf("Char,%d,00,%d\n", pxf->px_flen, sumlen);
+					sumlen += pxf->px_flen;
+					break;
+				case pxfDate:
+					printf("ADate,11,00,%d\n", sumlen);
+					sumlen += 11;
+					break;
+				case pxfShort:
+					printf("Short Integer,11,00,%d\n", sumlen);
+					sumlen += 11;
+					break;
+				case pxfLong:
+					printf("Long Integer,11,00,%d\n", sumlen);
+					sumlen += 11;
+					break;
+				case pxfCurrency:
+					printf("Currency,20,02,%d\n", sumlen);
+					sumlen += 20;
+					break;
+				case pxfNumber:
+					printf("Float,20,02,%d\n", sumlen);
+					sumlen += 20;
+					break;
+				case pxfLogical:
+					printf("Boolean,%d,00,%d\n", pxf->px_flen, sumlen);
+					sumlen += pxf->px_flen;
+					break;
+				case pxfMemoBLOb:
+				case pxfBLOb:
+				case pxfFmtMemoBLOb:
+				case pxfOLE:
+				case pxfGraphic:
+				case pxfAutoInc:
+					break;
+				case pxfTime:
+					printf("ATime,11,00,%d\n", sumlen);
+					sumlen += 11;
+					break;
+				case pxfTimestamp:
+					printf("ATimestamp;,11,00,%d\n", sumlen);
+					sumlen += 11;
+					break;
+				case pxfBCD:
+					printf("Float,17,%d,%d\n", pxf->px_flen, sumlen);
+					sumlen += 17;
+					break;
+				case pxfBytes:
+					printf("Char,%d,00,%d\n", pxf->px_flen, sumlen);
+					sumlen += pxf->px_flen;
+					break;
+				default:
+					break;
 			}
 			pxf++;
 		}
