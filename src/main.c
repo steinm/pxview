@@ -436,7 +436,7 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
 		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
 		localtime_r((time_t *) &(pxh->px_fileupdatetime), &time_tm);
-		fprintf(outfp, _("Update time:             %d.%d.%d (%d)\n"), time_tm.tm_mday, time_tm.tm_mon, time_tm.tm_year+1900, pxh->px_fileupdatetime);
+		fprintf(outfp, _("Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"), time_tm.tm_mday, time_tm.tm_mon+1, time_tm.tm_year+1900, time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, pxh->px_fileupdatetime);
 		if(verbose) {
 			fprintf(outfp, _("Record size:             %d (0x%X)\n"), pxh->px_recordsize, pxh->px_recordsize);
 			fprintf(outfp, _("Sort order:              %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
