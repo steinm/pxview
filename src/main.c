@@ -82,10 +82,10 @@ void usage(char *progname) {
 	recode = PX_has_recode_support();
 	switch(recode) {
 		case 1:
-			printf(_("libpx uses iconv for recoding."));
+			printf(_("libpx uses librecode for recoding."));
 			break;
 		case 2:
-			printf(_("libpx uses librecode for recoding."));
+			printf(_("libpx uses iconv for recoding."));
 			break;
 		case 0:
 			printf(_("libpx has no support for recoding."));
@@ -606,9 +606,9 @@ int main(int argc, char *argv[]) {
 									char filename[200];
 									FILE *fp;
 									size_t size, boffset, mod_nr;
-									size = get_long(&data[offset+4]);
-									boffset = get_long(&data[offset]) & 0xffffff00;
-									mod_nr = get_short(&data[offset+8]);
+									size = get_long_be(&data[offset+4]);
+									boffset = get_long_be(&data[offset]) & 0xffffff00;
+									mod_nr = get_short_be(&data[offset+8]);
 									fprintf(outfp, "offset=%ld ", boffset);
 									fprintf(outfp, "size=%ld ", size);
 									fprintf(outfp, "mod_nr=%d ", mod_nr);
@@ -627,9 +627,9 @@ int main(int argc, char *argv[]) {
 									}
 
 								} else {
-									fprintf(outfp, "offset=%ld ", get_long(&data[offset]) & 0xffffff00);
-									fprintf(outfp, "size=%ld ", get_long(&data[offset+4]));
-									fprintf(outfp, "mod_nr=%d ", get_short(&data[offset+8]));
+									fprintf(outfp, "offset=%ld ", get_long_be(&data[offset]) & 0xffffff00);
+									fprintf(outfp, "size=%ld ", get_long_be(&data[offset+4]));
+									fprintf(outfp, "mod_nr=%d ", get_short_be(&data[offset+8]));
 									hex_dump(outfp, &data[offset], pxf->px_flen);
 								}
 								first = 1;
@@ -957,3 +957,12 @@ int main(int argc, char *argv[]) {
 
 	exit(0);
 }
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: sw=4 ts=4 fdm=marker
+ * vim<600: sw=4 ts=4
+ */
