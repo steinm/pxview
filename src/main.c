@@ -1416,7 +1416,10 @@ int main(int argc, char *argv[]) {
 													fputc(blobdata[i], outfp);
 												}
 											} else {
-												sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+												if(blobprefix)
+													sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+												else
+													sprintf(filename, "%d.blob", mod_nr);
 												fp = fopen(filename, "w");
 												if(fp) {
 													fwrite(blobdata, size, 1, fp);
@@ -1769,7 +1772,10 @@ int main(int argc, char *argv[]) {
 															str_buffer_print(pxdoc, sbuf, "%c", blobdata[i]);
 														}
 													} else {
-														sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+														if(blobprefix)
+															sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+														else
+															sprintf(filename, "%d.blob", mod_nr);
 														fp = fopen(filename, "w");
 														if(fp) {
 															fwrite(blobdata, size, 1, fp);
@@ -2025,7 +2031,10 @@ int main(int argc, char *argv[]) {
 													fputc(blobdata[i], outfp);
 												}
 											} else {
-												sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+												if(blobprefix)
+													sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+												else
+													sprintf(filename, "%d.blob", mod_nr);
 												fp = fopen(filename, "w");
 												if(fp) {
 													fwrite(blobdata, size, 1, fp);
@@ -2334,7 +2343,10 @@ int main(int argc, char *argv[]) {
 																fputc(blobdata[i], outfp);
 															}
 														} else {
-															sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+															if(blobprefix)
+																sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+															else
+																sprintf(filename, "%d.blob", mod_nr);
 															fp = fopen(filename, "w");
 															if(fp) {
 																fwrite(blobdata, size, 1, fp);
@@ -2564,7 +2576,10 @@ int main(int argc, char *argv[]) {
 																fputc(blobdata[i], outfp);
 															}
 														} else {
-															sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+															if(blobprefix)
+																sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+															else
+																sprintf(filename, "%d.blob", mod_nr);
 															fp = fopen(filename, "w");
 															if(fp) {
 																fwrite(blobdata, size, 1, fp);
