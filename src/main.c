@@ -502,13 +502,16 @@ int main(int argc, char *argv[]) {
 									fprintf(outfp, "%s", buffer);
 								first = 1;
 								break;
-							case pxfDate:
-								if(data[offset] & 0x80) {
-									data[offset] &= 0x7f;
-									fprintf(outfp, "%d", *((long int *)(&data[offset])));
+							case pxfDate: {
+								long value;
+								int year, month, day;
+								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+									PX_SdnToGregorian(value+1721425, &year, &month, &day);
+									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
 								}
 								first = 1;
 								break;
+								}
 							case pxfShort: {
 								short int value;
 								if(PX_get_data_short(&data[offset], pxf->px_flen, &value)) {
@@ -583,7 +586,7 @@ int main(int argc, char *argv[]) {
 									fprintf(outfp, "offset=%ld ", get_long(&data[offset]) & 0xffffff00);
 									fprintf(outfp, "size=%ld ", get_long(&data[offset+4]));
 									fprintf(outfp, "mod_nr=%d ", get_short(&data[offset+8]));
-									hex_dump(&data[offset], pxf->px_flen);
+									hex_dump(outfp, &data[offset], pxf->px_flen);
 								}
 								first = 1;
 								break;
@@ -760,18 +763,16 @@ int main(int argc, char *argv[]) {
 								fprintf(outfp, "%s", buffer);
 								first = 1;
 								break;
-							case pxfDate:
-								if(data[offset] & 0x80) {
-									data[offset] &= 0x7f;
-									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
-								} else if(*((long int *)(&data[offset])) != 0) {
-									data[offset] |= 0x80;
-									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
+							case pxfDate: {
+								long value;
+								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%ld", value);
 								} else {
 									fprintf(outfp, "\\N");
 								}
 								first = 1;
 								break;
+							}
 							case pxfShort: {
 								short int value;
 								if(PX_get_data_short(&data[offset], pxf->px_flen, &value)) {
@@ -781,7 +782,7 @@ int main(int argc, char *argv[]) {
 								}
 								first = 1;
 								break;
-								}
+							}
 							case pxfAutoInc:
 							case pxfLong: {
 								long value;
@@ -792,7 +793,7 @@ int main(int argc, char *argv[]) {
 								}
 								first = 1;
 								break;
-								}
+							}
 							case pxfTime: {
 								long value;
 								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
@@ -868,7 +869,7 @@ int main(int argc, char *argv[]) {
 				for(i=0; i<pxh->px_numfields; i++) {
 					if(fieldregex == NULL || selectedfields[i]) {
 						fprintf(outfp, "%s: ", pxf->px_fname);
-						hex_dump(&data[offset], pxf->px_flen);
+						hex_dump(outfp, &data[offset], pxf->px_flen);
 						fprintf(outfp, "\n");
 					}
 					offset += pxf->px_flen;
