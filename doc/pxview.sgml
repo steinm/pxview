@@ -68,6 +68,7 @@ manpage.1: manpage.sgml
       <arg><option>-i | --info <replaceable></replaceable></option></arg>
       <arg><option>-c | --csv <replaceable></replaceable></option></arg>
       <arg><option>-s | --sql <replaceable></replaceable></option></arg>
+      <arg><option>-x | --html <replaceable></replaceable></option></arg>
       <arg><option>-t | --schema <replaceable></replaceable></option></arg>
       <arg><option>-v | --verbose <replaceable></replaceable></option></arg>
       <arg><option>--mode=MODE <replaceable></replaceable></option></arg>
@@ -185,12 +186,22 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-x</option>
+          <option>--html</option>
+        </term>
+        <listitem>
+          <para>Dump data records in HTML table format. This
+						option is the short form for --mode=html.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>--mode=MODE</option>
         </term>
         <listitem>
           <para>Sets the ouput mode. This options provides a different way
 					 to set the output format. --mode=sql is equivalent to --sql,
-					 --mode=csv to --csv, and --mode=schema to --schema.</para>
+					 --mode=csv to --csv, --mode=html to --html and --mode=schema
+					 to --schema.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -270,10 +281,10 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>This option allows to select certain fields by specifying
-					 an extended regular expression. It will only effect the csv and
-					 sql output. "field1|field23$" will select all fields whose name
+					 an extended regular expression. It will only effect the csv, html
+					 and sql output. "field1|field23$" will select all fields whose name
 					 contains "field1" or end in "field23". If this option is not used
-					 als fields will be shown.</para>
+					 als fields will be shown. The field name is case insensitive.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -313,21 +324,21 @@ manpage.1: manpage.sgml
 		<para>if you pass two or more options to set the output format then
 		 each format
 		 will be output one after the other starting with csv followed by
-		 sql.</para>
+		 html and finally sql.</para>
 		<para>The default field separator if exporting csv format is a tabulator.
 		 Fields will be enclosed in ".</para>
   </refsect1>
   <refsect1>
     <title>SEE ALSO</title>
 
-    <para>recode(1)</para>
+    <para>recode(1), iconv(1)</para>
 
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>
 
-    <para>This manual page was written by &dhusername; &lt;&dhemail;&gt; for
-      the &debian; system (but may be used by others).  Permission is
+    <para>This manual page was written by &dhusername; &lt;&dhemail;&gt;.
+      Permission is
       granted to copy, distribute and/or modify this document under
       the terms of the &gnu; Free Documentation
       License, Version 1.1 or any later version published by the Free
