@@ -143,18 +143,10 @@ dnl
 dnl Extra flags
 dnl
 
-AC_ARG_WITH(debug, [  --with-debug            Add the debugging module (on)])
-if test "$with_debug" = "no" ; then
-    echo Disabling DEBUG support
-    WITH_DEBUG=0
-    DEBUG_OBJ=
-else    
-    WITH_DEBUG=1
-    DEBUG_OBJ=debugPX.o
+AC_ARG_WITH(memory-debug, [  --with-memory-debug     Adds extra code for memory debugging])
+if test "x$with_memory_debug" = "xyes" ; then
+	AC_DEFINE(MEMORY_DEBUGGING, 1, [Define if you want memory debugging.])
 fi
-
-AC_SUBST(WITH_DEBUG)
-AC_SUBST(DEBUG_OBJ)
 
 AC_SUBST(PX_LIBDIR)
 AC_SUBST(PX_LIBS)

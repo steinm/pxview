@@ -14,6 +14,11 @@
 #else
 #include <paradox.h>
 #endif
+
+#ifdef MEMORY_DEBUGGING
+#include <paradox-mp.h>
+#endif
+
 #ifdef HAVE_SQLITE
 #include <sqlite.h>
 #endif
@@ -221,6 +226,10 @@ int main(int argc, char *argv[]) {
 	char *tablename = NULL;
 	char *targetencoding = NULL;
 	FILE *outfp = NULL;
+
+#ifdef MEMORY_DEBUGGING
+	PX_mp_init();
+#endif
 
 #ifdef ENABLE_NLS
 	setlocale (LC_ALL, "");
@@ -438,7 +447,11 @@ int main(int argc, char *argv[]) {
 
 	/* Open input file {{{
 	 */
+#ifdef MEMORY_DEBUGGING
+	if(NULL == (pxdoc = PX_new2(errorhandler, PX_mp_malloc, PX_mp_realloc, PX_mp_free))) {
+#else
 	if(NULL == (pxdoc = PX_new2(errorhandler, NULL, NULL, NULL))) {
+#endif
 		fprintf(stderr, _("Could not create new paradox instance."));
 		fprintf(stderr, "\n");
 		exit(1);
@@ -865,7 +878,7 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, "\n");
 
 		/* Allocate memory for record */
-		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -900,6 +913,7 @@ int main(int argc, char *argv[]) {
 										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
 									else
 										fprintf(outfp, "%s", value);
+									pxdoc->free(pxdoc, value);
 								}
 								first = 1;
 								break;
@@ -1254,6 +1268,7 @@ int main(int argc, char *argv[]) {
 									char *value;
 									if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										pbuffer(buffer, "'%s'", value);
+										pxdoc->free(pxdoc, value);
 									} else {
 										pbuffer(buffer, "NULL");
 									}
@@ -1482,6 +1497,7 @@ int main(int argc, char *argv[]) {
 								char *value;
 								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%s", value);
+									pxdoc->free(pxdoc, value);
 								}
 								break;
 							}
@@ -1781,6 +1797,7 @@ int main(int argc, char *argv[]) {
 									char *value;
 									if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										fprintf(outfp, "%s", value);
+										pxdoc->free(pxdoc, value);
 									}
 									first = 1;
 
@@ -1970,6 +1987,10 @@ int main(int argc, char *argv[]) {
 	}
 #endif
 	/* }}} */
+
+#ifdef MEMORY_DEBUGGING
+	PX_mp_list_unfreed();
+#endif
 
 	exit(0);
 }
