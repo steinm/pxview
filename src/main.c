@@ -1242,7 +1242,7 @@ int main(int argc, char *argv[]) {
 							fprintf(outfp, ",F,%d", pxf->px_flen);
 							break;
 						case pxfMemoBLOb:
-							fprintf(outfp, ",F,%d", pxf->px_flen);
+							fprintf(outfp, ",M,%d", pxf->px_flen);
 							break;
 						case pxfBytes:
 							fprintf(outfp, ",Y,%d", pxf->px_flen);
@@ -1406,15 +1406,15 @@ int main(int argc, char *argv[]) {
 							case pxfFmtMemoBLOb:
 							case pxfMemoBLOb:
 							case pxfOLE:
-								if(pxblob) {
+								if(PX_has_blob_file(pxdoc)) {
 									char *blobdata;
 									char filename[200];
 									FILE *fp;
 									int mod_nr, size;
 									if(pxf->px_ftype == pxfGraphic)
-										blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+										PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 									else
-										blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+										PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 									if(size) {
 										if(blobdata) {
 											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
@@ -1438,7 +1438,7 @@ int main(int argc, char *argv[]) {
 										}
 									}
 									if(blobdata)
-										pxblob->pxdoc->free(pxblob->pxdoc, blobdata);
+										pxdoc->free(pxdoc, blobdata);
 
 								} else {
 									hex_dump(outfp, &data[offset], pxf->px_flen);
@@ -1599,7 +1599,7 @@ int main(int argc, char *argv[]) {
 						case pxfFmtMemoBLOb:
 						case pxfGraphic:
 						case pxfOLE:
-							if(pxblob) {
+							if(PX_has_blob_file(pxdoc)) {
 								str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
 								str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 								first = 1;
@@ -1757,15 +1757,15 @@ int main(int argc, char *argv[]) {
 								case pxfFmtMemoBLOb:
 								case pxfGraphic:
 								case pxfOLE:
-									if(pxblob) {
+									if(PX_has_blob_file(pxdoc)) {
 										char *blobdata;
 										char filename[200];
 										FILE *fp;
 										int mod_nr, size;
 										if(pxf->px_ftype == pxfGraphic)
-											blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+											PX_get_data_graphic(&data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 										else
-											blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+											PX_get_data_blob(&data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 										str_buffer_print(pxdoc, sbuf, "'");
 										if(size) {
 											if(blobdata) {
@@ -1794,7 +1794,7 @@ int main(int argc, char *argv[]) {
 										}
 										str_buffer_print(pxdoc, sbuf, "'");
 										if(blobdata)
-											pxblob->pxdoc->free(pxblob->pxdoc, blobdata);
+											pxdoc->free(pxdoc, blobdata);
 										first = 1;
 
 									} else {
@@ -2017,15 +2017,15 @@ int main(int argc, char *argv[]) {
 							case pxfFmtMemoBLOb:
 							case pxfMemoBLOb:
 							case pxfOLE:
-								if(pxblob) {
+								if(PX_has_blob_file(pxdoc)) {
 									char *blobdata;
 									char filename[200];
 									FILE *fp;
 									int mod_nr, size;
 									if(pxf->px_ftype == pxfGraphic)
-										blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+										PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 									else
-										blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+										PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 									if(size) {
 										if(blobdata) {
 											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
@@ -2049,7 +2049,7 @@ int main(int argc, char *argv[]) {
 										}
 									}
 									if(blobdata)
-										pxblob->pxdoc->free(pxblob->pxdoc, blobdata);
+										pxdoc->free(pxdoc, blobdata);
 
 								} else {
 									hex_dump(outfp, &data[offset], pxf->px_flen);
@@ -2150,7 +2150,7 @@ int main(int argc, char *argv[]) {
 						case pxfFmtMemoBLOb:
 						case pxfGraphic:
 						case pxfOLE:
-							if(pxblob) {
+							if(PX_has_blob_file(pxdoc)) {
 								fprintf(outfp, "  %s ", pxf->px_fname);
 								fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 								first = 1;
@@ -2216,7 +2216,7 @@ int main(int argc, char *argv[]) {
 							case pxfFmtMemoBLOb:
 							case pxfGraphic:
 							case pxfOLE:
-								if(pxblob) {
+								if(PX_has_blob_file(pxdoc)) {
 									fprintf(outfp, "%s", pxf->px_fname);
 									first = 1;
 								} else {
@@ -2328,15 +2328,15 @@ int main(int argc, char *argv[]) {
 									case pxfOLE:
 									case pxfMemoBLOb:
 									case pxfFmtMemoBLOb:
-										if(pxblob) {
+										if(PX_has_blob_file(pxdoc)) {
 											char *blobdata;
 											char filename[200];
 											FILE *fp;
 											int mod_nr, size;
 											if(pxf->px_ftype == pxfGraphic)
-												blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 											else
-												blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 											if(size) {
 												if(blobdata) {
 													if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
@@ -2360,7 +2360,7 @@ int main(int argc, char *argv[]) {
 												}
 											}
 											if(blobdata)
-												pxblob->pxdoc->free(pxblob->pxdoc, blobdata);
+												pxdoc->free(pxdoc, blobdata);
 											first = 1;
 
 										} else {
@@ -2435,7 +2435,7 @@ int main(int argc, char *argv[]) {
 								case pxfBLOb:
 								case pxfGraphic:
 								case pxfOLE:
-									if(pxblob) {
+									if(PX_has_blob_file(pxdoc)) {
 										str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
 										first = 1;
 									} else {
@@ -2556,15 +2556,15 @@ int main(int argc, char *argv[]) {
 									case pxfOLE:
 									case pxfMemoBLOb:
 									case pxfFmtMemoBLOb:
-										if(pxblob) {
+										if(PX_has_blob_file(pxdoc)) {
 											char *blobdata;
 											char filename[200];
 											FILE *fp;
 											int mod_nr, size;
 											if(pxf->px_ftype == pxfGraphic)
-												blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 											else
-												blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 											fputc('\'', outfp);
 											if(size) {
 												if(blobdata) {
@@ -2589,7 +2589,7 @@ int main(int argc, char *argv[]) {
 												}
 											}
 											if(blobdata)
-												pxblob->pxdoc->free(pxblob->pxdoc, blobdata);
+												pxdoc->free(pxdoc, blobdata);
 											fputc('\'', outfp);
 											first = 1;
 
@@ -2713,9 +2713,6 @@ int main(int argc, char *argv[]) {
 		PX_close(pindexdoc);
 		PX_delete(pindexdoc);
 	}
-
-	if(pxblob)
-		PX_delete_blob(pxblob);
 
 	PX_close(pxdoc);
 	PX_delete(pxdoc);
