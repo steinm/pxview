@@ -184,7 +184,7 @@ int str_buffer_printmask(pxdoc_t *pxdoc, struct str_buffer *sb, char *str, char 
 	/* Count occurences of c1 */
 	ptr = str;
 	while(*ptr != '\0') {
-		if(*ptr == c1)
+		if(*ptr++ == c1)
 			c++;
 	}
 
@@ -610,7 +610,8 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_SQLITE
 					outputsqlite = 1;
 #else
-					printf(_("No sqlite support available."));
+					fprintf(stderr, _("No sqlite support available."));
+					fprintf(stderr, "\n");
 					exit(1);
 #endif
 				} else if(!strcmp(optarg, "html")) {
@@ -970,8 +971,8 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, _("Next auto inc. value:    %d\n"), pxh->px_autoinc);
 		}
 		if(pxh->px_filetype == pxfFileTypPrimIndex) {
-			fprintf(outfp, _("Root index block number:  %d\n"), pxh->px_indexroot);
-			fprintf(outfp, _("Num. of index levels:     %d\n"), pxh->px_numindexlevels);
+			fprintf(outfp, _("Root index block number: %d\n"), pxh->px_indexroot);
+			fprintf(outfp, _("Num. of index levels:    %d\n"), pxh->px_numindexlevels);
 		}
 		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
 		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
@@ -1583,14 +1584,14 @@ int main(int argc, char *argv[]) {
 						case pxfLogical:
 						case pxfTime:
 						case pxfTimestamp:
-						case pxfBCD:
-							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
-							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
-							first = 1;
-							break;
 						case pxfBytes:
 							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
 							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
+							first = 1;
+							break;
+						case pxfBCD:
+							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
 							first = 1;
 							break;
 						case pxfMemoBLOb:
@@ -1846,7 +1847,7 @@ int main(int argc, char *argv[]) {
 	/* }}} */
 #endif
 
-	/* Output HTML Table {{{
+	/* Output data as HTML Table {{{
 	 */
 	if(outputhtml) {
 		int numrecords;
@@ -2134,14 +2135,14 @@ int main(int argc, char *argv[]) {
 						case pxfLogical:
 						case pxfTime:
 						case pxfTimestamp:
-						case pxfBCD:
-							fprintf(outfp, "  %s ", pxf->px_fname);
-							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
-							first = 1;
-							break;
 						case pxfBytes:
 							fprintf(outfp, "  %s ", pxf->px_fname);
 							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
+							first = 1;
+							break;
+						case pxfBCD:
+							fprintf(outfp, "  %s ", pxf->px_fname);
+							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
 							first = 1;
 							break;
 						case pxfMemoBLOb:
