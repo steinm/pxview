@@ -1,3 +1,6 @@
+Version 0.1.10
+	- do not output option -q in usage information if sqlite is not available
+
 Version 0.1.9
 	- mask ' and tabulator in sql and sqlite output
 	- use ',' as the default separator for fields in csv output
