@@ -2,12 +2,13 @@ Source: pxview
 Section: misc 
 Priority: optional
 Maintainer: Uwe Steinmann <uwe@steinmann.cx>
-Build-Depends: debhelper (>> 4.0.0), pxlib-dev (>= 0.1.9)
+Build-Depends: debhelper (>> 4.0.0), pxlib-dev (>= 0.1.9), libsqlite0-dev (>= 2.8.5)
 Standards-Version: 3.6.1
 
 Package: pxview
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: Display information about Paradox files
- Displays information about various Paradox files (mostly
- DB files). It can also dump the data in CSV and SQL format.
+Description: Converts Paradox files into several formats
+ pxview can display information about various Paradox files and
+ convert Paradox databases into several output formats. Currently,
+ the output formats csv, html, sql and sqlite are supported.
