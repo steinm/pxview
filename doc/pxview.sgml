@@ -367,9 +367,10 @@ manpage.1: manpage.sgml
 			has the same basename as the database file. If it exists the database
 			file will have the header field 'Num. of prim. Key fields' set to a
 			value greater than 0. An index file is actually a regular database file
-			with some extra columns and a slightly different header. There is not
+			with some extra columns and a slightly different header. There is no
 			further reference between the database and index file beside the file
-			name.</para>
+			name. You can always read a database without its primary index, but
+			access will be slower.</para>
 		<para>Each database file may have 1 or more primary key fields. The number
 			is stored in the header of the database file.  Primary key fields
 			must be in the first n columns of the database file. If for
@@ -382,21 +383,38 @@ manpage.1: manpage.sgml
 		  columns which point to data blocks in the database file. In order
 			to understand these columns you need to know that database files are
 			segmented into datablocks. The size of each data block can be calculated
-			from the 'Max. Table size' value in the database file header. Each
-			data block is prefaced by a six byte data block header which is here
-			of no further relevance except for its size.</para>
+			from the 'Max. Table size' value in the database file header. Datablocks
+			are organized in a double linked list. Each
+			data block is prefaced by a six bytes data block header which contains
+			references to the previous and next data block in the list and the size
+			of the block.</para>
 		<para>The n+1 column (with n being the number of primary key fields) in the
 		  primary index file contains the block number in the database file.
-			The first block has number 1. This block number may not be confused
-			with the block number in the data block header. The block number is
+			The first block has number 1. The block number is
 			used to locate the data block in the database file. It can be calculated
-			by `(blocknumber - 1) * datablocksize + headersize'.</para>
-		<para>The n+2 column contains the number of records in the
-		  referenced data block.
-		  Though data block sizes are equal, this number may vary if records
-			has been deleted from the database file.</para>
+			by `(blocknumber - 1) * datablocksize + headersize'.
+		  The n+2 column contains the number of records in the
+		  referenced data block.</para>
+		<para>Beside records whose block numbers point to blocks in the database
+		  file, there are also so called index blocks. Its block numbers reffer
+			other index blocks in the primary index itself. The reason for this is
+			the tree structure of the index which is explained in the file
+			/usr/share/doc/pxlib-doc/paradox4.txt. The number of records in this
+			index blocks is the sum of all records referenzed by the records in
+			the block this block references. If for example you have 100 records
+			each pointing to a data block in the database with 5 records each,
+			and those 100 records are store in a datablock number 1 in the index
+			file, then the reference from an index record to this block number
+			1 will have a record count 100*5. The index record itself will be part
+			of an index block.</para>
 		<para>The last column has some unknown meaning. It is often set to
 		  zero.</para>
+		<para>When you output the content of an primary index file you will
+		  notice a forth extra column. This one is added by &dhpackage; itself.
+			It is the block number the current record is stored in. It is very
+			helpful when investigating the tree structure of the index file.
+			Quite often one will find index blocks at the begining of an index
+			file.</para>
 	</refsect1>
   <refsect1>
     <title>SEE ALSO</title>
