@@ -87,6 +87,8 @@ void usage(char *progname) {
 	printf("\n\n");
 	printf(_("  -h, --help          this usage information."));
 	printf("\n");
+	printf(_("  --version           show version information."));
+	printf("\n");
 	printf(_("  -v, --verbose       be more verbose."));
 	printf("\n");
 	if(!strcmp(progname, "pxview")) {
@@ -289,6 +291,7 @@ int main(int argc, char *argv[]) {
 			{"use-copy", 0, 0, 9},
 			{"without-head", 0, 0, 10},
 			{"primary-index-file", 1, 0, 'n'},
+			{"version", 0, 0, 11},
 			{0, 0, 0, 0}
 		};
 		c = getopt_long (argc, argv, "icsxqvtf:b:r:p:o:n:h",
@@ -345,6 +348,10 @@ int main(int argc, char *argv[]) {
 				break;
 			case 10:
 				withouthead = 1;
+				break;
+			case 11:
+				fprintf(stdout, "%s\n", VERSION);
+				exit(0);
 				break;
 			case 'h':
 				usage(progname);

@@ -64,6 +64,7 @@ manpage.1: manpage.sgml
       <command>&dhpackage;</command>
 
       <arg><option>-h | --help <replaceable></replaceable></option></arg>
+      <arg><option>--verbose <replaceable></replaceable></option></arg>
 
       <arg><option>-i | --info <replaceable></replaceable></option></arg>
       <arg><option>-c | --csv <replaceable></replaceable></option></arg>
@@ -126,8 +127,7 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
-        <term><option>-v</option>
-          <option>--version</option>
+        <term><option>--version</option>
         </term>
         <listitem>
           <para>Show version of program.</para>
@@ -222,14 +222,6 @@ manpage.1: manpage.sgml
 					 --mode=csv to --csv, --mode=html to --html, --mode=sqlite to
 					 --sqlite and --mode=schema
 					 to --schema.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>-o FILE</option>
-          <option>--output=FILE</option>
-        </term>
-        <listitem>
-          <para>Dump records into given file instead of stdout.</para>
         </listitem>
       </varlistentry>
       <varlistentry>

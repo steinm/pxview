@@ -1,4 +1,5 @@
 Version 0.1.9
+	- added option --version
 	- New option --without-head to suppress first line with field
 	  names in csv output
 	- added complete header line to csv output of primary index files
