@@ -1,5 +1,6 @@
 Version 0.2.3
-	- fixed reading and outputting timestamps
+	- fixed reading and outputting timestamps, uses the new function
+	  PX_timestamp2string() of pxlib >= 0.4.3
 
 Version 0.2.2
 	- No need to specify a blob file if all blobs are contained in the
