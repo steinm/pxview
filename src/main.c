@@ -29,6 +29,8 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  -t, --shema         output schema of database."));
 	printf("\n");
+	printf(_("  --mode=MODE         set output mode (csv, sql, or schema)."));
+	printf("\n");
 	printf(_("  -o, --output=FILE   output data into file instead of stdout."));
 	printf("\n");
 	printf(_("  -b, --blobfile=FILE read blob data from file."));
@@ -42,6 +44,8 @@ void usage(char *progname) {
 	printf(_("  --includeblobs      add blob fields in sql output."));
 	printf("\n");
 	printf(_("  --fields=REGEX      extended regular expression to select fields."));
+	printf("\n");
+	printf(_("  --tablename=NAME    overwrite name of database table."));
 	printf("\n\n");
 	printf(_("If you do not specify any of the options -i, -c, -s, or -t\nthen -i will be used."));
 	printf("\n\n");
@@ -73,9 +77,11 @@ int main(int argc, char *argv[]) {
 	char *blobfile = NULL;
 	char *blobprefix = NULL;
 	char *fieldregex = NULL;
+	char *tablename = NULL;
 
 #ifdef ENABLE_NLS
 	setlocale (LC_ALL, "");
+	setlocale (LC_NUMERIC, "C");
 	bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
 	textdomain (GETTEXT_PACKAGE);
 #endif
@@ -96,6 +102,8 @@ int main(int argc, char *argv[]) {
 			{"enclosure", 1, 0, 1},
 			{"includeblobs", 0, 0, 2},
 			{"fields", 1, 0, 'f'},
+			{"tablename", 1, 0, 3},
+			{"mode", 1, 0, 4},
 			{0, 0, 0, 0}
 		};
 		c = getopt_long (argc, argv, "icstf:b:p:o:h",
@@ -111,6 +119,18 @@ int main(int argc, char *argv[]) {
 				break;
 			case 2:
 				includeblobs = 1;;
+				break;
+			case 3:
+				tablename = strdup(optarg);
+				break;
+			case 4:
+				if(!strcmp(optarg, "csv")) {
+					outputcsv = 1;
+				} else if(!strcmp(optarg, "sql")) {
+					outputsql = 1;
+				} else if(!strcmp(optarg, "schema")) {
+					outputschema = 1;
+				}
 				break;
 			case 'h':
 				usage(argv[0]);
@@ -290,7 +310,10 @@ int main(int argc, char *argv[]) {
 
 	if(outputschema) {
 		int sumlen = 0;
-		printf("[%s]\n", pxh->px_tablename);
+		if(tablename)
+			printf("[%s]\n", tablename);
+		else
+			printf("[%s]\n", pxh->px_tablename);
 		printf("Filetype=Delimited\n");
 		printf("Delimiter=%c\n", enclosure);
 		printf("Separator=%c\n", delimiter);
@@ -440,16 +463,20 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 							case pxfNumber:
-								data[offset] &= 0x7f;
-								printf("%f", *((double *)(&data[offset])));
+								if(*((long *)(&data[offset])) & 0x80000000) {
+									data[offset] &= 0x7f;
+									printf("%f", *((double *)(&data[offset])));
+								}
 								first = 1;
 								break;
 							case pxfLogical:
-								data[offset] &= 0x7f;
-								if(data[offset])
-									printf("1");
-								else
-									printf("0");
+								if(*((char *)(&data[offset])) & 0x80) {
+									data[offset] &= 0x7f;
+									if(data[offset])
+										printf("1");
+									else
+										printf("0");
+								}
 								first = 1;
 								break;
 							case pxfGraphic:
@@ -501,7 +528,10 @@ int main(int argc, char *argv[]) {
 	/* Output data as sql statements */
 	if(outputsql) {
 		/* Output table schema */
-		printf("CREATE TABLE %s (\n", pxh->px_tablename);
+		if(tablename)
+			printf("CREATE TABLE %s (\n", tablename);
+		else
+			printf("CREATE TABLE %s (\n", pxh->px_tablename);
 		first = 0;  // set to 1 when first field has been output
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
@@ -541,16 +571,16 @@ int main(int argc, char *argv[]) {
 						printf("date");
 						break;
 					case pxfShort:
-						printf("integer");
+						printf("smallint");
 						break;
 					case pxfLong:
 						printf("integer");
 						break;
 					case pxfCurrency:
-						printf("double");
+						printf("decimal(20,2)");
 						break;
 					case pxfNumber:
-						printf("double");
+						printf("decimal(20,2)");
 						break;
 					case pxfLogical:
 						printf("boolean");
@@ -592,7 +622,10 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		printf("COPY %s (", pxh->px_tablename);
+		if(tablename)
+			printf("COPY %s (", tablename);
+		else
+			printf("COPY %s (", pxh->px_tablename);
 		first = 0;  // set to 1 when first field has been output
 		pxf = pxh->px_fields;
 		/* output field name */
@@ -652,21 +685,35 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 							case pxfLong:
+								// FIXME: distinguish between NULL and 0 as in pxfNumber
 								data[offset] ^= data[offset];
 								printf("%ld", *((long int *)(&data[offset])));
 								first = 1;
 								break;
 							case pxfNumber:
-								data[offset] &= 0x7f;
-								printf("%f", *((double *)(&data[offset])));
+								//hex_dump(&data[offset], pxf->px_flen);
+								/* Paradox distinguishes a decimal 0.0 and not set value
+								 * a decimal null is 8000000000000000 and a not set value
+								 * are 8 null bytes.
+								 */
+								if(*((long *)(&data[offset])) & 0x80000000) {
+									data[offset] &= 0x7f;
+									printf("%.2f", *((double *)(&data[offset])));
+								} else {
+									printf("\\N");
+								}
 								first = 1;
 								break;
 							case pxfLogical:
-								data[offset] &= 0x7f;
-								if(data[offset])
-									printf("TRUE");
-								else
-									printf("FALSE");
+								if(*((char *)(&data[offset])) & 0x80) {
+									data[offset] &= 0x7f;
+									if(data[offset])
+										printf("TRUE");
+									else
+										printf("FALSE");
+								} else {
+									printf("\\N");
+								}
 								first = 1;
 								break;
 							case pxfMemoBLOb:
