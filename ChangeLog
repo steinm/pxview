@@ -1,5 +1,8 @@
 Version 0.1.8
 	- All float values will formated with %g and not %f
+	- sql output use by default INSERT-statements, --use-copy
+	  enforces the use of the COPY-statement which was the default
+	  up to version 0.1.7
 
 Version 0.1.7
 	- First line of HTML output uses <th> instead of <td><b>
