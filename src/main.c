@@ -891,6 +891,9 @@ int main(int argc, char *argv[]) {
 #ifdef HAVE_GSF
 	}
 #endif
+
+	/* Below this point inputfile isn't used anymore. */
+	free(inputfile);
 	/* }}} */
 
 	/* Open primary index file {{{
@@ -2752,7 +2755,13 @@ int main(int argc, char *argv[]) {
 	/* }}} */
 
 	/* FIXME: not to free typemap->sqltype */
-	free(typemap);
+	if(typemap) {
+		free_sql_types(typemap);
+		free(typemap);
+	}
+
+	if(tablename)
+		free(tablename);
 
 	/* Free resources and close files {{{
 	 */
