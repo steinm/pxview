@@ -5,6 +5,7 @@
 #include <libintl.h>
 #include <sys/types.h>
 #include <regex.h>
+#include <libgen.h>
 #include <paradox.h>
 #include "config.h"
 #define _(String) gettext(String)
@@ -21,40 +22,57 @@ void usage(char *progname) {
 	printf("\n\n");
 	printf(_("  -h, --help          this usage information."));
 	printf("\n");
-	printf(_("  -i, --info          show information about file."));
-	printf("\n");
-	printf(_("  -c, --csv           dump records in CSV format."));
-	printf("\n");
-	printf(_("  -s, --sql           dump records in SQL format."));
-	printf("\n");
-	printf(_("  -t, --shema         output schema of database."));
-	printf("\n");
-	printf(_("  --mode=MODE         set output mode (csv, sql, or schema)."));
-	printf("\n");
+	if(!strcmp(progname, "pxview")) {
+		printf(_("  -i, --info          show information about file."));
+		printf("\n");
+		printf(_("  -c, --csv           dump records in CSV format."));
+		printf("\n");
+		printf(_("  -s, --sql           dump records in SQL format."));
+		printf("\n");
+		printf(_("  -t, --shema         output schema of database."));
+		printf("\n");
+		printf(_("  --mode=MODE         set output mode (csv, sql, or schema)."));
+		printf("\n");
+	}
 	printf(_("  -o, --output=FILE   output data into file instead of stdout."));
 	printf("\n");
 	printf(_("  -b, --blobfile=FILE read blob data from file."));
 	printf("\n");
 	printf(_("  -p, --blobprefix=PREFIX prefix for all created files with blob data."));
 	printf("\n");
-	printf(_("  --separator=CHAR    character used to separate field values."));
-	printf("\n");
-	printf(_("  --enclosure=CHAR    character used to enclose field values."));
-	printf("\n");
+	if(strcmp(progname, "px2sql")) {
+		printf(_("  --separator=CHAR    character used to separate field values."));
+		printf("\n");
+		printf(_("  --enclosure=CHAR    character used to enclose field values."));
+		printf("\n");
+	}
 	printf(_("  --includeblobs      add blob fields in sql output."));
 	printf("\n");
 	printf(_("  --fields=REGEX      extended regular expression to select fields."));
 	printf("\n");
-	printf(_("  --tablename=NAME    overwrite name of database table."));
-	printf("\n\n");
-	printf(_("If you do not specify any of the options -i, -c, -s, or -t\nthen -i will be used."));
-	printf("\n\n");
-	printf(_("The options --separator and --enclosure will only affect csv output."));
-	printf("\n\n");
-	printf(_("The option --fields will only affect csv and sql output."));
-	printf("\n\n");
-	printf(_("If exporting csv format fields will be separated by tabulator\nand enclosed into \"."));
+	if(strcmp(progname, "px2csv")) {
+		printf(_("  --tablename=NAME    overwrite name of database table."));
+		printf("\n");
+		printf(_("  --deletetable       delete existing sql database table."));
+		printf("\n");
+	}
 	printf("\n");
+	if(!strcmp(progname, "pxview")) {
+		printf(_("If you do not specify any of the options -i, -c, -s, or -t\nthen -i will be used."));
+		printf("\n\n");
+	}
+	if(strcmp(progname, "px2sql")) {
+		printf(_("The options --separator and --enclosure will only affect csv output."));
+		printf("\n\n");
+	}
+	if(!strcmp(progname, "pxview")) {
+		printf(_("The option --fields will only affect csv and sql output."));
+		printf("\n\n");
+	}
+	if(strcmp(progname, "px2sql")) {
+		printf(_("If exporting csv format fields will be separated by tabulator\nand enclosed into \"."));
+		printf("\n\n");
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -62,6 +80,7 @@ int main(int argc, char *argv[]) {
 	pxfield_t *pxf;
 	pxdoc_t *pxdoc = NULL;
 	pxblob_t *pxblob = NULL;
+	char *progname = NULL;
 	char *selectedfields;
 	char *data, buffer[1000];
 	int i, j, c; // general counters
@@ -71,13 +90,16 @@ int main(int argc, char *argv[]) {
 	int outputsql = 0;
 	int outputschema = 0;
 	int includeblobs = 0;
+	int deletetable = 0;
 	char delimiter = '\t';
 	char enclosure = '"';
 	char *inputfile = NULL;
+	char *outputfile = NULL;
 	char *blobfile = NULL;
 	char *blobprefix = NULL;
 	char *fieldregex = NULL;
 	char *tablename = NULL;
+	FILE *outfp = NULL;
 
 #ifdef ENABLE_NLS
 	setlocale (LC_ALL, "");
@@ -86,6 +108,7 @@ int main(int argc, char *argv[]) {
 	textdomain (GETTEXT_PACKAGE);
 #endif
 
+	progname = basename(strdup(argv[0]));
 	while(1) {
 		int this_option_optind = optind ? optind : 1;
 		int option_index = 0;
@@ -103,6 +126,7 @@ int main(int argc, char *argv[]) {
 			{"includeblobs", 0, 0, 2},
 			{"fields", 1, 0, 'f'},
 			{"tablename", 1, 0, 3},
+			{"deletetable", 1, 0, 5},
 			{"mode", 1, 0, 4},
 			{0, 0, 0, 0}
 		};
@@ -118,7 +142,7 @@ int main(int argc, char *argv[]) {
 				enclosure = optarg[0];
 				break;
 			case 2:
-				includeblobs = 1;;
+				includeblobs = 1;
 				break;
 			case 3:
 				tablename = strdup(optarg);
@@ -132,8 +156,11 @@ int main(int argc, char *argv[]) {
 					outputschema = 1;
 				}
 				break;
+			case 5:
+				deletetable = 1;
+				break;
 			case 'h':
-				usage(argv[0]);
+				usage(progname);
 				exit(0);
 				break;
 			case 't':
@@ -149,6 +176,7 @@ int main(int argc, char *argv[]) {
 				fieldregex = strdup(optarg);
 				break;
 			case 'o':
+				outputfile = strdup(optarg);
 				break;
 			case 'i':
 				outputinfo = 1;
@@ -160,6 +188,18 @@ int main(int argc, char *argv[]) {
 				outputsql = 1;
 				break;
 		}
+	}
+
+	if(!strcmp(progname, "px2sql")) {
+		outputinfo = 0;
+		outputcsv = 0;
+		outputschema = 0;
+		outputsql = 1;
+	} else if(!strcmp(progname, "px2csv")) {
+		outputinfo = 0;
+		outputcsv = 1;
+		outputschema = 0;
+		outputsql = 0;
 	}
 
 	/* if none the output modes is selected then display info */
@@ -174,8 +214,19 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, _("You must at least specify an input file."));
 		fprintf(stderr, "\n");
 		fprintf(stderr, "\n");
-		usage(argv[0]);
+		usage(progname);
 		exit(0);
+	}
+
+	if(outputfile) {
+		outfp = fopen(outputfile, "w");
+		if(outfp == NULL) {
+			fprintf(stderr, _("Could not open output file."));
+			fprintf(stderr, "\n");
+			exit(1);
+		}
+	} else {
+		outfp = stdout;
 	}
 
 	pxdoc = PX_new();
@@ -198,111 +249,111 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(outputinfo) {
-		printf(_("File Version:        %1.1f\n"), (float) pxh->px_fileversion/10.0);
-		printf(_("File Type:           "));
+		fprintf(outfp, _("File Version:        %1.1f\n"), (float) pxh->px_fileversion/10.0);
+		fprintf(outfp, _("File Type:           "));
 		switch(pxh->px_filetype) {
 			case pxfFileTypIndexDB:
-				printf(_("indexed .DB data file"));
+				fprintf(outfp, _("indexed .DB data file"));
 				break;
 			case pxfFileTypPrimIndex:
-				printf(_("primary index .PX file"));
+				fprintf(outfp, _("primary index .PX file"));
 				break;
 			case pxfFileTypNonIndexDB:
-				printf(_("non-indexed .DB data file"));
+				fprintf(outfp, _("non-indexed .DB data file"));
 				break;
 			case pxfFileTypNonIncSecIndex:
-				printf(_("non-incrementing secondary index .Xnn file"));
+				fprintf(outfp, _("non-incrementing secondary index .Xnn file"));
 				break;
 			case pxfFileTypSecIndex:
-				printf(_("secondary index .Ynn file (inc or non-inc)"));
+				fprintf(outfp, _("secondary index .Ynn file (inc or non-inc)"));
 				break;
 			case pxfFileTypIncSecIndex:
-				printf(_("incrementing secondary index .Xnn file"));
+				fprintf(outfp, _("incrementing secondary index .Xnn file"));
 				break;
 			case pxfFileTypNonIncSecIndexG:
-				printf(_("non-incrementing secondary index .XGn file"));
+				fprintf(outfp, _("non-incrementing secondary index .XGn file"));
 				break;
 			case pxfFileTypSecIndexG:
-				printf(_("secondary index .YGn file (inc or non inc)"));
+				fprintf(outfp, _("secondary index .YGn file (inc or non inc)"));
 				break;
 			case pxfFileTypIncSecIndexG:
-				printf(_("incrementing secondary index .XGn file"));
+				fprintf(outfp, _("incrementing secondary index .XGn file"));
 				break;
 		}
-		printf("\n");
-		printf(_("Tablename:           %s\n"), pxh->px_tablename);
-		printf(_("Num. of Records:     %d\n"), pxh->px_numrecords);
-		printf(_("Num. of Fields:      %d\n"), pxh->px_numfields);
-		printf(_("Header size:         %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
-		printf(_("Max. Table size:     %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
-		printf(_("Num. of Data Blocks: %d\n"), pxh->px_fileblocks);
+		fprintf(outfp, "\n");
+		fprintf(outfp, _("Tablename:           %s\n"), pxh->px_tablename);
+		fprintf(outfp, _("Num. of Records:     %d\n"), pxh->px_numrecords);
+		fprintf(outfp, _("Num. of Fields:      %d\n"), pxh->px_numfields);
+		fprintf(outfp, _("Header size:         %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
+		fprintf(outfp, _("Max. Table size:     %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
+		fprintf(outfp, _("Num. of Data Blocks: %d\n"), pxh->px_fileblocks);
 		if((pxh->px_filetype == pxfFileTypNonIncSecIndex) ||
 			 (pxh->px_filetype == pxfFileTypIncSecIndex))
-			printf(_("Num. of Index Field: %d\n"), pxh->px_indexfieldnumber);
-		printf(_("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
-		printf(_("Write protected:     %d\n"), pxh->px_writeprotected);
-		printf(_("Code Page:           %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
-		printf("\n");
+			fprintf(outfp, _("Num. of Index Field: %d\n"), pxh->px_indexfieldnumber);
+		fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
+		fprintf(outfp, _("Write protected:     %d\n"), pxh->px_writeprotected);
+		fprintf(outfp, _("Code Page:           %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
+		fprintf(outfp, "\n");
 
-		printf(_("Fieldname          | Type\n"));
-		printf("------------------------------------\n");
+		fprintf(outfp, _("Fieldname          | Type\n"));
+		fprintf(outfp, "------------------------------------\n");
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
-			printf("%18s | ", pxf->px_fname);
+			fprintf(outfp, "%18s | ", pxf->px_fname);
 			switch(pxf->px_ftype) {
 				case pxfAlpha:
-					printf("char(%d)\n", pxf->px_flen);
+					fprintf(outfp, "char(%d)\n", pxf->px_flen);
 					break;
 				case pxfDate:
-					printf("date(%d)\n", pxf->px_flen);
+					fprintf(outfp, "date(%d)\n", pxf->px_flen);
 					break;
 				case pxfShort:
-					printf("int(%d)\n", pxf->px_flen);
+					fprintf(outfp, "int(%d)\n", pxf->px_flen);
 					break;
 				case pxfLong:
-					printf("int(%d)\n", pxf->px_flen);
+					fprintf(outfp, "int(%d)\n", pxf->px_flen);
 					break;
 				case pxfCurrency:
-					printf("currency(%d)\n", pxf->px_flen);
+					fprintf(outfp, "currency(%d)\n", pxf->px_flen);
 					break;
 				case pxfNumber:
-					printf("double(%d)\n", pxf->px_flen);
+					fprintf(outfp, "double(%d)\n", pxf->px_flen);
 					break;
 				case pxfLogical:
-					printf("boolean(%d)\n", pxf->px_flen);
+					fprintf(outfp, "boolean(%d)\n", pxf->px_flen);
 					break;
 				case pxfMemoBLOb:
-					printf("blob(%d)\n", pxf->px_flen);
+					fprintf(outfp, "blob(%d)\n", pxf->px_flen);
 					break;
 				case pxfBLOb:
-					printf("blob(%d)\n", pxf->px_flen);
+					fprintf(outfp, "blob(%d)\n", pxf->px_flen);
 					break;
 				case pxfFmtMemoBLOb:
-					printf("blob(%d)\n", pxf->px_flen);
+					fprintf(outfp, "blob(%d)\n", pxf->px_flen);
 					break;
 				case pxfOLE:
-					printf("ole(%d)\n", pxf->px_flen);
+					fprintf(outfp, "ole(%d)\n", pxf->px_flen);
 					break;
 				case pxfGraphic:
-					printf("graphic(%d)\n", pxf->px_flen);
+					fprintf(outfp, "graphic(%d)\n", pxf->px_flen);
 					break;
 				case pxfTime:
-					printf("time(%d)\n", pxf->px_flen);
+					fprintf(outfp, "time(%d)\n", pxf->px_flen);
 					break;
 				case pxfTimestamp:
-					printf("timestamp(%d)\n", pxf->px_flen);
+					fprintf(outfp, "timestamp(%d)\n", pxf->px_flen);
 					break;
 				case pxfAutoInc:
-					printf("autoinc(%d)\n", pxf->px_flen);
+					fprintf(outfp, "autoinc(%d)\n", pxf->px_flen);
 					break;
 				case pxfBCD:
-					printf("decimal(17,%d)\n", pxf->px_flen);
+					fprintf(outfp, "decimal(17,%d)\n", pxf->px_flen);
 					break;
 				case pxfBytes:
-					printf("bytes(%d)\n", pxf->px_flen);
+					fprintf(outfp, "bytes(%d)\n", pxf->px_flen);
 					break;
 				default:
-					printf("%c(%d)\n", pxf->px_ftype, pxf->px_flen);
+					fprintf(outfp, "%c(%d)\n", pxf->px_ftype, pxf->px_flen);
 			}
 			pxf++;
 		}
@@ -311,13 +362,13 @@ int main(int argc, char *argv[]) {
 	if(outputschema) {
 		int sumlen = 0;
 		if(tablename)
-			printf("[%s]\n", tablename);
+			fprintf(outfp, "[%s]\n", tablename);
 		else
-			printf("[%s]\n", pxh->px_tablename);
-		printf("Filetype=Delimited\n");
-		printf("Delimiter=%c\n", enclosure);
-		printf("Separator=%c\n", delimiter);
-		printf("CharSet=ANSIINTL\n");
+			fprintf(outfp, "[%s]\n", pxh->px_tablename);
+		fprintf(outfp, "Filetype=Delimited\n");
+		fprintf(outfp, "Delimiter=%c\n", enclosure);
+		fprintf(outfp, "Separator=%c\n", delimiter);
+		fprintf(outfp, "CharSet=ANSIINTL\n");
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
 			switch(pxf->px_ftype) {
@@ -332,38 +383,38 @@ int main(int argc, char *argv[]) {
 				case pxfTimestamp:
 				case pxfBCD:
 				case pxfBytes:
-					printf("Field%d=", i+1);
-					printf("%s,", pxf->px_fname);
+					fprintf(outfp, "Field%d=", i+1);
+					fprintf(outfp, "%s,", pxf->px_fname);
 					break;
 			}
 			switch(pxf->px_ftype) {
 				case pxfAlpha:
-					printf("Char,%d,00,%d\n", pxf->px_flen, sumlen);
+					fprintf(outfp, "Char,%d,00,%d\n", pxf->px_flen, sumlen);
 					sumlen += pxf->px_flen;
 					break;
 				case pxfDate:
-					printf("ADate,11,00,%d\n", sumlen);
+					fprintf(outfp, "ADate,11,00,%d\n", sumlen);
 					sumlen += 11;
 					break;
 				case pxfShort:
-					printf("Short Integer,11,00,%d\n", sumlen);
+					fprintf(outfp, "Short Integer,11,00,%d\n", sumlen);
 					sumlen += 11;
 					break;
 				case pxfAutoInc:
 				case pxfLong:
-					printf("Long Integer,11,00,%d\n", sumlen);
+					fprintf(outfp, "Long Integer,11,00,%d\n", sumlen);
 					sumlen += 11;
 					break;
 				case pxfCurrency:
-					printf("Currency,20,02,%d\n", sumlen);
+					fprintf(outfp, "Currency,20,02,%d\n", sumlen);
 					sumlen += 20;
 					break;
 				case pxfNumber:
-					printf("Float,20,02,%d\n", sumlen);
+					fprintf(outfp, "Float,20,02,%d\n", sumlen);
 					sumlen += 20;
 					break;
 				case pxfLogical:
-					printf("Boolean,%d,00,%d\n", pxf->px_flen, sumlen);
+					fprintf(outfp, "Boolean,%d,00,%d\n", pxf->px_flen, sumlen);
 					sumlen += pxf->px_flen;
 					break;
 				case pxfMemoBLOb:
@@ -373,19 +424,19 @@ int main(int argc, char *argv[]) {
 				case pxfGraphic:
 					break;
 				case pxfTime:
-					printf("ATime,11,00,%d\n", sumlen);
+					fprintf(outfp, "ATime,11,00,%d\n", sumlen);
 					sumlen += 11;
 					break;
 				case pxfTimestamp:
-					printf("ATimestamp,11,00,%d\n", sumlen);
+					fprintf(outfp, "ATimestamp,11,00,%d\n", sumlen);
 					sumlen += 11;
 					break;
 				case pxfBCD:
-					printf("Float,17,%d,%d\n", pxf->px_flen, sumlen);
+					fprintf(outfp, "Float,17,%d,%d\n", pxf->px_flen, sumlen);
 					sumlen += 17;
 					break;
 				case pxfBytes:
-					printf("Char,%d,00,%d\n", pxf->px_flen, sumlen);
+					fprintf(outfp, "Char,%d,00,%d\n", pxf->px_flen, sumlen);
 					sumlen += pxf->px_flen;
 					break;
 				default:
@@ -434,40 +485,40 @@ int main(int argc, char *argv[]) {
 				offset = 0;
 				first = 0;  // set to 1 when first field has been output
 				for(i=0; i<pxh->px_numfields; i++) {
-					if(fieldregex == NULL ||  selectedfields[i]) {
+					if(fieldregex == NULL || selectedfields[i]) {
 						if(first == 1)
-							printf("%c", delimiter);
+							fprintf(outfp, "%c", delimiter);
 						switch(pxf->px_ftype) {
 							case pxfAlpha:
 								memcpy(buffer, &data[offset], pxf->px_flen);
 								buffer[pxf->px_flen] = '\0';
 								if(enclosure)
-									printf("%c%s%c", enclosure, buffer, enclosure);
+									fprintf(outfp, "%c%s%c", enclosure, buffer, enclosure);
 								else
-									printf("%s", buffer);
+									fprintf(outfp, "%s", buffer);
 								first = 1;
 								break;
 							case pxfDate:
 								data[offset] ^= data[offset];
-								printf("%d", *((int *)(&data[offset])));
+								fprintf(outfp, "%d", *((int *)(&data[offset])));
 								first = 1;
 								break;
 							case pxfShort:
 								if(data[offset] & 0x80)
-									printf("%d", *((short int *)(&data[offset]))&0x7f);
+									fprintf(outfp, "%d", *((short int *)(&data[offset]))&0x7f);
 								else if(*((short int *)(&data[offset])) != 0) {
 									data[offset] |= 0x80;
-									printf("%d", *((short int *)(&data[offset])));
+									fprintf(outfp, "%d", *((short int *)(&data[offset])));
 								}
 								first = 1;
 								break;
 							case pxfAutoInc:
 							case pxfLong:
 								if(data[offset] & 0x80)
-									printf("%ld", *((long int *)(&data[offset]))&0x7f);
+									fprintf(outfp, "%ld", *((long int *)(&data[offset]))&0x7f);
 								else if(*((long int *)(&data[offset])) != 0) {
 									data[offset] |= 0x80;
-									printf("%ld", *((long int *)(&data[offset])));
+									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
 								}
 								first = 1;
 								break;
@@ -475,12 +526,12 @@ int main(int argc, char *argv[]) {
 							case pxfNumber:
 								if(data[offset] & 0x80) {
 									data[offset] &= 0x7f;
-									printf("%f", *((double *)(&data[offset])));
+									fprintf(outfp, "%f", *((double *)(&data[offset])));
 								} else if(*((long long int *)(&data[offset])) != 0) {
 									j = 0;
 									for(j=0; j<8; j++)
 										data[offset+j] = ~data[offset+j];
-									printf("%f", *((double *)(&data[offset])));
+									fprintf(outfp, "%f", *((double *)(&data[offset])));
 								}
 								first = 1;
 								break;
@@ -488,9 +539,9 @@ int main(int argc, char *argv[]) {
 								if(*((char *)(&data[offset])) & 0x80) {
 									data[offset] &= 0x7f;
 									if(data[offset])
-										printf("1");
+										fprintf(outfp, "1");
 									else
-										printf("0");
+										fprintf(outfp, "0");
 								}
 								first = 1;
 								break;
@@ -504,9 +555,9 @@ int main(int argc, char *argv[]) {
 									size = get_long(&data[offset+4]);
 									boffset = get_long(&data[offset]) & 0xffffff00;
 									mod_nr = get_short(&data[offset+8]);
-									printf("offset=%ld ", boffset);
-									printf("size=%ld ", size);
-									printf("mod_nr=%d ", mod_nr);
+									fprintf(outfp, "offset=%ld ", boffset);
+									fprintf(outfp, "size=%ld ", size);
+									fprintf(outfp, "mod_nr=%d ", mod_nr);
 									blobdata = PX_read_blobdata(pxblob, boffset, size);
 									if(blobdata) {
 										sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
@@ -522,21 +573,21 @@ int main(int argc, char *argv[]) {
 									}
 
 								} else {
-									printf("offset=%ld ", get_long(&data[offset]) & 0xffffff00);
-									printf("size=%ld ", get_long(&data[offset+4]));
-									printf("mod_nr=%d ", get_short(&data[offset+8]));
+									fprintf(outfp, "offset=%ld ", get_long(&data[offset]) & 0xffffff00);
+									fprintf(outfp, "size=%ld ", get_long(&data[offset+4]));
+									fprintf(outfp, "mod_nr=%d ", get_short(&data[offset+8]));
 									hex_dump(&data[offset], pxf->px_flen);
 								}
 								first = 1;
 								break;
 							default:
-								printf("");
+								fprintf(outfp, "");
 						}
 					}
 					offset += pxf->px_flen;
 					pxf++;
 				}
-				printf("\n");
+				fprintf(outfp, "\n");
 			} else {
 				fprintf(stderr, _("Couldn't get record\n"));
 			}
@@ -546,17 +597,24 @@ int main(int argc, char *argv[]) {
 
 	/* Output data as sql statements */
 	if(outputsql) {
+		/* check if existing table shall be delete */
+		if(deletetable) {
+			if(tablename)
+				fprintf(outfp, "DELETE TABLE %s;\n", tablename);
+			else
+				fprintf(outfp, "DELETE TABLE %s;\n", pxh->px_tablename);
+		}
 		/* Output table schema */
 		if(tablename)
-			printf("CREATE TABLE %s (\n", tablename);
+			fprintf(outfp, "CREATE TABLE %s (\n", tablename);
 		else
-			printf("CREATE TABLE %s (\n", pxh->px_tablename);
+			fprintf(outfp, "CREATE TABLE %s (\n", pxh->px_tablename);
 		first = 0;  // set to 1 when first field has been output
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				if(first == 1)
-					printf(",\n");
+					fprintf(outfp, ",\n");
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
 					case pxfDate:
@@ -570,7 +628,7 @@ int main(int argc, char *argv[]) {
 					case pxfTimestamp:
 					case pxfBCD:
 					case pxfBytes:
-						printf("  %s ", pxf->px_fname);
+						fprintf(outfp, "  %s ", pxf->px_fname);
 						first = 1;
 						break;
 					case pxfMemoBLOb:
@@ -578,52 +636,52 @@ int main(int argc, char *argv[]) {
 					case pxfFmtMemoBLOb:
 					case pxfGraphic:
 						if(includeblobs) {
-							printf("  %s ", pxf->px_fname);
+							fprintf(outfp, "  %s ", pxf->px_fname);
 							first = 1;
 						}
 						break;
 				}
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
-						printf("char(%d)", pxf->px_flen);
+						fprintf(outfp, "char(%d)", pxf->px_flen);
 						break;
 					case pxfDate:
-						printf("date");
+						fprintf(outfp, "date");
 						break;
 					case pxfShort:
-						printf("smallint");
+						fprintf(outfp, "smallint");
 						break;
 					case pxfLong:
 					case pxfAutoInc:
-						printf("integer");
+						fprintf(outfp, "integer");
 						break;
 					case pxfCurrency:
 					case pxfNumber:
-						printf("decimal(20,2)");
+						fprintf(outfp, "decimal(20,2)");
 						break;
 					case pxfLogical:
-						printf("boolean");
+						fprintf(outfp, "boolean");
 						break;
 					case pxfMemoBLOb:
 					case pxfBLOb:
 					case pxfFmtMemoBLOb:
 					case pxfGraphic:
 						if(includeblobs)
-							printf("oid");
+							fprintf(outfp, "oid");
 						break;
 					case pxfOLE:
 						break;
 					case pxfTime:
-						printf("time");
+						fprintf(outfp, "time");
 						break;
 					case pxfTimestamp:
-						printf("timestamp");
+						fprintf(outfp, "timestamp");
 						break;
 					case pxfBCD:
-						printf("decimal(17,%d)", pxf->px_flen);
+						fprintf(outfp, "decimal(17,%d)", pxf->px_flen);
 						break;
 					case pxfBytes:
-						printf("char(%d)", pxf->px_flen);
+						fprintf(outfp, "char(%d)", pxf->px_flen);
 						break;
 					default:
 						break;
@@ -631,7 +689,7 @@ int main(int argc, char *argv[]) {
 			}
 			pxf++;
 		}
-		printf("\n);\n\n");
+		fprintf(outfp, "\n);\n\n");
 
 		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
@@ -641,16 +699,16 @@ int main(int argc, char *argv[]) {
 		}
 
 		if(tablename)
-			printf("COPY %s (", tablename);
+			fprintf(outfp, "COPY %s (", tablename);
 		else
-			printf("COPY %s (", pxh->px_tablename);
+			fprintf(outfp, "COPY %s (", pxh->px_tablename);
 		first = 0;  // set to 1 when first field has been output
 		pxf = pxh->px_fields;
 		/* output field name */
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				if(first == 1)
-					printf(", ");
+					fprintf(outfp, ", ");
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
 					case pxfDate:
@@ -660,7 +718,7 @@ int main(int argc, char *argv[]) {
 					case pxfCurrency:
 					case pxfNumber:
 					case pxfLogical:
-						printf("%s", pxf->px_fname);
+						fprintf(outfp, "%s", pxf->px_fname);
 						first = 1;
 						break;
 					case pxfMemoBLOb:
@@ -668,7 +726,7 @@ int main(int argc, char *argv[]) {
 					case pxfFmtMemoBLOb:
 					case pxfGraphic:
 						if(includeblobs) {
-							printf("%s", pxf->px_fname);
+							fprintf(outfp, "%s", pxf->px_fname);
 							first = 1;
 						}
 						break;
@@ -676,7 +734,7 @@ int main(int argc, char *argv[]) {
 			}
 			pxf++;
 		}
-		printf(") FROM stdin;\n");
+		fprintf(outfp, ") FROM stdin;\n");
 		for(j=0; j<pxh->px_numrecords; j++) {
 			int offset;
 			if(PX_get_record(pxdoc, j, data)) {
@@ -686,37 +744,37 @@ int main(int argc, char *argv[]) {
 				for(i=0; i<pxh->px_numfields; i++) {
 					if(fieldregex == NULL ||  selectedfields[i]) {
 						if(first == 1)
-							printf("\t");
+							fprintf(outfp, "\t");
 						switch(pxf->px_ftype) {
 							case pxfAlpha:
 								memcpy(buffer, &data[offset], pxf->px_flen);
 								buffer[pxf->px_flen] = '\0';
-								printf("%s", buffer);
+								fprintf(outfp, "%s", buffer);
 								first = 1;
 								break;
 							case pxfDate:
 								data[offset] ^= data[offset];
-								printf("%d", *((int *)(&data[offset])));
+								fprintf(outfp, "%d", *((int *)(&data[offset])));
 								first = 1;
 								break;
 							case pxfShort:
 								if(data[offset] & 0x80)
-									printf("%d", *((short int *)(&data[offset]))&0x7f);
+									fprintf(outfp, "%d", *((short int *)(&data[offset]))&0x7f);
 								else if(*((short int *)(&data[offset])) != 0) {
 									data[offset] |= 0x80;
-									printf("%d", *((short int *)(&data[offset])));
+									fprintf(outfp, "%d", *((short int *)(&data[offset])));
 								}
 								first = 1;
 								break;
 							case pxfAutoInc:
 							case pxfLong:
 								if(data[offset] & 0x80)
-									printf("%ld", *((long int *)(&data[offset]))&0x7f);
+									fprintf(outfp, "%ld", *((long int *)(&data[offset]))&0x7f);
 								else if(*((long int *)(&data[offset])) != 0) {
 									data[offset] |= 0x80;
-									printf("%ld", *((long int *)(&data[offset])));
+									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
 								} else {
-									printf("\\N");
+									fprintf(outfp, "\\N");
 								}
 								first = 1;
 								break;
@@ -724,14 +782,14 @@ int main(int argc, char *argv[]) {
 							case pxfNumber:
 								if(data[offset] & 0x80) {
 									data[offset] &= 0x7f;
-									printf("%.2f", *((double *)(&data[offset])));
+									fprintf(outfp, "%.2f", *((double *)(&data[offset])));
 								} else if(*((long long int *)(&data[offset])) != 0) {
 									j = 0;
 									for(j=0; j<8; j++)
 										data[offset+j] = ~data[offset+j];
-									printf("%.2f", *((double *)(&data[offset])));
+									fprintf(outfp, "%.2f", *((double *)(&data[offset])));
 								} else {
-									printf("\\N");
+									fprintf(outfp, "\\N");
 								}
 								first = 1;
 								break;
@@ -739,11 +797,11 @@ int main(int argc, char *argv[]) {
 								if(*((char *)(&data[offset])) & 0x80) {
 									data[offset] &= 0x7f;
 									if(data[offset])
-										printf("TRUE");
+										fprintf(outfp, "TRUE");
 									else
-										printf("FALSE");
+										fprintf(outfp, "FALSE");
 								} else {
-									printf("\\N");
+									fprintf(outfp, "\\N");
 								}
 								first = 1;
 								break;
@@ -752,23 +810,23 @@ int main(int argc, char *argv[]) {
 							case pxfFmtMemoBLOb:
 							case pxfGraphic:
 								if(includeblobs) {
-									printf("\\N");
+									fprintf(outfp, "\\N");
 									first = 1;
 								}
 								break;
 							default:
-								printf("");
+								fprintf(outfp, "");
 						}
 					}
 					offset += pxf->px_flen;
 					pxf++;
 				}
-				printf("\n");
+				fprintf(outfp, "\n");
 			} else {
 				fprintf(stderr, _("Couldn't get record\n"));
 			}
 		}
-		printf("\\.\n");
+		fprintf(outfp, "\\.\n");
 		px_free(pxdoc, data);
 	}
 
