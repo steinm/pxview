@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <regex.h>
 #include <libgen.h>
-#include <paradox.h>
+#include <paradox-gsf.h>
 #include "config.h"
 #define _(String) gettext(String)
 
@@ -740,6 +740,7 @@ int main(int argc, char *argv[]) {
 								break;
 								}
 							case pxfAutoInc:
+							case pxfTimestamp:
 							case pxfLong: {
 								long value;
 								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
