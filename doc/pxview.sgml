@@ -69,6 +69,7 @@ manpage.1: manpage.sgml
       <arg><option>-c | --csv <replaceable></replaceable></option></arg>
       <arg><option>-s | --sql <replaceable></replaceable></option></arg>
       <arg><option>-t | --schema <replaceable></replaceable></option></arg>
+      <arg><option>-v | --verbose <replaceable></replaceable></option></arg>
       <arg><option>--mode=MODE <replaceable></replaceable></option></arg>
       <arg><option>-o FILE | --output=FILE <replaceable></replaceable></option></arg>
       <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
@@ -152,6 +153,16 @@ manpage.1: manpage.sgml
           <para>Dump schema of database as it would be created by the official
 					 Paradox software, when a database is exported in CSV format. This
 					 option is the short form for --mode=schema.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>-v</option>
+          <option>--verbose</option>
+        </term>
+        <listitem>
+          <para>Output some more information from the header. This option is only
+					 needed if you want see some internal information which are usually
+					 not of any interessed.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
