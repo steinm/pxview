@@ -782,8 +782,190 @@ int main(int argc, char *argv[]) {
 	}
 	/* }}} */
 
+	/* Output data as comma separated values {{{ */
+	if(outputcsv) {
+		int numrecords, ireccounter = 0;
+		int isdeleted, presetdeleted;
+		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+			if(selectedfields)
+				px_free(pxdoc, selectedfields);
+			PX_close(pxdoc);
+			exit(1);
+		}
+
+		if(outputdeleted) {
+			numrecords = pxh->px_theonumrecords;
+			presetdeleted = 1;
+		} else {
+			numrecords = pxh->px_numrecords;
+			presetdeleted = 0;
+		}
+		for(j=0; j<numrecords; j++) {
+			int offset;
+			pxdatablockinfo_t pxdbinfo;
+			isdeleted = presetdeleted;
+			if(NULL != PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
+				pxf = pxh->px_fields;
+				offset = 0;
+				first = 0;  // set to 1 when first field has been output
+				for(i=0; i<pxh->px_numfields; i++) {
+					if(fieldregex == NULL || selectedfields[i]) {
+						if(first == 1)
+							fprintf(outfp, "%c", delimiter);
+						switch(pxf->px_ftype) {
+							case pxfAlpha: {
+								char *value;
+								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(enclosure && strchr(value, delimiter))
+										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
+									else
+										fprintf(outfp, "%s", value);
+								}
+								first = 1;
+								break;
+							}
+							case pxfDate: {
+								long value;
+								int year, month, day;
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									PX_SdnToGregorian(value+1721425, &year, &month, &day);
+									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+								}
+								first = 1;
+								break;
+								}
+							case pxfShort: {
+								short int value;
+								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%d", value);
+								}
+								first = 1;
+								break;
+								}
+							case pxfAutoInc:
+							case pxfTimestamp:
+							case pxfLong: {
+								long value;
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%ld", value);
+								}
+								first = 1;
+								break;
+								}
+							case pxfTime: {
+								long value;
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+								}
+								first = 1;
+								break;
+								}
+							case pxfCurrency:
+							case pxfNumber: {
+								double value;
+								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%f", value);
+								} 
+								first = 1;
+								break;
+								} 
+							case pxfLogical: {
+								char value;
+								if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(value)
+										fprintf(outfp, "1");
+									else
+										fprintf(outfp, "0");
+								}
+								first = 1;
+								break;
+								}
+							case pxfGraphic:
+							case pxfBLOb:
+								if(pxblob) {
+									char *blobdata;
+									char filename[200];
+									FILE *fp;
+									size_t size, boffset, mod_nr;
+									size = get_long_le(&data[offset+4]);
+									boffset = get_long_le(&data[offset]) & 0xffffff00;
+									mod_nr = get_short_le(&data[offset+8]);
+									fprintf(outfp, "offset=%ld ", boffset);
+									fprintf(outfp, "size=%ld ", size);
+									fprintf(outfp, "mod_nr=%d ", mod_nr);
+									blobdata = PX_read_blobdata(pxblob, boffset, size);
+									if(blobdata) {
+										sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+										fp = fopen(filename, "w");
+										if(fp) {
+											fwrite(blobdata, size, 1, fp);
+											fclose(fp);
+										} else {
+											fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+										}
+									} else {
+										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+									}
+
+								} else {
+									fprintf(outfp, "offset=%ld ", get_long_le(&data[offset]) & 0xffffff00);
+									fprintf(outfp, "size=%ld ", get_long_le(&data[offset+4]));
+									fprintf(outfp, "mod_nr=%d ", get_short_le(&data[offset+8]));
+									hex_dump(outfp, &data[offset], pxf->px_flen);
+								}
+								first = 1;
+								break;
+							default:
+								fprintf(outfp, "");
+						}
+					}
+					offset += pxf->px_flen;
+					pxf++;
+				}
+				if(pxh->px_filetype == pxfFileTypPrimIndex) {
+					short int value;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "%c", delimiter);
+						fprintf(outfp, "%d", value);
+					}
+					offset += 2;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "%c", delimiter);
+						fprintf(outfp, "%d", value);
+						ireccounter += value;
+					}
+					offset += 2;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "%c", delimiter);
+						fprintf(outfp, "%d", value);
+					}
+					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%d", pxdbinfo.number);
+				}
+				if(markdeleted) {
+					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%d", isdeleted);
+				}
+				fprintf(outfp, "\n");
+			} else {
+				fprintf(stderr, _("Couldn't get record number %d\n"), j);
+			}
+		}
+		/* Print sum over all records */
+		if(pxh->px_filetype == pxfFileTypPrimIndex) {
+			for(i=0; i<pxh->px_numfields; i++)
+				fprintf(outfp, "%c", delimiter);
+			fprintf(outfp, "%c", delimiter);
+			fprintf(outfp, "%d", ireccounter);
+			fprintf(outfp, "%c", delimiter);
+			fprintf(outfp, "\n");
+		}
+		px_free(pxdoc, data);
+	}
+	/* }}} */
+
 #ifdef HAVE_SQLITE
-	/* Output data as comma separated values {{{
+	/* Output data into sqlite database {{{
 	 */
 	if(outputsqlite) {
 		int numrecords;
