@@ -235,9 +235,12 @@ manpage.1: manpage.sgml
         <listitem>
           <para>If the database files references blobs (binary large objects)
 					 then read them from the
-					 given file and write each blob into a single file. The filename will
+					 given file and write each blob of type Blob, OLE, and Graphic
+					 into a single file. The filename will
 					 be constructed from the blobprefix option, an underscore, the
-					 internal number of the blob and the extension .blob.</para>
+					 internal number of the blob and the extension .blob. Blobs of
+					 type Memo and FmtMemo are treated like alpha fields and
+					 its content will be inserted into the regular output.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -441,6 +444,17 @@ manpage.1: manpage.sgml
 		 Fields will be enclosed in " if required.</para>
   </refsect1>
 	<refsect1>
+	  <title>BLOB FILES</title>
+		<para>Fields of type blob will be default be disregarded in the output
+		  unless you pass the option <option>--include-blobs</option> and set
+			the file containing the blobs (usually a .MB file). Paradox distinguishes
+			five different types of blobs of which two of them are actually pure
+			text and the remaining three are binary data. The two text blobs
+			(Memo and FmtMemo) are treaded like alpha fields and its content will
+			be included in the regular output. The binary blobs are separately
+			written to a file.</para>
+  </refsect1>
+	<refsect1>
 	  <title>PRIMARY INDEX FILES</title>
 		<para>&dhpackage; supports not just the reading and outputting of DB
 		  files but also
@@ -450,14 +464,14 @@ manpage.1: manpage.sgml
 			accelerated access on database records in a .DB file, but this section
 			is about outputting the content of a primary index file.</para>
 		<para>An index file
-			has the same basename as the database file. If it exists the database
+			has the same basename as the database file. If it exists, then the database
 			file will have the header field 'Num. of prim. Key fields' set to a
 			value greater than 0. An index file is actually a regular database file
 			with some extra columns and a slightly different header. There is no
 			further reference between the database and the index file beside the file
 			name. You can always read a database without its primary index, but
 			access will be slower.</para>
-		<para>Each database file may have 1 or more primary key fields. The number
+		<para>Each database file may have one or more primary key fields. The number
 			is stored in the header of the database file.  Primary key fields
 			must be in the first n columns of the database file. If for
 			example the number of primary key fields is set to two, then the
