@@ -255,7 +255,7 @@ msgstr "Anz. der Datensätze:     %d\n"
 #: src/main.c:377
 #, c-format
 msgid "Theor. Num. of Rec.:     %d\n"
-msgstr "Anz. der Datensätze:     %d\n"
+msgstr "Theo. Anz. der Datensätze: %d\n"
 
 #: src/main.c:378
 #, c-format
