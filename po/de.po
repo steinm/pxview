@@ -85,7 +85,7 @@ msgstr "  -s, --sql           gebe Datensätze im SQL-Format aus."
 
 #: src/main.c:86
 msgid "  -q, --sqlite        dump records into sqlite database."
-msgstr "  -s, --sqlite        schreibe Datensätze in eine sqlite Datenbank."
+msgstr "  -q, --sqlite        schreibe Datensätze in eine sqlite Datenbank."
 
 #: src/main.c:88
 msgid "  -x, --html          dump records in HTML format."
