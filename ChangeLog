@@ -1,4 +1,8 @@
 Version 0.1.10
+	- added reading of fields of type pxfGraphic in csv mode
+	- reorganize usage information
+	- --tablename in html mode sets caption of html table
+	- allow to set info mode with --mode=info
 	- do not output option -q in usage information if sqlite is not available
 
 Version 0.1.9
