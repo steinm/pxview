@@ -1,3 +1,10 @@
+Version 0.1.2
+	- debug mode: output information about the datablock where a record is stored
+	- usage output has been to restrictive if run as pxview
+	- options --output-deleted, --delete-table has been misinterpreted
+	- new option --mark-deleted to mark those records which are deleted
+	  the csv and html ouput will have an extra column
+
 Version 0.1.1
 	- html output
 	- field selection is case insenitive
