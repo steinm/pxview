@@ -389,6 +389,7 @@ void usage(char *progname) {
 	printf(_("  -b, --blobfile=FILE read blob data from file."));
 	printf("\n");
 	printf(_("  -p, --blobprefix=PREFIX prefix for all created files with blob data."));
+	printf("\n");
 	printf(_("  --blobextension=EXT extension for all created files with blob data."));
 	printf("\n");
 
