@@ -1,4 +1,5 @@
 Version 0.1.11
+	- new option skip-schema to omit sql command to create table structure
 	- output of sqlite is much more saver in terms of buffer overflows
 
 Version 0.1.10
