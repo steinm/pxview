@@ -1,8 +1,12 @@
+Version 0.2.2
+	- sql type for time and timestamp can be both set on the command line
+	- delete blob file object if open
+
 Version 0.2.1
 	- new option --blobextension
-	- removed option --include-blobs (blobs are only read if a .MB fiel is given)
+	- removed option --include-blobs (blobs are only read if a .MB file is given)
 	- updated man page
-	- filename of blobs is created properly if no filename prefis is given
+	- filename of blobs is created properly if no filename prefix is given
 	- fields of type BCD can be read
 	- used fixed field length of 17 for BCD type of fields
 	- boolean values must be 0 or 1 in sqlite (not true or false)

@@ -658,7 +658,8 @@ int main(int argc, char *argv[]) {
 					typelen = delimptr-optarg;
 					for(i=1; i<=pxfBytes; i++) {
 						if(typemap[i].pxtype) {
-							if(!strncmp(typemap[i].pxtype, optarg, typelen)) {
+							if(!strncmp(typemap[i].pxtype, optarg, typelen) &&
+							   (strlen(typemap[i].pxtype) == typelen)) {
 								index = i;
 							}
 						}
@@ -2711,6 +2712,9 @@ int main(int argc, char *argv[]) {
 		PX_close(pindexdoc);
 		PX_delete(pindexdoc);
 	}
+
+	if(pxblob)
+		PX_delete_blob(pxblob);
 
 	PX_close(pxdoc);
 	PX_delete(pxdoc);
