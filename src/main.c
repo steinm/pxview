@@ -1375,14 +1375,8 @@ int main(int argc, char *argv[]) {
 							case pxfTimestamp: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									int year, month, day, secs, days;
-									value = value / 1000.0;
-									days = (int) (value / 86400);
-//									fprintf(outfp, "%d ", days);
-									secs = ((long long) value) % 86400;
-									PX_SdnToGregorian(days+1721425, &year, &month, &day);
-									fprintf(outfp, "%02d:%02d:%02d ", secs/3600, secs/60%60, secs%60);
-									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+									char *str = PX_timestamp2string(pxdoc, value, "H:i:s d.m.Y");
+									fprintf(outfp, "%s", str);
 								} 
 								first = 1;
 								break;
@@ -1726,13 +1720,9 @@ int main(int argc, char *argv[]) {
 								case pxfTimestamp: {
 									double value;
 									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										int year, month, day, secs, days;
-										value = value / 1000.0;
-										days = (int) (value / 86400);
-										secs = ((long long) value) % 86400;
-										PX_SdnToGregorian(days+1721425, &year, &month, &day);
-										str_buffer_print(pxdoc, sbuf, "%04d-%02d-%02d ", year, month, day);
-										str_buffer_print(pxdoc, sbuf, "%02d:%02d:%02d", secs/3600, secs/60%60, secs%60);
+										char *str = PX_timestamp2string(pxdoc, value, "Y-m-d H:i:s");
+										str_buffer_print(pxdoc, sbuf, "'%s'", str);
+										pxdoc->free(pxdoc, str);
 									} else {
 										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
@@ -2022,13 +2012,9 @@ int main(int argc, char *argv[]) {
 							case pxfTimestamp: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									int year, month, day, secs, days;
-									value = value / 1000.0;
-									days = (int) (value / 86400);
-									secs = ((long long) value) % 86400;
-									PX_SdnToGregorian(days+1721425, &year, &month, &day);
-									fprintf(outfp, "%04d-%02d-%02d ", year, month, day);
-									fprintf(outfp, "%02d:%02d:%02d", secs/3600, secs/60%60, secs%60);
+									char *str = PX_timestamp2string(pxdoc, value, "Y-m-d H:i:s");
+									fprintf(outfp, str);
+									pxdoc->free(pxdoc, str);
 								} 
 								break;
 							} 
@@ -2301,13 +2287,9 @@ int main(int argc, char *argv[]) {
 									case pxfTimestamp: {
 										double value;
 										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											int year, month, day, secs, days;
-											value = value / 1000.0;
-											days = (int) (value / 86400);
-											secs = ((long long) value) % 86400;
-											PX_SdnToGregorian(days+1721425, &year, &month, &day);
-											fprintf(outfp, "%04d-%02d-%02d ", year, month, day);
-											fprintf(outfp, "%02d:%02d:%02d", secs/3600, secs/60%60, secs%60);
+											char *str = PX_timestamp2string(pxdoc, value, "Y-m-d H:i:s");
+											fprintf(outfp, str);
+											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -2533,13 +2515,9 @@ int main(int argc, char *argv[]) {
 									case pxfTimestamp: {
 										double value;
 										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											int year, month, day, secs, days;
-											value = value / 1000.0;
-											days = (int) (value / 86400);
-											secs = ((long long) value) % 86400;
-											PX_SdnToGregorian(days+1721425, &year, &month, &day);
-											fprintf(outfp, "'%04d-%02d-%02d ", year, month, day);
-											fprintf(outfp, "%02d:%02d:%02d'", secs/3600, secs/60%60, secs%60);
+											char *str = PX_timestamp2string(pxdoc, value, "Y-m-d H:i:s");
+											fprintf(outfp, "'%s'", str);
+											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "NULL");
 										}
