@@ -584,11 +584,12 @@ int main(int argc, char *argv[]) {
 							case pxfCurrency:
 							case pxfNumber: {
 								double value;
-								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value))
+								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%f", value);
 								} 
 								first = 1;
 								break;
+								} 
 							case pxfLogical:
 								if(*((char *)(&data[offset])) & 0x80) {
 									data[offset] &= 0x7f;
