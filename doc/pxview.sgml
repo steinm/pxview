@@ -349,8 +349,9 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Adds a sql command at the begining of the sql output to delete
-					 an existing table before creating the new one. This option only
-					 affects sql output.</para>
+					 an existing table before creating the new one. If used in sqlite
+					 mode it will drop the table before creating a new one.
+					 This option only affects sql and sqlite output.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -358,7 +359,8 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Use the sql COPY statement in the sql output instead of the
-					 default INSERT. Using COPY is usually faster but less supported
+					 default INSERT. Using COPY is usually faster when the data is
+					 imported into a database, but less supported
 					 by databases. This option only affects sql output.</para>
         </listitem>
       </varlistentry>

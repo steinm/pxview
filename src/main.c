@@ -150,7 +150,9 @@ void usage(char *progname) {
 	if(!strcmp(progname, "pxview")) {
 		printf(_("The option --fields will only affect csv, html, sql and sqlite output."));
 		printf("\n\n");
-		printf(_("The options --delete-table and --use-copy will only affect sql output."));
+		printf(_("The option --use-copy will only affect sql output."));
+		printf("\n\n");
+		printf(_("The option --delete-table will only affect sql and sqlite output."));
 		printf("\n\n");
 		printf(_("The options --separator, --enclosure and --mark-deleted will only\naffect csv output."));
 		printf("\n\n");
