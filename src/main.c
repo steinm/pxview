@@ -1763,9 +1763,9 @@ int main(int argc, char *argv[]) {
 										FILE *fp;
 										int mod_nr, size;
 										if(pxf->px_ftype == pxfGraphic)
-											PX_get_data_graphic(&data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+											PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 										else
-											PX_get_data_blob(&data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
+											PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 										str_buffer_print(pxdoc, sbuf, "'");
 										if(size) {
 											if(blobdata) {
