@@ -301,6 +301,8 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  --skip-schema       do not output database table schema."));
 		printf("\n");
+		printf(_("  --short-insert      use short insert statements."));
+		printf("\n");
 	}
 	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
 		printf("\n");
@@ -390,6 +392,7 @@ int main(int argc, char *argv[]) {
 	int includeblobs = 0;
 	int deletetable = 0;
 	int skipschema = 0;
+	int shortinsert = 0;
 	int outputdeleted = 0;
 	int markdeleted = 0;
 	int usecopy = 0;
@@ -455,6 +458,7 @@ int main(int argc, char *argv[]) {
 			{"use-copy", 0, 0, 9},
 			{"without-head", 0, 0, 10},
 			{"skip-schema", 0, 0, 12},
+			{"short-insert", 0, 0, 13},
 			{"primary-index-file", 1, 0, 'n'},
 			{"version", 0, 0, 11},
 			{0, 0, 0, 0}
@@ -522,6 +526,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 12:
 				skipschema = 1;
+				break;
+			case 13:
+				shortinsert = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -2208,12 +2215,64 @@ int main(int argc, char *argv[]) {
 				}
 				fprintf(outfp, "\\.\n");
 			} else {
+				struct str_buffer *sbuf;
+				if(!shortinsert) {
+					if((sbuf = str_buffer_new(pxdoc, 20)) == NULL) {
+						if(selectedfields)
+							pxdoc->free(pxdoc, selectedfields);
+						PX_close(pxdoc);
+						exit(1);
+					}
+					str_buffer_print(pxdoc, sbuf, "(");
+					first = 0;  // set to 1 when first field has been output
+					pxf = pxh->px_fields;
+					/* output field name */
+					for(i=0; i<pxh->px_numfields; i++) {
+						if(fieldregex == NULL ||  selectedfields[i]) {
+							if(first == 1)
+								str_buffer_print(pxdoc, sbuf, ", ");
+							switch(pxf->px_ftype) {
+								case pxfAlpha:
+								case pxfDate:
+								case pxfShort:
+								case pxfLong:
+								case pxfAutoInc:
+								case pxfTime:
+								case pxfCurrency:
+								case pxfNumber:
+								case pxfLogical:
+								case pxfBCD:
+								case pxfTimestamp:
+								case pxfBytes:
+									str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
+									first = 1;
+									break;
+								case pxfMemoBLOb:
+								case pxfBLOb:
+								case pxfFmtMemoBLOb:
+								case pxfGraphic:
+									if(includeblobs) {
+										str_buffer_print(pxdoc, sbuf, "%s", pxf->px_fname);
+										first = 1;
+									} else {
+										first = 0;
+									}
+									break;
+							}
+						}
+						pxf++;
+					}
+					str_buffer_print(pxdoc, sbuf, ")");
+				}
 				for(j=0; j<pxh->px_numrecords; j++) {
 					int offset;
 					if(PX_get_record(pxdoc, j, data)) {
 						first = 0;  // set to 1 when first field has been output
 						offset = 0;
-						fprintf(outfp, "insert into %s values (", tablename);
+						if(shortinsert)
+							fprintf(outfp, "insert into %s values (", tablename);
+						else
+							fprintf(outfp, "insert into %s %s values (", tablename, str_buffer_get(pxdoc, sbuf));
 						pxf = pxh->px_fields;
 						for(i=0; i<pxh->px_numfields; i++) {
 							if(fieldregex == NULL ||  selectedfields[i]) {
@@ -2333,6 +2392,8 @@ int main(int argc, char *argv[]) {
 						fprintf(stderr, _("Couldn't get record number %d\n"), j);
 					}
 				}
+				if(!shortinsert)
+					str_buffer_delete(pxdoc, sbuf);
 			}
 			pxdoc->free(pxdoc, data);
 		}
