@@ -126,7 +126,7 @@ void usage(char *progname) {
 			break;
 	}
 	printf("\n\n");
-  if(PX_is_bigendian())
+	if(PX_is_bigendian())
 		printf(_("libpx has been compiled for big endian architecture."));
 	else
 		printf(_("libpx has been compiled for little endian architecture."));
@@ -335,7 +335,12 @@ int main(int argc, char *argv[]) {
 		outfp = stdout;
 	}
 
-	pxdoc = PX_new2(errorhandler, NULL, NULL, NULL);
+	if(NULL == (pxdoc = PX_new2(errorhandler, NULL, NULL, NULL))) {
+		fprintf(stderr, _("Could not create new paradox instance."));
+		fprintf(stderr, "\n");
+		exit(1);
+	}
+
 	if(0 > PX_open_file(pxdoc, inputfile)) {
 		fprintf(stderr, _("Could not open input file."));
 		fprintf(stderr, "\n");
