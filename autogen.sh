@@ -37,9 +37,9 @@ test -d debian && {
 	find -type f -perm +111 ! -name '.*' -fprint debian/executable.files
 
 	# link these in Debian builds
-	rm -f config.sub config.guess
-	ln -s /usr/share/misc/config.sub .
-	ln -s /usr/share/misc/config.guess .
+#	rm -f config.sub config.guess
+#	ln -s /usr/share/misc/config.sub .
+#	ln -s /usr/share/misc/config.guess .
 }
 
 exit 0
