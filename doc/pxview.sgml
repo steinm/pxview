@@ -274,7 +274,7 @@ manpage.1: manpage.sgml
         <listitem>
           <para>If the database is exported in csv format the given character
 					 will be used to separate field values. Other output formats will not
-					 be affected by this option.</para>
+					 be affected by this option. The default value is ','.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -285,7 +285,7 @@ manpage.1: manpage.sgml
 					 will be used to enclose field values if the field is of type char().
 					 The enclosure will only take place if the delimiter between fields
 					 is part of the field value.  Other output formats will not
-					 be affected by this option.</para>
+					 be affected by this option. The default value is '"'.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
