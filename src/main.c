@@ -793,7 +793,7 @@ int main(int argc, char *argv[]) {
 				}
 				fprintf(outfp, "\n");
 			} else {
-				fprintf(stderr, _("Couldn't get record\n"));
+				fprintf(stderr, _("Couldn't get record number %d\n"), j);
 			}
 		}
 		/* Print sum over all records */
@@ -996,7 +996,7 @@ int main(int argc, char *argv[]) {
 				}
 				fprintf(outfp, " <tr>\n");
 			} else {
-				fprintf(stderr, _("Couldn't get record\n"));
+				fprintf(stderr, _("Couldn't get record number %d\n"), j);
 			}
 		}
 		fprintf(outfp, "</table>\n");
@@ -1272,7 +1272,7 @@ int main(int argc, char *argv[]) {
 					}
 					fprintf(outfp, "\n");
 				} else {
-					fprintf(stderr, _("Couldn't get record\n"));
+					fprintf(stderr, _("Couldn't get record number %d\n"), j);
 				}
 			}
 			fprintf(outfp, "\\.\n");
@@ -1335,7 +1335,7 @@ int main(int argc, char *argv[]) {
 				}
 				fprintf(outfp, "\n");
 			} else {
-				fprintf(stderr, _("Couldn't get record\n"));
+				fprintf(stderr, _("Couldn't get record number %d\n"), j);
 			}
 		}
 		px_free(pxdoc, data);
