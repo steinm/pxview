@@ -786,6 +786,79 @@ int main(int argc, char *argv[]) {
 	if(outputcsv) {
 		int numrecords, ireccounter = 0;
 		int isdeleted, presetdeleted;
+
+		/* Output first line with column names */
+		first = 0;  // set to 1 when first field has been output
+		pxf = pxh->px_fields;
+		for(i=0; i<pxh->px_numfields; i++) {
+			if(fieldregex == NULL || selectedfields[i]) {
+				if(first == 1)
+					fprintf(outfp, "%c", delimiter);
+				if(delimiter == ',')
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "%s", pxf->px_fname);
+				switch(pxf->px_ftype) {
+					case pxfAlpha:
+						fprintf(outfp, ",A,%d", pxf->px_flen);
+						break;
+					case pxfDate:
+						fprintf(outfp, ",D,%d", pxf->px_flen);
+						break;
+					case pxfShort:
+						fprintf(outfp, ",S,%d", pxf->px_flen);
+						break;
+					case pxfAutoInc:
+						fprintf(outfp, ",+,%d", pxf->px_flen);
+						break;
+					case pxfTimestamp:
+						fprintf(outfp, ",@,%d", pxf->px_flen);
+						break;
+					case pxfLong:
+						fprintf(outfp, ",I,%d", pxf->px_flen);
+						break;
+					case pxfTime:
+						fprintf(outfp, ",T,%d", pxf->px_flen);
+						break;
+					case pxfCurrency:
+						fprintf(outfp, ",$,%d", pxf->px_flen);
+						break;
+					case pxfNumber:
+						fprintf(outfp, ",N,%d", pxf->px_flen);
+						break;
+					case pxfLogical:
+						fprintf(outfp, ",L,%d", pxf->px_flen);
+						break;
+					case pxfGraphic:
+						fprintf(outfp, ",G,%d", pxf->px_flen);
+						break;
+					case pxfBLOb:
+						fprintf(outfp, ",B,%d", pxf->px_flen);
+						break;
+					case pxfOLE:
+						fprintf(outfp, ",O,%d", pxf->px_flen);
+						break;
+					case pxfFmtMemoBLOb:
+						fprintf(outfp, ",F,%d", pxf->px_flen);
+						break;
+					case pxfMemoBLOb:
+						fprintf(outfp, ",F,%d", pxf->px_flen);
+						break;
+					case pxfBytes:
+						fprintf(outfp, ",Y,%d", pxf->px_flen);
+						break;
+					case pxfBCD:
+						fprintf(outfp, ",#,%d", pxf->px_flen);
+						break;
+				}
+				if(delimiter == ',')
+					fprintf(outfp, "%c", enclosure);
+				first = 1;
+			}
+			pxf++;
+		}
+		fprintf(outfp, "\n");
+
+		/* Allocate memory for record */
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -800,6 +873,7 @@ int main(int argc, char *argv[]) {
 			numrecords = pxh->px_numrecords;
 			presetdeleted = 0;
 		}
+		/* Output records */
 		for(j=0; j<numrecords; j++) {
 			int offset;
 			pxdatablockinfo_t pxdbinfo;
@@ -882,6 +956,8 @@ int main(int argc, char *argv[]) {
 								}
 							case pxfGraphic:
 							case pxfBLOb:
+							case pxfFmtMemoBLOb:
+							case pxfOLE:
 								if(pxblob) {
 									char *blobdata;
 									char filename[200];
@@ -913,6 +989,14 @@ int main(int argc, char *argv[]) {
 									fprintf(outfp, "mod_nr=%d ", get_short_le(&data[offset+8]));
 									hex_dump(outfp, &data[offset], pxf->px_flen);
 								}
+								first = 1;
+								break;
+							case pxfBytes:
+								hex_dump(outfp, &data[offset], pxf->px_flen);
+								first = 1;
+								break;
+							case pxfBCD:
+								hex_dump(outfp, &data[offset], pxf->px_flen);
 								first = 1;
 								break;
 							default:
@@ -1092,7 +1176,7 @@ int main(int argc, char *argv[]) {
 						pbuffer(buffer, "timestamp");
 						break;
 					case pxfBCD:
-						pbuffer(buffer, "decimal(17,%d)", pxf->px_flen);
+						pbuffer(buffer, "decimal(34,%d)", pxf->px_flen);
 						break;
 					case pxfBytes:
 						pbuffer(buffer, "char(%d)", pxf->px_flen);
@@ -1288,6 +1372,8 @@ int main(int argc, char *argv[]) {
 	if(outputhtml) {
 		int numrecords;
 		int isdeleted, presetdeleted;
+
+		/* Allocate memory for record data */
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -1312,26 +1398,58 @@ int main(int argc, char *argv[]) {
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				fprintf(outfp, "  <td><b>");
+				fprintf(outfp, "%s", pxf->px_fname);
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
+						fprintf(outfp, ",A,%d", pxf->px_flen);
+						break;
 					case pxfDate:
+						fprintf(outfp, ",D,%d", pxf->px_flen);
+						break;
 					case pxfShort:
-					case pxfLong:
+						fprintf(outfp, ",S,%d", pxf->px_flen);
+						break;
 					case pxfAutoInc:
-					case pxfTime:
-					case pxfCurrency:
-					case pxfNumber:
-					case pxfLogical:
-					case pxfBCD:
+						fprintf(outfp, ",+,%d", pxf->px_flen);
+						break;
 					case pxfTimestamp:
-					case pxfBytes:
-						fprintf(outfp, "%s", pxf->px_fname);
+						fprintf(outfp, ",@,%d", pxf->px_flen);
+						break;
+					case pxfLong:
+						fprintf(outfp, ",I,%d", pxf->px_flen);
+						break;
+					case pxfTime:
+						fprintf(outfp, ",T,%d", pxf->px_flen);
+						break;
+					case pxfCurrency:
+						fprintf(outfp, ",$,%d", pxf->px_flen);
+						break;
+					case pxfNumber:
+						fprintf(outfp, ",N,%d", pxf->px_flen);
+						break;
+					case pxfLogical:
+						fprintf(outfp, ",L,%d", pxf->px_flen);
+						break;
+					case pxfGraphic:
+						fprintf(outfp, ",G,%d", pxf->px_flen);
+						break;
+					case pxfBLOb:
+						fprintf(outfp, ",B,%d", pxf->px_flen);
+						break;
+					case pxfOLE:
+						fprintf(outfp, ",O,%d", pxf->px_flen);
+						break;
+					case pxfFmtMemoBLOb:
+						fprintf(outfp, ",F,%d", pxf->px_flen);
 						break;
 					case pxfMemoBLOb:
-					case pxfBLOb:
-					case pxfFmtMemoBLOb:
-					case pxfGraphic:
-						fprintf(outfp, "%s", pxf->px_fname);
+						fprintf(outfp, ",F,%d", pxf->px_flen);
+						break;
+					case pxfBytes:
+						fprintf(outfp, ",Y,%d", pxf->px_flen);
+						break;
+					case pxfBCD:
+						fprintf(outfp, ",#,%d", pxf->px_flen);
 						break;
 				}
 				fprintf(outfp, "</b></td>\n");
@@ -1740,6 +1858,7 @@ int main(int argc, char *argv[]) {
 									}
 									break;
 								case pxfBCD:
+								case pxfBytes:
 									fprintf(outfp, "\\N");
 									break;
 								default:
