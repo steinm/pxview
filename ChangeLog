@@ -1,2 +1,6 @@
 Version 0.0.4
-  - proper handling of negative Long, Short, Double values
+  - proper handling of negative Long, Short, Double value
+	- finaly implemented export to a given output file (option --output)
+	- added option --deletetable
+	- updated manual page
+	- calling pxview as px2sql or px2csv will set the appropriate options
