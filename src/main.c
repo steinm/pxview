@@ -1444,16 +1444,14 @@ int main(int argc, char *argv[]) {
 								break;
 							case pxfBCD: {
 								char *value;
-								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_flen, &value)) {
+						//		hex_dump(outfp, &data[offset], pxf->px_flen);
+								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
 									fprintf(outfp, "%s", value);
 									pxdoc->free(pxdoc, value);
 								}
 								first = 1;
 								break;
 							}
-						//		hex_dump(outfp, &data[offset], pxf->px_flen);
-						//		first = 1;
-						//		break;
 							default:
 								fprintf(outfp, "");
 						}
@@ -1797,9 +1795,20 @@ int main(int argc, char *argv[]) {
 										first = 0;
 									}
 									break;
-								case pxfBCD:
-									str_buffer_print(pxdoc, sbuf, "NULL");
+								case pxfBCD: {
+									char *value;
+									int ret;
+									if(0 < (ret = PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value))) {
+										str_buffer_print(pxdoc, sbuf, "%s", value);
+										pxdoc->free(pxdoc, value);
+									} else if(ret == 0) {
+										str_buffer_print(pxdoc, sbuf, "NULL");
+									} else {
+										fprintf(stderr, "Could not read data of bcd field '%s'\n", pxf->px_fname);
+									}
+									first = 1;
 									break;
+								}
 								default:
 									str_buffer_print(pxdoc, sbuf, "NULL");
 							}
@@ -2037,6 +2046,15 @@ int main(int argc, char *argv[]) {
 									hex_dump(outfp, &data[offset], pxf->px_flen);
 								}
 								break;
+							case pxfBCD: {
+								char *value;
+								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
+									fprintf(outfp, "%s", value);
+									pxdoc->free(pxdoc, value);
+								}
+								first = 1;
+								break;
+							}
 							default:
 								fprintf(outfp, "");
 						}
@@ -2341,7 +2359,20 @@ int main(int argc, char *argv[]) {
 											first = 0;
 										}
 										break;
-									case pxfBCD:
+									case pxfBCD: {
+										char *value;
+										int ret;
+										if(0 < (ret = PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value))) {
+											fprintf(outfp, "%s", value);
+											pxdoc->free(pxdoc, value);
+										} else if(ret == 0) {
+											fprintf(outfp, "NULL");
+										} else {
+											fprintf(stderr, "Could not read data of bcd field '%s'\n", pxf->px_fname);
+										}
+										first = 1;
+										break;
+									}
 									case pxfBytes:
 										fprintf(outfp, "\\N");
 										break;
@@ -2559,7 +2590,20 @@ int main(int argc, char *argv[]) {
 											first = 0;
 										}
 										break;
-									case pxfBCD:
+									case pxfBCD: {
+										char *value;
+										int ret;
+										if(0 < (ret = PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value))) {
+											fprintf(outfp, "%s", value);
+											pxdoc->free(pxdoc, value);
+										} else if(ret == 0) {
+											fprintf(outfp, "NULL");
+										} else {
+											fprintf(stderr, "Could not read data of bcd field '%s'\n", pxf->px_fname);
+										}
+										first = 1;
+										break;
+									}
 									case pxfBytes:
 										fprintf(outfp, "NULL");
 										first = 1;
