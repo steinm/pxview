@@ -72,6 +72,9 @@ manpage.1: manpage.sgml
       <arg><option>-o FILE | --output=FILE <replaceable></replaceable></option></arg>
       <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
       <arg><option>-p PREFIX | --blobprefix=PREFIX <replaceable></replaceable></option></arg>
+      <arg><option>--separator=CHAR <replaceable></replaceable></option></arg>
+      <arg><option>--enclosure=CHAR <replaceable></replaceable></option></arg>
+      <arg><option>--includeblobs <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -185,10 +188,50 @@ manpage.1: manpage.sgml
 					 running &dhpackage;.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term><option>--separator=CHAR</option>
+        </term>
+        <listitem>
+          <para>If the database is exported in csv format the given character
+					 will be used to separate field values. Other output formats will not
+					 be affected by this option.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--enclosure=CHAR</option>
+        </term>
+        <listitem>
+          <para>If the database is exported in csv format the given character
+					 will be used to enclose field values. Other output formats will not
+					 be affected by this option.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--includeblobs</option>
+        </term>
+        <listitem>
+          <para>Includes blob fields in sql output. The field value itself
+					 will be set to null. Currently only PostgreSQL syntax is
+					 supported.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--fields=REGEX</option>
+        </term>
+        <listitem>
+          <para>This option allows to select certain fields by specifying
+					 an extended regular expression. It will only effect the csv and
+					 sql output. "field1|field23$" will select all fields whose name
+					 contains "field1" or end in "field23". If this option is not used
+					 als fields will be shown.</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
 
 		<para>The none optional parameter FILE is the Paradox file which shall
 		  be read.</para>
+		<para>The default field separator if exporting csv format is a tabular.
+		 Fields will be enclosed in "</para>
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>
