@@ -11,7 +11,7 @@ msgstr ""
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=iso8859-1\n"
+"Content-Type: text/plain; charset=ISO-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/main.c:11
@@ -35,37 +35,30 @@ msgid "Options:"
 msgstr "Optionen:"
 
 #: src/main.c:16
-#, fuzzy
 msgid "  -h, --help          this usage information."
 msgstr "  -h, --help          diese Hilfe."
 
 #: src/main.c:18
-#, fuzzy
 msgid "  -i, --info          show information about file."
 msgstr "  -i, --info          zeige Informationen über diese Datei."
 
 #: src/main.c:20
-#, fuzzy
 msgid "  -c, --csv           dump records in CSV format."
 msgstr "  -c, --csv           gebe Datensätze im CVS-Format aus."
 
 #: src/main.c:22
-#, fuzzy
 msgid "  -s, --sql           dump records in SQL format."
 msgstr "  -s, --sql           gebe Datensätze im SQL-Format aus."
 
 #: src/main.c:24
-#, fuzzy
 msgid "  -o, --output=FILE   output dump into file instead of stdout."
-msgstr "  -o, --output-DATEI  schreibe Ausgabe in Datei statt nach stdout."
+msgstr "  -o, --output=DATEI  schreibe Ausgabe in Datei statt nach stdout."
 
 #: src/main.c:26
-#, fuzzy
 msgid "  -f, --file=FILE     read input data from file."
 msgstr "  -f, --file=DATEI    lese aus Eingabedatei."
 
 #: src/main.c:93
-#, fuzzy
 msgid "You must at least specify an input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
