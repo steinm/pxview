@@ -115,6 +115,8 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  --enclosure=CHAR    character used to enclose field values."));
 		printf("\n");
+		printf(_("  --without-head      Turn off first line with field names."));
+		printf("\n");
 	}
 	if(!strcmp(progname, "px2csv") || !strcmp(progname, "px2html") || !strcmp(progname, "pxview")) {
 		printf(_("  --mark-deleted      add extra column with 1 for deleted records."));
@@ -222,6 +224,7 @@ int main(int argc, char *argv[]) {
 	int usecopy = 0;
 	int usegsf = 0;
 	int verbose = 0;
+	int withouthead = 0;
 	char delimiter = '\t';
 	char enclosure = '"';
 	char *inputfile = NULL;
@@ -279,6 +282,7 @@ int main(int argc, char *argv[]) {
 			{"mark-deleted", 0, 0, 7},
 			{"use-gsf", 0, 0, 8},
 			{"use-copy", 0, 0, 9},
+			{"without-head", 0, 0, 10},
 			{"primary-index-file", 1, 0, 'n'},
 			{0, 0, 0, 0}
 		};
@@ -333,6 +337,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 9:
 				usecopy = 1;
+				break;
+			case 10:
+				withouthead = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -818,75 +825,106 @@ int main(int argc, char *argv[]) {
 		int isdeleted, presetdeleted;
 
 		/* Output first line with column names */
-		first = 0;  // set to 1 when first field has been output
-		pxf = pxh->px_fields;
-		for(i=0; i<pxh->px_numfields; i++) {
-			if(fieldregex == NULL || selectedfields[i]) {
-				if(first == 1)
+		if(!withouthead) {
+			first = 0;  // set to 1 when first field has been output
+			pxf = pxh->px_fields;
+			for(i=0; i<pxh->px_numfields; i++) {
+				if(fieldregex == NULL || selectedfields[i]) {
+					if(first == 1)
+						fprintf(outfp, "%c", delimiter);
+					if(delimiter == ',')
+						fprintf(outfp, "%c", enclosure);
+					fprintf(outfp, "%s", pxf->px_fname);
+					switch(pxf->px_ftype) {
+						case pxfAlpha:
+							fprintf(outfp, ",A,%d", pxf->px_flen);
+							break;
+						case pxfDate:
+							fprintf(outfp, ",D,%d", pxf->px_flen);
+							break;
+						case pxfShort:
+							fprintf(outfp, ",S,%d", pxf->px_flen);
+							break;
+						case pxfAutoInc:
+							fprintf(outfp, ",+,%d", pxf->px_flen);
+							break;
+						case pxfTimestamp:
+							fprintf(outfp, ",@,%d", pxf->px_flen);
+							break;
+						case pxfLong:
+							fprintf(outfp, ",I,%d", pxf->px_flen);
+							break;
+						case pxfTime:
+							fprintf(outfp, ",T,%d", pxf->px_flen);
+							break;
+						case pxfCurrency:
+							fprintf(outfp, ",$,%d", pxf->px_flen);
+							break;
+						case pxfNumber:
+							fprintf(outfp, ",N,%d", pxf->px_flen);
+							break;
+						case pxfLogical:
+							fprintf(outfp, ",L,%d", pxf->px_flen);
+							break;
+						case pxfGraphic:
+							fprintf(outfp, ",G,%d", pxf->px_flen);
+							break;
+						case pxfBLOb:
+							fprintf(outfp, ",B,%d", pxf->px_flen);
+							break;
+						case pxfOLE:
+							fprintf(outfp, ",O,%d", pxf->px_flen);
+							break;
+						case pxfFmtMemoBLOb:
+							fprintf(outfp, ",F,%d", pxf->px_flen);
+							break;
+						case pxfMemoBLOb:
+							fprintf(outfp, ",F,%d", pxf->px_flen);
+							break;
+						case pxfBytes:
+							fprintf(outfp, ",Y,%d", pxf->px_flen);
+							break;
+						case pxfBCD:
+							fprintf(outfp, ",#,%d", pxf->px_flen);
+							break;
+					}
+					if(delimiter == ',')
+						fprintf(outfp, "%c", enclosure);
+					first = 1;
+				}
+				pxf++;
+			}
+			if(pxh->px_filetype == pxfFileTypPrimIndex) {
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
+				fprintf(outfp, "%cblocknr,I,4", delimiter);
+				if(delimiter == ',')
 					fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", enclosure);
-				fprintf(outfp, "%s", pxf->px_fname);
-				switch(pxf->px_ftype) {
-					case pxfAlpha:
-						fprintf(outfp, ",A,%d", pxf->px_flen);
-						break;
-					case pxfDate:
-						fprintf(outfp, ",D,%d", pxf->px_flen);
-						break;
-					case pxfShort:
-						fprintf(outfp, ",S,%d", pxf->px_flen);
-						break;
-					case pxfAutoInc:
-						fprintf(outfp, ",+,%d", pxf->px_flen);
-						break;
-					case pxfTimestamp:
-						fprintf(outfp, ",@,%d", pxf->px_flen);
-						break;
-					case pxfLong:
-						fprintf(outfp, ",I,%d", pxf->px_flen);
-						break;
-					case pxfTime:
-						fprintf(outfp, ",T,%d", pxf->px_flen);
-						break;
-					case pxfCurrency:
-						fprintf(outfp, ",$,%d", pxf->px_flen);
-						break;
-					case pxfNumber:
-						fprintf(outfp, ",N,%d", pxf->px_flen);
-						break;
-					case pxfLogical:
-						fprintf(outfp, ",L,%d", pxf->px_flen);
-						break;
-					case pxfGraphic:
-						fprintf(outfp, ",G,%d", pxf->px_flen);
-						break;
-					case pxfBLOb:
-						fprintf(outfp, ",B,%d", pxf->px_flen);
-						break;
-					case pxfOLE:
-						fprintf(outfp, ",O,%d", pxf->px_flen);
-						break;
-					case pxfFmtMemoBLOb:
-						fprintf(outfp, ",F,%d", pxf->px_flen);
-						break;
-					case pxfMemoBLOb:
-						fprintf(outfp, ",F,%d", pxf->px_flen);
-						break;
-					case pxfBytes:
-						fprintf(outfp, ",Y,%d", pxf->px_flen);
-						break;
-					case pxfBCD:
-						fprintf(outfp, ",#,%d", pxf->px_flen);
-						break;
-				}
+					fprintf(outfp, "%c", delimiter);
+				fprintf(outfp, "%ccount,I,4", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", enclosure);
-				first = 1;
+					fprintf(outfp, "%c", delimiter);
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
+				fprintf(outfp, "%cdummy,I,4", delimiter);
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
+				fprintf(outfp, "%cthisblocknr,I,4");
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
 			}
-			pxf++;
+			if(markdeleted) {
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
+				fprintf(outfp, "%cdeleted,L,1", delimiter);
+				if(delimiter == ',')
+					fprintf(outfp, "%c", delimiter);
+			}
+			fprintf(outfp, "\n");
 		}
-		fprintf(outfp, "\n");
 
 		/* Allocate memory for record */
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Allocate memory for record."))) == NULL) {

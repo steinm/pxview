@@ -1,3 +1,8 @@
+Version 0.1.9
+	- New option --without-head to suppress first line with field
+	  names in csv output
+	- added complete header line to csv output of primary index files
+
 Version 0.1.8
 	- All float values will formated with %g and not %f
 	- sql output use by default INSERT-statements, --use-copy
