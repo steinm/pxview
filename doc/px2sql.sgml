@@ -75,6 +75,7 @@ manpage.1: manpage.sgml
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg><option>--short-insert <replaceable></replaceable></option></arg>
       <arg><option>--set-sql-type=SPEC <replaceable></replaceable></option></arg>
+      <arg><option>--empty-string-is-null <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
   </refsynopsisdiv>
