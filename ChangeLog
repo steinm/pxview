@@ -1,3 +1,7 @@
+Version 0.0.5
+	- added support for recoding alpha fields
+	- access to alpha fields is done with PX_get_data_alpha()
+
 Version 0.0.4
   - proper handling of negative Long, Short, Double value
 	- finaly implemented export to a given output file (option --output)
