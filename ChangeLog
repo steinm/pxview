@@ -1,3 +1,6 @@
+Version 0.1.11
+	- output of sqlite is much more saver in terms of buffer overflows
+
 Version 0.1.10
 	- added reading of fields of type pxfGraphic in csv mode
 	- reorganize usage information

@@ -1,3 +1,10 @@
+pxview (0.1.11-1) unstable; urgency=low
+
+  * New upstream version.
+  * Changed email of maintainer
+
+ -- Uwe Steinmann <steinm@debian.org>  Mon, 16 Mai 2004 08:42:53 +0200
+
 pxview (0.1.10-1) unstable; urgency=low
 
   * New upstream version.
