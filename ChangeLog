@@ -1,3 +1,16 @@
+Version 0.2.1
+	- new option --blobextension
+	- removed option --include-blobs (blobs are only read if a .MB fiel is given)
+	- updated man page
+	- filename of blobs is created properly if no filename prefis is given
+	- fields of type BCD can be read
+	- used fixed field length of 17 for BCD type of fields
+	- boolean values must be 0 or 1 in sqlite (not true or false)
+	- sql output: all blobs are by default text fields. If it is a memo
+	  it will contain the blob content otherwise the content will be written
+		to file and the field contains the file name.
+	- reading of blobs is finally working
+
 Version 0.2.0
 	- fixed reading of blob files (needs at least pxlib >= 0.2.11)
 
