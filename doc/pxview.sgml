@@ -175,7 +175,8 @@ manpage.1: manpage.sgml
           <option>--csv</option>
         </term>
         <listitem>
-          <para>Dump data records in CSV format. This
+          <para>Dump data records in CSV format. The first line of the output
+					  contains the names of each field, its type and size. This
 						option is the short form for --mode=csv.</para>
         </listitem>
       </varlistentry>
