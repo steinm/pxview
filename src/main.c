@@ -495,7 +495,7 @@ int main(int argc, char *argv[]) {
 	pxblob_t *pxblob = NULL;
 	char *progname = NULL;
 	char *selectedfields = NULL;
-	char *data, *buffer = NULL;
+	char *data;
 	int i, j, c; // general counters
 	int first; // used to indicate if output has started or not
 	int outputcsv = 0;
@@ -675,7 +675,7 @@ int main(int argc, char *argv[]) {
 				} else {
 					fprintf(stderr, _("Argument of --set-sql-type does not contain the delimiting character ':'."));
 					fprintf(stderr, "\n");
-					exit;
+					exit(1);
 				}
 				break;
 			}
@@ -1153,7 +1153,7 @@ int main(int argc, char *argv[]) {
 			pxf++;
 		}
 	}
-	/* }}} *?
+	/* }}} */
 
 	/* Check which fields shall be shown in output {{{
 	 */
@@ -1386,7 +1386,7 @@ int main(int argc, char *argv[]) {
 							case pxfTime: {
 								long value;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+									fprintf(outfp, "'%02ld:%02ld:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								}
 								first = 1;
 								break;
@@ -1466,7 +1466,8 @@ int main(int argc, char *argv[]) {
 								break;
 							}
 							default:
-								fprintf(outfp, "");
+								break;
+//								fprintf(outfp, "");
 						}
 					}
 					offset += pxf->px_flen;
@@ -1949,7 +1950,7 @@ int main(int argc, char *argv[]) {
 			pxf++;
 		}
 		if(markdeleted) {
-			fprintf(outfp, "  <th>deleted</th>\n", isdeleted);
+			fprintf(outfp, "  <th>deleted</th>\n");
 		}
 		fprintf(outfp, " </tr>\n");
 
@@ -1999,7 +2000,7 @@ int main(int argc, char *argv[]) {
 							case pxfTime: {
 								long value;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+									fprintf(outfp, "'%02ld:%02ld:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								}
 								break;
 							}
@@ -2078,7 +2079,8 @@ int main(int argc, char *argv[]) {
 								break;
 							}
 							default:
-								fprintf(outfp, "");
+								break;
+//								fprintf(outfp, "");
 						}
 						fprintf(outfp, "</td>\n");
 					}
@@ -2301,7 +2303,7 @@ int main(int argc, char *argv[]) {
 									case pxfTime: {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%02d:%02d:%02.3f", value/3600000, value/60000%60, value%60000/1000.0);
+											fprintf(outfp, "%02ld:%02ld:%02.3f", value/3600000, value/60000%60, value%60000/1000.0);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -2390,7 +2392,8 @@ int main(int argc, char *argv[]) {
 										fprintf(outfp, "\\N");
 										break;
 									default:
-										fprintf(outfp, "");
+										break;
+//										fprintf(outfp, "");
 								}
 							}
 							offset += pxf->px_flen;
@@ -2473,9 +2476,9 @@ int main(int argc, char *argv[]) {
 											pxdoc->free(pxdoc, value);
 										} else {
 											if(emptystringisnull)
-												fprintf(outfp, "NULL", value);
+												fprintf(outfp, "NULL");
 											else
-												fprintf(outfp, "''", value);
+												fprintf(outfp, "''");
 										}
 										first = 1;
 
@@ -2529,7 +2532,7 @@ int main(int argc, char *argv[]) {
 									case pxfTime: {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+											fprintf(outfp, "'%02ld:%02ld:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 										} else {
 											fprintf(outfp, "NULL");
 										}
@@ -2621,7 +2624,8 @@ int main(int argc, char *argv[]) {
 										first = 1;
 										break;
 									default:
-										fprintf(outfp, "");
+										break;
+//										fprintf(outfp, "");
 								}
 							}
 							offset += pxf->px_flen;
@@ -2678,9 +2682,9 @@ int main(int argc, char *argv[]) {
 				fprintf(outfp, _("Number of records in block: "));
 				fprintf(outfp, "%d\n", pxdbinfo.numrecords);
 				fprintf(outfp, _("Block position in file: "));
-				fprintf(outfp, "%d (0x%X)\n", pxdbinfo.blockpos, pxdbinfo.blockpos);
+				fprintf(outfp, "%ld (0x%X)\n", pxdbinfo.blockpos, (unsigned int) pxdbinfo.blockpos);
 				fprintf(outfp, _("Record position in file: "));
-				fprintf(outfp, "%d (0x%X)\n", pxdbinfo.recordpos, pxdbinfo.recordpos);
+				fprintf(outfp, "%ld (0x%X)\n", pxdbinfo.recordpos, (unsigned int) pxdbinfo.recordpos);
 				if(markdeleted) {
 					fprintf(outfp, _("Record deleted: "));
 					fprintf(outfp, "%d\n", isdeleted);
