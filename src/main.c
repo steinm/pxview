@@ -400,6 +400,7 @@ int main(int argc, char *argv[]) {
 				case pxfAlpha:
 				case pxfDate:
 				case pxfShort:
+				case pxfAutoInc:
 				case pxfLong:
 				case pxfCurrency:
 				case pxfNumber:
