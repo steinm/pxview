@@ -1407,7 +1407,10 @@ int main(int argc, char *argv[]) {
 									char filename[200];
 									FILE *fp;
 									int mod_nr, size;
-									blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+									if(pxf->px_ftype == pxfGraphic)
+										blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+									else
+										blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
 									if(size) {
 										if(blobdata) {
 											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
@@ -1419,7 +1422,7 @@ int main(int argc, char *argv[]) {
 												if(blobprefix)
 													sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
 												else
-													sprintf(filename, "%d.blob", mod_nr);
+													sprintf(filename, "%s_%d.blob", tablename, mod_nr);
 												fp = fopen(filename, "w");
 												if(fp) {
 													fwrite(blobdata, size, 1, fp);
@@ -1759,7 +1762,10 @@ int main(int argc, char *argv[]) {
 											char filename[200];
 											FILE *fp;
 											int mod_nr, size;
-											blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+											if(pxf->px_ftype == pxfGraphic)
+												blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+											else
+												blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
 											str_buffer_print(pxdoc, sbuf, "'");
 											if(size) {
 												if(blobdata) {
@@ -1775,7 +1781,7 @@ int main(int argc, char *argv[]) {
 														if(blobprefix)
 															sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
 														else
-															sprintf(filename, "%d.blob", mod_nr);
+															sprintf(filename, "%s_%d.blob", tablename, mod_nr);
 														fp = fopen(filename, "w");
 														if(fp) {
 															fwrite(blobdata, size, 1, fp);
@@ -2022,7 +2028,10 @@ int main(int argc, char *argv[]) {
 									char filename[200];
 									FILE *fp;
 									int mod_nr, size;
-									blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+									if(pxf->px_ftype == pxfGraphic)
+										blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+									else
+										blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
 									if(size) {
 										if(blobdata) {
 											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
@@ -2034,7 +2043,7 @@ int main(int argc, char *argv[]) {
 												if(blobprefix)
 													sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
 												else
-													sprintf(filename, "%d.blob", mod_nr);
+													sprintf(filename, "%s_%d.blob", tablename, mod_nr);
 												fp = fopen(filename, "w");
 												if(fp) {
 													fwrite(blobdata, size, 1, fp);
@@ -2334,7 +2343,10 @@ int main(int argc, char *argv[]) {
 												char filename[200];
 												FILE *fp;
 												int mod_nr, size;
-												blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												if(pxf->px_ftype == pxfGraphic)
+													blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												else
+													blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
 												if(size) {
 													if(blobdata) {
 														if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
@@ -2346,7 +2358,7 @@ int main(int argc, char *argv[]) {
 															if(blobprefix)
 																sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
 															else
-																sprintf(filename, "%d.blob", mod_nr);
+																sprintf(filename, "%s_%d.blob", tablename, mod_nr);
 															fp = fopen(filename, "w");
 															if(fp) {
 																fwrite(blobdata, size, 1, fp);
@@ -2566,7 +2578,10 @@ int main(int argc, char *argv[]) {
 												char filename[200];
 												FILE *fp;
 												int mod_nr, size;
-												blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												if(pxf->px_ftype == pxfGraphic)
+													blobdata = PX_read_graphicdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
+												else
+													blobdata = PX_read_blobdata(pxblob, &data[offset], pxf->px_flen, &mod_nr, &size);
 												fputc('\'', outfp);
 												if(size) {
 													if(blobdata) {
@@ -2579,7 +2594,7 @@ int main(int argc, char *argv[]) {
 															if(blobprefix)
 																sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
 															else
-																sprintf(filename, "%d.blob", mod_nr);
+																sprintf(filename, "%s_%d.blob", tablename, mod_nr);
 															fp = fopen(filename, "w");
 															if(fp) {
 																fwrite(blobdata, size, 1, fp);
