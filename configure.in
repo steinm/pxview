@@ -115,6 +115,7 @@ else
 			SQLITE_INCLUDEDIR="-I/usr/include"
 			try_sqlite=true
 		else
+			AC_MSG_ERROR(header file for sqlite not found)
 			try_sqlite=false
 		fi
 	fi
