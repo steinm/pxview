@@ -10,5 +10,5 @@ Architecture: any
 Depends: ${shlibs:Depends}
 Description: Converts Paradox files into several formats
  pxview can display information about various Paradox files and
- convert Paradox databases into several output formats. Currently,
+ converts Paradox databases into several output formats. Currently,
  the output formats csv, html, sql and sqlite are supported.
