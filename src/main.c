@@ -10,6 +10,16 @@
 #include "config.h"
 #define _(String) gettext(String)
 
+void strrep(char *str, char c1, char c2) {
+	char *ptr = str;
+
+	while(*ptr != '\0') {
+		if(*ptr == c1)
+			*ptr = c2;
+		ptr++;
+	}
+}
+
 void usage(char *progname) {
 	int recode;
 
@@ -17,7 +27,14 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("Copyright: Copyright (C) 2003 Uwe Steinmann <uwe@steinmann.cx>"));
 	printf("\n\n");
-	printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV format.\n\n"), progname);
+	if(!strcmp(progname, "px2csv")) {
+		printf(_("%s reads a paradox file and outputs the file in CSV format."), progname);
+	} else if(!strcmp(progname, "px2sql")) {
+		printf(_("%s reads a paradox file and outputs the file in SQL format."), progname);
+	} else {
+		printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV or SQL format."), progname);
+	}
+	printf("\n\n");
 	printf(_("Usage: %s [OPTIONS] FILE"), progname);
 	printf("\n\n");
 	printf(_("Options:"));
@@ -252,7 +269,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "\n");
 		fprintf(stderr, "\n");
 		usage(progname);
-		exit(0);
+		exit(1);
 	}
 
 	if(outputfile) {
@@ -327,9 +344,15 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, _("Max. Table size:     %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
 		fprintf(outfp, _("Num. of Data Blocks: %d\n"), pxh->px_fileblocks);
 		if((pxh->px_filetype == pxfFileTypNonIncSecIndex) ||
-			 (pxh->px_filetype == pxfFileTypIncSecIndex))
+		   (pxh->px_filetype == pxfFileTypIncSecIndex)) {
 			fprintf(outfp, _("Num. of Index Field: %d\n"), pxh->px_indexfieldnumber);
-		fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
+			fprintf(outfp, _("Sort order of Field: %d\n"), pxh->px_refintegrity);
+		}
+		if((pxh->px_filetype == pxfFileTypIndexDB) ||
+		   (pxh->px_filetype == pxfFileTypNonIndexDB)) {
+			fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
+			fprintf(outfp, _("Next auto inc. value: %d\n"), pxh->px_autoinc);
+		}
 		fprintf(outfp, _("Write protected:     %d\n"), pxh->px_writeprotected);
 		fprintf(outfp, _("Code Page:           %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
 		if(verbose) {
@@ -406,6 +429,15 @@ int main(int argc, char *argv[]) {
 
 	if(outputschema) {
 		int sumlen = 0;
+
+		if((pxh->px_filetype != pxfFileTypIndexDB) && 
+		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
+			fprintf(stderr, _("Schema output is only reasonable for DB files."));
+			fprintf(stderr, "\n");
+			PX_close(pxdoc);
+			exit(1);
+		}
+
 		if(tablename)
 			fprintf(outfp, "[%s]\n", tablename);
 		else
@@ -498,12 +530,12 @@ int main(int argc, char *argv[]) {
 		if(regcomp(&preg, fieldregex, REG_NOSUB|REG_EXTENDED)) {
 			fprintf(stderr, _("Could not compile regular expression to select fields."));
 			PX_close(pxdoc);
-			exit;
+			exit(1);
 		}
 		/* allocate memory for selected field array */
 		if((selectedfields = (char *) pxdoc->malloc(pxdoc, pxh->px_numfields, _("Could not allocate memory for array of selected fields."))) == NULL) {
 			PX_close(pxdoc);
-			exit;
+			exit(1);
 		}
 		memset(selectedfields, '\0', pxh->px_numfields);
 		pxf = pxh->px_fields;
@@ -669,6 +701,14 @@ int main(int argc, char *argv[]) {
 
 	/* Output data as sql statements */
 	if(outputsql) {
+		if((pxh->px_filetype != pxfFileTypIndexDB) && 
+		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
+			fprintf(stderr, _("SQL output is only reasonable for DB files."));
+			fprintf(stderr, "\n");
+			PX_close(pxdoc);
+			exit(1);
+		}
+
 		/* check if existing table shall be delete */
 		if(deletetable) {
 			if(tablename)
@@ -685,6 +725,7 @@ int main(int argc, char *argv[]) {
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
+				strrep(pxf->px_fname, ' ', '_');
 				if(first == 1)
 					fprintf(outfp, ",\n");
 				switch(pxf->px_ftype) {
@@ -710,6 +751,8 @@ int main(int argc, char *argv[]) {
 						if(includeblobs) {
 							fprintf(outfp, "  %s ", pxf->px_fname);
 							first = 1;
+						} else {
+							first = 0;
 						}
 						break;
 				}
@@ -758,6 +801,8 @@ int main(int argc, char *argv[]) {
 					default:
 						break;
 				}
+				if(i < pxh->px_primarykeyfields)
+					fprintf(outfp, " unique");
 			}
 			pxf++;
 		}
@@ -793,6 +838,9 @@ int main(int argc, char *argv[]) {
 						case pxfCurrency:
 						case pxfNumber:
 						case pxfLogical:
+						case pxfBCD:
+						case pxfTimestamp:
+						case pxfBytes:
 							fprintf(outfp, "%s", pxf->px_fname);
 							first = 1;
 							break;
@@ -803,6 +851,8 @@ int main(int argc, char *argv[]) {
 							if(includeblobs) {
 								fprintf(outfp, "%s", pxf->px_fname);
 								first = 1;
+							} else {
+								first = 0;
 							}
 							break;
 					}
@@ -851,6 +901,7 @@ int main(int argc, char *argv[]) {
 									break;
 								}
 								case pxfAutoInc:
+								case pxfTimestamp:
 								case pxfLong: {
 									long value;
 									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
@@ -901,7 +952,12 @@ int main(int argc, char *argv[]) {
 									if(includeblobs) {
 										fprintf(outfp, "\\N");
 										first = 1;
+									} else {
+										first = 0;
 									}
+									break;
+								case pxfBCD:
+									fprintf(outfp, "\\N");
 									break;
 								default:
 									fprintf(outfp, "");
