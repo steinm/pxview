@@ -1,4 +1,5 @@
 Version 0.0.7
+	- man pages are not created if docbook-to-man is missing
 	- program returns 1 in case of error else 0
 	- better sql output
 	- fixed potential segm fault
