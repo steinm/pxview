@@ -20,6 +20,10 @@ void strrep(char *str, char c1, char c2) {
 	}
 }
 
+void errorhandler(pxdoc_t *p, int error, const char *str) {
+	  fprintf(stderr, "PXLib: %s\n", str);
+}
+
 void usage(char *progname) {
 	int recode;
 
@@ -69,14 +73,16 @@ void usage(char *progname) {
 		printf(_("  --enclosure=CHAR    character used to enclose field values."));
 		printf("\n");
 	}
-	printf(_("  --includeblobs      add blob fields in sql output."));
+	printf(_("  --include-blobs     add blob fields in sql output."));
 	printf("\n");
 	printf(_("  --fields=REGEX      extended regular expression to select fields."));
+	printf("\n");
+	printf(_("  --output-deleted    output also records which were deleted."));
 	printf("\n");
 	if(strcmp(progname, "px2csv")) {
 		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
-		printf(_("  --deletetable       delete existing sql database table."));
+		printf(_("  --delete-table      delete existing sql database table."));
 		printf("\n");
 	}
 	printf("\n");
@@ -133,6 +139,7 @@ int main(int argc, char *argv[]) {
 	int outputdebug = 0;
 	int includeblobs = 0;
 	int deletetable = 0;
+	int outputdeleted = 0;
 	int verbose = 0;
 	char delimiter = '\t';
 	char enclosure = '"';
@@ -170,9 +177,13 @@ int main(int argc, char *argv[]) {
 			{"separator", 1, 0, 0},
 			{"enclosure", 1, 0, 1},
 			{"includeblobs", 0, 0, 2},
+			{"include-blobs", 0, 0, 2},
 			{"fields", 1, 0, 'f'},
 			{"tablename", 1, 0, 3},
 			{"deletetable", 1, 0, 5},
+			{"delete-table", 1, 0, 5},
+			{"outputdeleted", 1, 0, 6},
+			{"output-deleted", 1, 0, 6},
 			{"mode", 1, 0, 4},
 			{0, 0, 0, 0}
 		};
@@ -206,6 +217,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 5:
 				deletetable = 1;
+				break;
+			case 6:
+				outputdeleted = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -283,7 +297,7 @@ int main(int argc, char *argv[]) {
 		outfp = stdout;
 	}
 
-	pxdoc = PX_new();
+	pxdoc = PX_new2(errorhandler, NULL, NULL, NULL);
 	if(0 > PX_open_file(pxdoc, inputfile)) {
 		fprintf(stderr, _("Could not open input file."));
 		fprintf(stderr, "\n");
@@ -305,8 +319,9 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(outputinfo) {
-		fprintf(outfp, _("File Version:        %1.1f\n"), (float) pxh->px_fileversion/10.0);
-		fprintf(outfp, _("File Type:           "));
+		int reclen;
+		fprintf(outfp, _("File Version:            %1.1f\n"), (float) pxh->px_fileversion/10.0);
+		fprintf(outfp, _("File Type:               "));
 		switch(pxh->px_filetype) {
 			case pxfFileTypIndexDB:
 				fprintf(outfp, _("indexed .DB data file"));
@@ -337,35 +352,40 @@ int main(int argc, char *argv[]) {
 				break;
 		}
 		fprintf(outfp, "\n");
-		fprintf(outfp, _("Tablename:           %s\n"), pxh->px_tablename);
-		fprintf(outfp, _("Num. of Records:     %d\n"), pxh->px_numrecords);
-		fprintf(outfp, _("Num. of Fields:      %d\n"), pxh->px_numfields);
-		fprintf(outfp, _("Header size:         %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
-		fprintf(outfp, _("Max. Table size:     %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
-		fprintf(outfp, _("Num. of Data Blocks: %d\n"), pxh->px_fileblocks);
+		fprintf(outfp, _("Tablename:               %s\n"), pxh->px_tablename);
+		fprintf(outfp, _("Num. of Records:         %d\n"), pxh->px_numrecords);
+		fprintf(outfp, _("Theor. Num. of Rec.:     %d\n"), pxh->px_theonumrecords);
+		fprintf(outfp, _("Num. of Fields:          %d\n"), pxh->px_numfields);
+		fprintf(outfp, _("Header size:             %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
+		fprintf(outfp, _("Max. Table size:         %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
+		fprintf(outfp, _("Num. of Data Blocks:     %d\n"), pxh->px_fileblocks);
 		if((pxh->px_filetype == pxfFileTypNonIncSecIndex) ||
 		   (pxh->px_filetype == pxfFileTypIncSecIndex)) {
-			fprintf(outfp, _("Num. of Index Field: %d\n"), pxh->px_indexfieldnumber);
-			fprintf(outfp, _("Sort order of Field: %d\n"), pxh->px_refintegrity);
+			fprintf(outfp, _("Num. of Index Field:     %d\n"), pxh->px_indexfieldnumber);
+			fprintf(outfp, _("Sort order of Field:     %d\n"), pxh->px_refintegrity);
 		}
 		if((pxh->px_filetype == pxfFileTypIndexDB) ||
 		   (pxh->px_filetype == pxfFileTypNonIndexDB)) {
 			fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
-			fprintf(outfp, _("Next auto inc. value: %d\n"), pxh->px_autoinc);
+			fprintf(outfp, _("Next auto inc. value:    %d\n"), pxh->px_autoinc);
 		}
-		fprintf(outfp, _("Write protected:     %d\n"), pxh->px_writeprotected);
-		fprintf(outfp, _("Code Page:           %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
+		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
+		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
 		if(verbose) {
-			fprintf(outfp, _("Record size:         %d (0x%X)\n"), pxh->px_recordsize, pxh->px_recordsize);
-			fprintf(outfp, _("Sort order:          %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
-			fprintf(outfp, _("Auto increment:      %d (0x%X)\n"), pxh->px_autoinc, pxh->px_autoinc);
+			fprintf(outfp, _("Record size:             %d (0x%X)\n"), pxh->px_recordsize, pxh->px_recordsize);
+			fprintf(outfp, _("Sort order:              %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
+			fprintf(outfp, _("Auto increment:          %d (0x%X)\n"), pxh->px_autoinc, pxh->px_autoinc);
+			fprintf(outfp, _("Modified Flags 1:        %d (0x%X)\n"), pxh->px_modifiedflags1, pxh->px_modifiedflags1);
+			fprintf(outfp, _("Modified Flags 2:        %d (0x%X)\n"), pxh->px_modifiedflags2, pxh->px_modifiedflags2);
 		}
 		fprintf(outfp, "\n");
 
 		fprintf(outfp, _("Fieldname          | Type\n"));
 		fprintf(outfp, "------------------------------------\n");
 		pxf = pxh->px_fields;
+		reclen = 0;
 		for(i=0; i<pxh->px_numfields; i++) {
+			reclen += pxf->px_flen;
 			fprintf(outfp, "%18s | ", pxf->px_fname);
 			switch(pxf->px_ftype) {
 				case pxfAlpha:
@@ -425,6 +445,7 @@ int main(int argc, char *argv[]) {
 			pxf++;
 		}
 		fprintf(outfp, "------------------------------------\n");
+		fprintf(outfp, _("     Record length | %d (0x%X)\n"), reclen, reclen);
 	}
 
 	if(outputschema) {
@@ -549,6 +570,8 @@ int main(int argc, char *argv[]) {
 
 	/* Output data as comma separated values */
 	if(outputcsv) {
+		int numrecords;
+		int isdeleted;
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -556,9 +579,18 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		for(j=0; j<pxh->px_numrecords; j++) {
+		if(outputdeleted) {
+			numrecords = pxh->px_theonumrecords;
+			isdeleted = 1;
+		} else {
+			numrecords = pxh->px_numrecords;
+			isdeleted = 0;
+		}
+		for(j=0; j<numrecords; j++) {
 			int offset;
-			if(PX_get_record(pxdoc, j, data)) {
+			int ret;
+			ret = PX_get_record2(pxdoc, j, data, &isdeleted, NULL);
+			if(ret) {
 				pxf = pxh->px_fields;
 				offset = 0;
 				first = 0;  // set to 1 when first field has been output
@@ -639,9 +671,9 @@ int main(int argc, char *argv[]) {
 									char filename[200];
 									FILE *fp;
 									size_t size, boffset, mod_nr;
-									size = get_long_be(&data[offset+4]);
-									boffset = get_long_be(&data[offset]) & 0xffffff00;
-									mod_nr = get_short_be(&data[offset+8]);
+									size = get_long_le(&data[offset+4]);
+									boffset = get_long_le(&data[offset]) & 0xffffff00;
+									mod_nr = get_short_le(&data[offset+8]);
 									fprintf(outfp, "offset=%ld ", boffset);
 									fprintf(outfp, "size=%ld ", size);
 									fprintf(outfp, "mod_nr=%d ", mod_nr);
@@ -660,9 +692,9 @@ int main(int argc, char *argv[]) {
 									}
 
 								} else {
-									fprintf(outfp, "offset=%ld ", get_long_be(&data[offset]) & 0xffffff00);
-									fprintf(outfp, "size=%ld ", get_long_be(&data[offset+4]));
-									fprintf(outfp, "mod_nr=%d ", get_short_be(&data[offset+8]));
+									fprintf(outfp, "offset=%ld ", get_long_le(&data[offset]) & 0xffffff00);
+									fprintf(outfp, "size=%ld ", get_long_le(&data[offset+4]));
+									fprintf(outfp, "mod_nr=%d ", get_short_le(&data[offset+8]));
 									hex_dump(outfp, &data[offset], pxf->px_flen);
 								}
 								first = 1;
