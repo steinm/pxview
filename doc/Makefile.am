@@ -2,12 +2,19 @@
 %.1: %.sgml
 	docbook-to-man $< > $@
 
+%.html: %.sgml
+	docbook2html $<
+	mv index.html $@
+
 distclean: clean
 
 clean:
 	rm -f ${man_MANS}
 
-EXTRA_DIST = pxview.sgml px2csv.sgml px2html.sgml px2sql.sgml px2sqlite.sgml
+SGML_FILES = pxview.sgml px2csv.sgml px2html.sgml px2sql.sgml px2sqlite.sgml
 
-man_MANS = $(EXTRA_DIST:.sgml=.1)
+EXTRA_DIST = $(SGML_FILES)
 
+man_MANS = $(SGML_FILES:.sgml=.1)
+
+html: $(SGML_FILES:.sgml=.html)
