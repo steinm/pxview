@@ -1,5 +1,5 @@
 
-%.3: %.sgml
+%.1: %.sgml
 	docbook-to-man $< > $@
 
 clean:
@@ -7,5 +7,5 @@ clean:
 
 EXTRA_DIST = pxview.sgml
 
-man_MANS = $(EXTRA_DIST:.sgml=.3)
+man_MANS = $(EXTRA_DIST:.sgml=.1)
 
