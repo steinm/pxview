@@ -1,4 +1,7 @@
 Version 0.1.3
+	- csv output of .PX files got an extra column with the block number of
+	  the current record for better investigation of the index file
+	- output of first and last block number
 	- option 'output' is now 'output-file'
 	- fixed debug output
 	- added output of fileUpdateTime
