@@ -1,5 +1,11 @@
 Version 0.2.4
 	- fixed various memory leaks
+	- fixed many compiler warnings
+	- configure checks for PX_timestamp2string() to ensure pxlib >= 0.4.3
+	  is present
+	- use functions like PX_get_num_fields() and PX_get_value() instead
+	  of directly accessing the file header structure
+	- create html version of manual pages on request
 
 Version 0.2.3
 	- fixed reading and outputting timestamps, uses the new function
