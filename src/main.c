@@ -278,6 +278,19 @@ void set_default_sql_types(struct sql_type_map *typemap) {
 }
 /* }}} */
 
+/* free_sql_types() {{{
+ */
+void free_sql_types(struct sql_type_map *typemap) {
+	int i;
+	for(i=1; i<=pxfBytes; i++) {
+		if(typemap[i].pxtype)
+			free(typemap[i].pxtype);
+		if(typemap[i].sqltype)
+			free(typemap[i].sqltype);
+	}
+}
+/* }}} */
+
 /* set_sql_type() {{{
  */
 void set_sql_type(struct sql_type_map *typemap, int pxtype, char *sqltype) {
@@ -645,6 +658,10 @@ int main(int argc, char *argv[]) {
 				break;
 			case 11:
 				fprintf(stdout, "%s\n", VERSION);
+				if(typemap) {
+					free_sql_types(typemap);
+					free(typemap);
+				}
 				exit(0);
 				break;
 			case 12:
@@ -693,6 +710,10 @@ int main(int argc, char *argv[]) {
 						printf("%s:%s\n", typemap[i].pxtype, typemap[i].sqltype);
 				}
 				printf("\n");
+				if(typemap) {
+					free_sql_types(typemap);
+					free(typemap);
+				}
 				exit(0);
 				break;
 			case 'v':
@@ -754,6 +775,10 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "\n");
 		fprintf(stderr, "\n");
 		usage(progname);
+		if(typemap) {
+			free_sql_types(typemap);
+			free(typemap);
+		}
 		exit(1);
 	}
 	/* }}} */
