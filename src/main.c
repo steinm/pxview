@@ -43,6 +43,40 @@ void strrep(char *str, char c1, char c2) {
 }
 /* }}} */
 
+/* str_replace() {{{
+ * Replace th first occurence of a substring s1 in str with the string s2
+ * Returns the new string
+ */
+char * str_replace(char *str, char *s1, char *s2) {
+	char *newstring, *newptr;
+	char *firstoccurence;
+	int index; /* Position of first occurence of s1 */
+	int rep_len, find_len; /* Length of s2 and s1 */
+
+	if(NULL == str || NULL == s1)
+		return(NULL);
+	if(NULL == s2)
+		rep_len = 0;
+	else
+		rep_len = strlen(s2);
+	find_len = strlen(s1);
+	newstring = malloc(strlen(str) + rep_len - find_len + 1);
+	firstoccurence = strstr(str, s1);
+	if(NULL == firstoccurence) {
+		memcpy(newstring, str, strlen(str)+1);
+		return(newstring);
+	}
+	newptr = newstring;
+	index = firstoccurence-str;
+	memcpy(newptr, str, index); /* Copy string up to start of s1 */
+	newptr += index;
+	memcpy(newptr, s2, rep_len); /* Copy replacement string */
+	newptr += rep_len;
+	memcpy(newptr, firstoccurence+find_len, rep_len + 1); /* Copy rest of string */
+	return(newstring);
+}
+/* }}} */
+
 struct str_buffer {
 	char *buffer;
 	size_t cur;
@@ -196,6 +230,72 @@ int printmask(FILE *outfp, char *str, char c1, char c2 ) {
 }
 /* }}} */
 
+struct sql_type_map {
+	char *pxtype;
+	char *sqltype;
+};
+
+void set_default_sql_types(struct sql_type_map *typemap) {
+	memset(typemap, 0, (pxfBytes+1) * sizeof(struct sql_type_map));
+	typemap[0].pxtype = NULL;
+	typemap[0].sqltype = NULL;
+	typemap[pxfAlpha].pxtype = strdup("alpha");
+	typemap[pxfAlpha].sqltype = strdup("char(%d)");
+	typemap[pxfDate].pxtype = strdup("date");
+	typemap[pxfDate].sqltype = strdup("date");
+	typemap[pxfShort].pxtype = strdup("short");
+	typemap[pxfShort].sqltype = strdup("integer");
+	typemap[pxfLong].pxtype = strdup("long");
+	typemap[pxfLong].sqltype = strdup("integer");
+	typemap[pxfCurrency].pxtype = strdup("currency");
+	typemap[pxfCurrency].sqltype = strdup("decimal(20,2)");
+	typemap[pxfNumber].pxtype = strdup("number");
+	typemap[pxfNumber].sqltype = strdup("real");
+	typemap[pxfLogical].pxtype = strdup("logical");
+	typemap[pxfLogical].sqltype = strdup("boolean");
+	typemap[pxfMemoBLOb].pxtype = strdup("memoblob");
+	typemap[pxfMemoBLOb].sqltype = strdup("oid");
+	typemap[pxfBLOb].pxtype = strdup("blob");
+	typemap[pxfBLOb].sqltype = strdup("oid");
+	typemap[pxfFmtMemoBLOb].pxtype = strdup("fmtmemoblob");
+	typemap[pxfFmtMemoBLOb].sqltype = strdup("oid");
+	typemap[pxfOLE].pxtype = strdup("ole");
+	typemap[pxfOLE].sqltype = strdup("oid");
+	typemap[pxfGraphic].pxtype = strdup("graphic");
+	typemap[pxfGraphic].sqltype = strdup("oid");
+	typemap[pxfTime].pxtype = strdup("time");
+	typemap[pxfTime].sqltype = strdup("time");
+	typemap[pxfTimestamp].pxtype = strdup("timestamp");
+	typemap[pxfTimestamp].sqltype = strdup("timestamp");
+	typemap[pxfAutoInc].pxtype = strdup("autoinc");
+	typemap[pxfAutoInc].sqltype = strdup("integer");
+	typemap[pxfBCD].pxtype = strdup("bcd");
+	typemap[pxfBCD].sqltype = strdup("decimal(34,%d)");
+	typemap[pxfBytes].pxtype = strdup("bytes");
+	typemap[pxfBytes].sqltype = strdup("text");
+}
+
+void set_sql_type(struct sql_type_map *typemap, int pxtype, char *sqltype) {
+	if(pxtype < 1 || pxtype > pxfBytes) {
+		return;
+	}
+	if(sqltype == NULL) {
+		return;
+	}
+	if(typemap[pxtype].sqltype)
+		free(typemap[pxtype].sqltype);
+	typemap[pxtype].sqltype = strdup(sqltype);
+}
+
+char *get_sql_type(struct sql_type_map *typemap, int pxtype, int len) {
+	static char buffer[200];
+	if(pxtype < 1 || pxtype > pxfBytes) {
+		return NULL;
+	}
+	snprintf(buffer, 200, typemap[pxtype].sqltype, len);
+	return(buffer);
+}
+
 void errorhandler(pxdoc_t *p, int error, const char *str, void *data) {
 	  fprintf(stderr, "PXLib: %s\n", str);
 }
@@ -303,6 +403,8 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  --short-insert      use short insert statements."));
 		printf("\n");
+		printf(_("  --set-sql-type=SPEC sets the type for a sql field."));
+		printf("\n");
 	}
 	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
 		printf("\n");
@@ -409,7 +511,12 @@ int main(int argc, char *argv[]) {
 	char *fieldregex = NULL;
 	char *tablename = NULL;
 	char *targetencoding = NULL;
+	struct sql_type_map *typemap;
 	FILE *outfp = NULL;
+
+	/* allocate 1 more struct because the first one is not used */
+	typemap = malloc((pxfBytes+1) * sizeof(struct sql_type_map));
+	set_default_sql_types(typemap);
 
 #ifdef MEMORY_DEBUGGING
 	PX_mp_init();
@@ -459,6 +566,7 @@ int main(int argc, char *argv[]) {
 			{"without-head", 0, 0, 10},
 			{"skip-schema", 0, 0, 12},
 			{"short-insert", 0, 0, 13},
+			{"set-sql-type", 1, 0, 14},
 			{"primary-index-file", 1, 0, 'n'},
 			{"version", 0, 0, 11},
 			{0, 0, 0, 0}
@@ -530,8 +638,42 @@ int main(int argc, char *argv[]) {
 			case 13:
 				shortinsert = 1;
 				break;
+			case 14: {
+				char *delimptr;
+				int typelen;
+				int index = 0;
+				delimptr = strchr(optarg, ':');
+				if(NULL != delimptr) {
+					typelen = delimptr-optarg;
+					for(i=1; i<=pxfBytes; i++) {
+						if(typemap[i].pxtype) {
+							if(!strncmp(typemap[i].pxtype, optarg, typelen)) {
+								index = i;
+							}
+						}
+					}
+					if(index) {
+						typemap[index].sqltype = strdup(delimptr+1);
+					} else {
+						fprintf(stderr, _("Unknown paradox type specified with --set-sql-type."));
+						fprintf(stderr, "\n");
+					}
+				} else {
+					fprintf(stderr, _("Argument of --set-sql-type does not contain the delimiting character ':'."));
+					fprintf(stderr, "\n");
+					exit;
+				}
+				break;
+			}
 			case 'h':
 				usage(progname);
+				printf(_("Predefined paradox to sql field type mapping:"));
+				printf("\n");
+				for(i=1; i<pxfBytes; i++) {
+					if(typemap[i].sqltype)
+						printf("%s:%s\n", typemap[i].pxtype, typemap[i].sqltype);
+				}
+				printf("\n");
 				exit(0);
 				break;
 			case 'v':
@@ -876,7 +1018,7 @@ int main(int argc, char *argv[]) {
 					fprintf(outfp, "autoinc(%d)\n", pxf->px_flen);
 					break;
 				case pxfBCD:
-					fprintf(outfp, "decimal(17,%d)\n", pxf->px_flen);
+					fprintf(outfp, "decimal(34,%d)\n", pxf->px_flen);
 					break;
 				case pxfBytes:
 					fprintf(outfp, "bytes(%d)\n", pxf->px_flen);
@@ -1459,6 +1601,7 @@ int main(int argc, char *argv[]) {
 							}
 							break;
 					}
+					/*
 					switch(pxf->px_ftype) {
 						case pxfAlpha:
 							str_buffer_print(pxdoc, sbuf, "char(%d)", pxf->px_flen);
@@ -1503,7 +1646,8 @@ int main(int argc, char *argv[]) {
 							break;
 						default:
 							break;
-					}
+					} */
+					str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 					if(i < pxh->px_primarykeyfields)
 						str_buffer_print(pxdoc, sbuf, " unique");
 				}
@@ -1981,6 +2125,7 @@ int main(int argc, char *argv[]) {
 							}
 							break;
 					}
+					/*
 					switch(pxf->px_ftype) {
 						case pxfAlpha:
 							fprintf(outfp, "char(%d)", pxf->px_flen);
@@ -2025,7 +2170,8 @@ int main(int argc, char *argv[]) {
 							break;
 						default:
 							break;
-					}
+					} */
+					fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 					if(i < pxh->px_primarykeyfields)
 						fprintf(outfp, " unique");
 				}
@@ -2465,6 +2611,9 @@ int main(int argc, char *argv[]) {
 		pxdoc->free(pxdoc, data);
 	}
 	/* }}} */
+
+	/* FIXME: not to free typemap->sqltype */
+	free(typemap);
 
 	/* Free resources and close files {{{
 	 */

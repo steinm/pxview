@@ -87,6 +87,7 @@ manpage.1: manpage.sgml
       <arg><option>--skip-schema <replaceable></replaceable></option></arg>
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg><option>--short-insert <replaceable></replaceable></option></arg>
+      <arg><option>--set-sql-type=SPEC <replaceable></replaceable></option></arg>
       <arg><option>--output-deleted <replaceable></replaceable></option></arg>
       <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
@@ -390,6 +391,28 @@ manpage.1: manpage.sgml
         <listitem>
           <para>Use given tablename instead of the one stored in the database
 					 file. This option only affects schema, sql and sqlite output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--set-sql-type=SPEC</option>
+        </term>
+        <listitem>
+          <para>Overrides the default mapping from a paradox field type to
+					  a sql field type. This option only affects sql and sqlite output
+						and should be use with care. You can output the predefined
+						mapping by
+						passing the option <option>--help</option>. SPEC is a colon
+						separated pair of field types. The one left to the colon is
+						the paradox type, the other one is the sql type. The paradox
+						type is one of 'alpha', 'date', 'short', 'long', 'currency',
+						'number', 'logical', 'memoblob', 'blob', 'fmtblob', 'ole',
+						'graphic', 'time', 'timestamp',
+						'autoinc', 'bcd', or 'bytes'. The sql type can be any available
+						type like real, integer or text. If the sql type requires
+						a length (e.g char(x)), then it can put into
+						the type specification with the placeholder '%d', e.g.
+						'alpha:char(%d)'. There is currently no check for reasonable
+						type mapping.</para>
         </listitem>
       </varlistentry>
     </variablelist>
