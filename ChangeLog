@@ -1,4 +1,5 @@
 Version 0.1.12
+	- added new option --set-sql-type
 	- added new option --short-insert
 
 Version 0.1.11
