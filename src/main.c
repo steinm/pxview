@@ -793,10 +793,7 @@ int main(int argc, char *argv[]) {
 							case pxfAlpha: {
 								char *value;
 								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									if(enclosure)
-										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
-									else
-										fprintf(outfp, "%s", value);
+									fprintf(outfp, "%s", value);
 								}
 								first = 1;
 
