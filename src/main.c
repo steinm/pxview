@@ -90,6 +90,12 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  --output-deleted    output also records which were deleted."));
 	printf("\n");
+#if PX_HAVE_GSF
+	if(PX_has_gsf_support()) {
+		printf(_("  --use-gsf           use gsf library to read input file."));
+		printf("\n");
+	}
+#endif
 	if(strcmp(progname, "px2sql") && strcmp(progname, "px2html")) {
 		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
@@ -132,6 +138,10 @@ void usage(char *progname) {
 	else
 		printf(_("libpx has been compiled for little endian architecture."));
 	printf("\n\n");
+	printf(_("libpx has gsf support: %s"), PX_has_gsf_support() == 1 ? _("Yes") : _("No"));
+	printf("\n\n");
+	printf(_("libpx has version: %d.%d.%d"), PX_get_majorversion(), PX_get_minorversion(), PX_get_subminorversion());
+	printf("\n\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -155,6 +165,7 @@ int main(int argc, char *argv[]) {
 	int deletetable = 0;
 	int outputdeleted = 0;
 	int markdeleted = 0;
+	int usegsf = 0;
 	int verbose = 0;
 	char delimiter = '\t';
 	char enclosure = '"';
@@ -204,6 +215,7 @@ int main(int argc, char *argv[]) {
 			{"output-deleted", 0, 0, 6},
 			{"markdeleted", 0, 0, 7},
 			{"mark-deleted", 0, 0, 7},
+			{"use-gsf", 0, 0, 8},
 			{"primary-index-file", 1, 0, 'n'},
 			{0, 0, 0, 0}
 		};
@@ -245,6 +257,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 7:
 				markdeleted = 1;
+				break;
+			case 8:
+				usegsf = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -342,10 +357,38 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	if(0 > PX_open_file(pxdoc, inputfile)) {
-		fprintf(stderr, _("Could not open input file."));
-		fprintf(stderr, "\n");
-		exit(1);
+	if(PX_has_gsf_support() && usegsf) {
+		GsfInput *input = NULL;
+		GsfInputStdio  *in_stdio;
+		GsfInputMemory *in_mem;
+		GError *gerr = NULL;
+		fprintf(stderr, "Inputfile:  %s\n", inputfile);
+		gsf_init ();
+		in_mem = gsf_input_mmap_new (inputfile, NULL);
+		if (in_mem == NULL) {
+			in_stdio = gsf_input_stdio_new(inputfile, &gerr);
+			if(in_stdio != NULL)
+				input = GSF_INPUT (in_stdio);
+			else {
+				fprintf(stderr, _("Could not open gsf input file."));
+				fprintf(stderr, "\n");
+				g_object_unref (G_OBJECT (input));
+				exit(1);
+			}
+		} else {
+			input = GSF_INPUT (in_mem);
+		}
+		if(0 > PX_open_gsf(pxdoc, input)) {
+			fprintf(stderr, _("Could not open input file."));
+			fprintf(stderr, "\n");
+			exit(1);
+		}
+	} else {
+		if(0 > PX_open_file(pxdoc, inputfile)) {
+			fprintf(stderr, _("Could not open input file."));
+			fprintf(stderr, "\n");
+			exit(1);
+		}
 	}
 	if(pindexfile) {
 		pindexdoc = PX_new2(errorhandler, NULL, NULL, NULL);
@@ -1361,6 +1404,10 @@ int main(int argc, char *argv[]) {
 
 	PX_close(pxdoc);
 	PX_delete(pxdoc);
+
+	if(PX_has_gsf_support() && usegsf) {
+		gsf_shutdown();
+	}
 
 	exit(0);
 }
