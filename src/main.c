@@ -60,8 +60,8 @@ void usage(char *progname) {
 int main(int argc, char *argv[]) {
 	pxhead_t *pxh;
 	pxfield_t *pxf;
-	pxdoc_t *pxdoc;
-	pxblob_t *pxblob;
+	pxdoc_t *pxdoc = NULL;
+	pxblob_t *pxblob = NULL;
 	char *selectedfields;
 	char *data, buffer[1000];
 	int i, j, c; // general counters
@@ -349,6 +349,7 @@ int main(int argc, char *argv[]) {
 					printf("Short Integer,11,00,%d\n", sumlen);
 					sumlen += 11;
 					break;
+				case pxfAutoInc:
 				case pxfLong:
 					printf("Long Integer,11,00,%d\n", sumlen);
 					sumlen += 11;
@@ -370,7 +371,6 @@ int main(int argc, char *argv[]) {
 				case pxfFmtMemoBLOb:
 				case pxfOLE:
 				case pxfGraphic:
-				case pxfAutoInc:
 					break;
 				case pxfTime:
 					printf("ATime,11,00,%d\n", sumlen);
@@ -453,18 +453,33 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 							case pxfShort:
-								data[offset] ^= data[offset];
-								printf("%d", *((short int *)(&data[offset])));
+								if(data[offset] & 0x80)
+									printf("%d", *((short int *)(&data[offset]))&0x7f);
+								else if(*((short int *)(&data[offset])) != 0) {
+									data[offset] |= 0x80;
+									printf("%d", *((short int *)(&data[offset])));
+								}
 								first = 1;
 								break;
+							case pxfAutoInc:
 							case pxfLong:
-								data[offset] ^= data[offset];
-								printf("%ld", *((long int *)(&data[offset])));
+								if(data[offset] & 0x80)
+									printf("%ld", *((long int *)(&data[offset]))&0x7f);
+								else if(*((long int *)(&data[offset])) != 0) {
+									data[offset] |= 0x80;
+									printf("%ld", *((long int *)(&data[offset])));
+								}
 								first = 1;
 								break;
+							case pxfCurrency:
 							case pxfNumber:
-								if(*((long *)(&data[offset])) & 0x80000000) {
+								if(data[offset] & 0x80) {
 									data[offset] &= 0x7f;
+									printf("%f", *((double *)(&data[offset])));
+								} else if(*((long long int *)(&data[offset])) != 0) {
+									j = 0;
+									for(j=0; j<8; j++)
+										data[offset+j] = ~data[offset+j];
 									printf("%f", *((double *)(&data[offset])));
 								}
 								first = 1;
@@ -496,8 +511,12 @@ int main(int argc, char *argv[]) {
 									if(blobdata) {
 										sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
 										fp = fopen(filename, "w");
-										fwrite(blobdata, size, 1, fp);
-										fclose(fp);
+										if(fp) {
+											fwrite(blobdata, size, 1, fp);
+											fclose(fp);
+										} else {
+											fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+										}
 									} else {
 										fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
 									}
@@ -543,6 +562,7 @@ int main(int argc, char *argv[]) {
 					case pxfDate:
 					case pxfShort:
 					case pxfLong:
+					case pxfAutoInc:
 					case pxfCurrency:
 					case pxfNumber:
 					case pxfLogical:
@@ -574,11 +594,10 @@ int main(int argc, char *argv[]) {
 						printf("smallint");
 						break;
 					case pxfLong:
+					case pxfAutoInc:
 						printf("integer");
 						break;
 					case pxfCurrency:
-						printf("decimal(20,2)");
-						break;
 					case pxfNumber:
 						printf("decimal(20,2)");
 						break;
@@ -593,7 +612,6 @@ int main(int argc, char *argv[]) {
 							printf("oid");
 						break;
 					case pxfOLE:
-					case pxfAutoInc:
 						break;
 					case pxfTime:
 						printf("time");
@@ -638,6 +656,8 @@ int main(int argc, char *argv[]) {
 					case pxfDate:
 					case pxfShort:
 					case pxfLong:
+					case pxfAutoInc:
+					case pxfCurrency:
 					case pxfNumber:
 					case pxfLogical:
 						printf("%s", pxf->px_fname);
@@ -680,24 +700,35 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 							case pxfShort:
-								data[offset] ^= data[offset];
-								printf("%d", *((short int *)(&data[offset])));
+								if(data[offset] & 0x80)
+									printf("%d", *((short int *)(&data[offset]))&0x7f);
+								else if(*((short int *)(&data[offset])) != 0) {
+									data[offset] |= 0x80;
+									printf("%d", *((short int *)(&data[offset])));
+								}
 								first = 1;
 								break;
+							case pxfAutoInc:
 							case pxfLong:
-								// FIXME: distinguish between NULL and 0 as in pxfNumber
-								data[offset] ^= data[offset];
-								printf("%ld", *((long int *)(&data[offset])));
+								if(data[offset] & 0x80)
+									printf("%ld", *((long int *)(&data[offset]))&0x7f);
+								else if(*((long int *)(&data[offset])) != 0) {
+									data[offset] |= 0x80;
+									printf("%ld", *((long int *)(&data[offset])));
+								} else {
+									printf("\\N");
+								}
 								first = 1;
 								break;
+							case pxfCurrency:
 							case pxfNumber:
-								//hex_dump(&data[offset], pxf->px_flen);
-								/* Paradox distinguishes a decimal 0.0 and not set value
-								 * a decimal null is 8000000000000000 and a not set value
-								 * are 8 null bytes.
-								 */
-								if(*((long *)(&data[offset])) & 0x80000000) {
+								if(data[offset] & 0x80) {
 									data[offset] &= 0x7f;
+									printf("%.2f", *((double *)(&data[offset])));
+								} else if(*((long long int *)(&data[offset])) != 0) {
+									j = 0;
+									for(j=0; j<8; j++)
+										data[offset+j] = ~data[offset+j];
 									printf("%.2f", *((double *)(&data[offset])));
 								} else {
 									printf("\\N");

@@ -1,0 +1,2 @@
+Version 0.0.4
+  - proper handling of negative Long, Short, Double values
