@@ -29,6 +29,9 @@
 #define _(String) String
 #endif
 
+/* strrep() {{{
+ * Replace a char c1 with c2
+ */
 void strrep(char *str, char c1, char c2) {
 	char *ptr = str;
 
@@ -38,6 +41,28 @@ void strrep(char *str, char c1, char c2) {
 		ptr++;
 	}
 }
+/* }}} */
+
+/* strrep() {{{
+ * Prints str and masks each occurence of c1 with c2.
+ * Returns the number of written chars.
+ */
+int printmask(FILE *outfp, char *str, char c1, char c2 ) {
+	char *ptr;
+	int len = 0;
+	ptr = str;
+	while(*ptr != '\0') {
+		if(*ptr == c1) {
+			fprintf(outfp, "%c", c2);
+			len ++;
+		} 
+		fprintf(outfp, "%c", *ptr);
+		len++;
+		ptr++;
+	}
+	return(len);
+}
+/* }}} */
 
 /* pbuffer() {{{
  * print a string at the end of a buffer
@@ -118,9 +143,9 @@ void usage(char *progname) {
 	printf(_("  -r, --recode=ENCODING sets the target encoding."));
 	printf("\n");
 	if(!strcmp(progname, "px2csv") || !strcmp(progname, "pxview")) {
-		printf(_("  --separator=CHAR    character used to separate field values."));
+		printf(_("  --separator=CHAR    character used to separate field values (default is ',')."));
 		printf("\n");
-		printf(_("  --enclosure=CHAR    character used to enclose field values."));
+		printf(_("  --enclosure=CHAR    character used to enclose field values (default is '\"')."));
 		printf("\n");
 		printf(_("  --without-head      Turn off first line with field names."));
 		printf("\n");
@@ -232,7 +257,7 @@ int main(int argc, char *argv[]) {
 	int usegsf = 0;
 	int verbose = 0;
 	int withouthead = 0;
-	char delimiter = '\t';
+	char delimiter = ',';
 	char enclosure = '"';
 	char *inputfile = NULL;
 	char *outputfile = NULL;
@@ -846,7 +871,10 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, "%c", delimiter);
 					if(delimiter == ',')
 						fprintf(outfp, "%c", enclosure);
-					fprintf(outfp, "%s", pxf->px_fname);
+					if(strlen(pxf->px_fname))
+						fprintf(outfp, "%s", pxf->px_fname);
+					else
+						fprintf(outfp, "column%d", i+1);
 					switch(pxf->px_ftype) {
 						case pxfAlpha:
 							fprintf(outfp, ",A,%d", pxf->px_flen);
@@ -907,33 +935,37 @@ int main(int argc, char *argv[]) {
 				pxf++;
 			}
 			if(pxh->px_filetype == pxfFileTypPrimIndex) {
+				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
-				fprintf(outfp, "%cblocknr,I,4", delimiter);
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "blocknr,I,4");
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
-				fprintf(outfp, "%ccount,I,4", delimiter);
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "count,I,4");
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
-				fprintf(outfp, "%cdummy,I,4", delimiter);
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "dummy,I,4");
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
-				fprintf(outfp, "%cthisblocknr,I,4");
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "thisblocknr,I,4");
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%c", enclosure);
 			}
 			if(markdeleted) {
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%c", enclosure);
 				fprintf(outfp, "%cdeleted,L,1", delimiter);
 				if(delimiter == ',')
-					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%c", enclosure);
 			}
 			fprintf(outfp, "\n");
 		}
@@ -970,10 +1002,21 @@ int main(int argc, char *argv[]) {
 							case pxfAlpha: {
 								char *value;
 								if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									if(enclosure && strchr(value, delimiter))
-										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
-									else
-										fprintf(outfp, "%s", value);
+									if(enclosure && strchr(value, delimiter)) {
+										fprintf(outfp, "%c", enclosure);
+										if(strchr(value, enclosure))
+											printmask(outfp, value, enclosure, enclosure);
+										else
+											fprintf(outfp, "%s", value);
+										fprintf(outfp, "%c", enclosure);
+									} else {
+										if(strchr(value, enclosure)) {
+											fprintf(outfp, "%c", enclosure);
+											printmask(outfp, value, enclosure, enclosure);
+											fprintf(outfp, "%c", enclosure);
+										} else
+											fprintf(outfp, "%s", value);
+									}
 									pxdoc->free(pxdoc, value);
 								}
 								first = 1;
@@ -1480,7 +1523,10 @@ int main(int argc, char *argv[]) {
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
 				fprintf(outfp, "  <th>");
-				fprintf(outfp, "%s", pxf->px_fname);
+				if(strlen(pxf->px_fname))
+					fprintf(outfp, "%s", pxf->px_fname);
+				else
+					fprintf(outfp, "column%d", i+1);
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
 						fprintf(outfp, ",A,%d", pxf->px_flen);
@@ -1748,7 +1794,7 @@ int main(int argc, char *argv[]) {
 						break;
 					case pxfCurrency:
 					case pxfNumber:
-						fprintf(outfp, "decimal(20,2)");
+						fprintf(outfp, "double");
 						break;
 					case pxfLogical:
 						fprintf(outfp, "boolean");
@@ -1769,7 +1815,7 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, "timestamp");
 						break;
 					case pxfBCD:
-						fprintf(outfp, "decimal(17,%d)", pxf->px_flen);
+						fprintf(outfp, "decimal(34,%d)", pxf->px_flen);
 						break;
 					case pxfBytes:
 						fprintf(outfp, "char(%d)", pxf->px_flen);
@@ -1867,8 +1913,10 @@ int main(int argc, char *argv[]) {
 									}
 									case pxfDate: {
 										long value;
+										int year, month, day;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%ld", value);
+											PX_SdnToGregorian(value+1721425, &year, &month, &day);
+											fprintf(outfp, "%02d.%02d.%04d", day, month, year);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -1986,8 +2034,10 @@ int main(int argc, char *argv[]) {
 									}
 									case pxfDate: {
 										long value;
+										int year, month, day;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%ld", value);
+											PX_SdnToGregorian(value+1721425, &year, &month, &day);
+											fprintf(outfp, "'%02d.%02d.%04d'", day, month, year);
 										} else {
 											fprintf(outfp, "NULL");
 										}
@@ -2064,6 +2114,7 @@ int main(int argc, char *argv[]) {
 									case pxfBCD:
 									case pxfBytes:
 										fprintf(outfp, "NULL");
+										first = 1;
 										break;
 									default:
 										fprintf(outfp, "");
