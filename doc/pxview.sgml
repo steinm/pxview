@@ -411,8 +411,8 @@ manpage.1: manpage.sgml
 						type like real, integer or text. It is up to you to specify
 						a valid type. If the sql type requires
 						a length (e.g char(x)), then it can put into
-						the type specification with the placeholder '%d', e.g.
-						'alpha:char(%d)'. There is currently no check for reasonable
+						the type specification with the placeholder `%d', e.g.
+						`alpha:char(%d)'. There is currently no check for reasonable
 						type mapping.</para>
         </listitem>
       </varlistentry>
