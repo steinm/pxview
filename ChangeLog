@@ -1,6 +1,7 @@
 Version 0.2.2
+	- Use PX_get_data_blob()
+	- fixed endless loop in str_buffer_printmask()
 	- sql type for time and timestamp can be both set on the command line
-	- delete blob file object if open
 
 Version 0.2.1
 	- new option --blobextension

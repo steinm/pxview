@@ -1,8 +1,8 @@
-pxview (0.2.1-1) unstable; urgency=low
+pxview (0.2.2-1) unstable; urgency=low
 
   * New upstream version.
 
- -- Uwe Steinmann <steinm@debian.org>  Fri, 16 Jul 2004 16:46:58 +0200
+ -- Uwe Steinmann <steinm@debian.org>  Tue, 02 Nov 2004 11:54:08 +0100
 
 pxview (0.2.0-1) unstable; urgency=low
 
