@@ -27,8 +27,8 @@ msgstr ""
 
 #: src/main.c:12
 #, c-format
-msgid "Usage: %s PARADOX FILE"
-msgstr "Aufruf: %s PARADOX DATEI"
+msgid "Usage: %s [OPTION] [PARADOX FILE]"
+msgstr "Aufruf: %s [OPTION] [PARADOX DATEI]"
 
 #: src/main.c:14
 msgid "Options:"
@@ -40,7 +40,7 @@ msgstr "  -h, --help          diese Hilfe."
 
 #: src/main.c:18
 msgid "  -i, --info          show information about file."
-msgstr "  -i, --info          zeige Informationen über diese Datei."
+msgstr "  -i, --info          zeige Informationen über eine Datei."
 
 #: src/main.c:20
 msgid "  -c, --csv           dump records in CSV format."

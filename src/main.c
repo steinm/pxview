@@ -9,7 +9,7 @@
 
 void usage(char *progname) {
 	printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV format.\n\n"), progname);
-	printf(_("Usage: %s PARADOX FILE"), progname);
+	printf(_("Usage: %s [OPTIONS] [PARADOX FILE]"), progname);
 	printf("\n\n");
 	printf(_("Options:"));
 	printf("\n\n");
@@ -115,6 +115,7 @@ int main(int argc, char *argv[]) {
 	pxdoc = PX_new();
 	if(0 > PX_open_file(pxdoc, inputfile)) {
 		fprintf(stderr, _("Could not open input file."));
+		fprintf(stderr, "\n");
 		exit(1);
 	}
 	pxh = pxdoc->px_head;
@@ -124,6 +125,7 @@ int main(int argc, char *argv[]) {
 		pxblob = PX_new_blob(pxdoc);
 		if(0 > PX_open_blob_file(pxblob, blobfile)) {
 			fprintf(stderr, _("Could not open blob file."));
+			fprintf(stderr, "\n");
 			PX_close(pxdoc);
 			exit(1);
 		}
