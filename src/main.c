@@ -21,7 +21,7 @@ void strrep(char *str, char c1, char c2) {
 	}
 }
 
-void errorhandler(pxdoc_t *p, int error, const char *str) {
+void errorhandler(pxdoc_t *p, int error, const char *str, void *data) {
 	  fprintf(stderr, "PXLib: %s\n", str);
 }
 
@@ -90,7 +90,7 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  --output-deleted    output also records which were deleted."));
 	printf("\n");
-#if PX_HAVE_GSF
+#ifdef HAVE_GSF
 	if(PX_has_gsf_support()) {
 		printf(_("  --use-gsf           use gsf library to read input file."));
 		printf("\n");
@@ -357,6 +357,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
+#ifdef HAVE_GSF
 	if(PX_has_gsf_support() && usegsf) {
 		GsfInput *input = NULL;
 		GsfInputStdio  *in_stdio;
@@ -384,12 +385,16 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 	} else {
+#endif
 		if(0 > PX_open_file(pxdoc, inputfile)) {
 			fprintf(stderr, _("Could not open input file."));
 			fprintf(stderr, "\n");
 			exit(1);
 		}
+#ifdef HAVE_GSF
 	}
+#endif
+
 	if(pindexfile) {
 		pindexdoc = PX_new2(errorhandler, NULL, NULL, NULL);
 		if(0 > PX_open_file(pindexdoc, pindexfile)) {
@@ -1352,8 +1357,8 @@ int main(int argc, char *argv[]) {
 
 		for(j=0; j<numrecords; j++) {
 			int offset;
-			isdeleted = presetdeleted;
 			pxdatablockinfo_t pxdbinfo;
+			isdeleted = presetdeleted;
 			if(PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
 				fprintf(outfp, _("Previous block number according to header: "));
 				fprintf(outfp, "%d\n", pxdbinfo.prev);
@@ -1406,9 +1411,11 @@ int main(int argc, char *argv[]) {
 	PX_close(pxdoc);
 	PX_delete(pxdoc);
 
+#ifdef HAVE_GSF
 	if(PX_has_gsf_support() && usegsf) {
 		gsf_shutdown();
 	}
+#endif
 
 	exit(0);
 }
