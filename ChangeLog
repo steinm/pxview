@@ -1,4 +1,5 @@
 Version 0.1.3
+	- option 'output' is now 'output-file'
 	- fixed debug output
 	- added output of fileUpdateTime
 	- some smaller cleanups

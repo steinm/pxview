@@ -72,7 +72,7 @@ manpage.1: manpage.sgml
       <arg><option>-t | --schema <replaceable></replaceable></option></arg>
       <arg><option>-v | --verbose <replaceable></replaceable></option></arg>
       <arg><option>--mode=MODE <replaceable></replaceable></option></arg>
-      <arg><option>-o FILE | --output=FILE <replaceable></replaceable></option></arg>
+      <arg><option>-o FILE | --output-file=FILE <replaceable></replaceable></option></arg>
       <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
       <arg><option>-p PREFIX | --blobprefix=PREFIX <replaceable></replaceable></option></arg>
       <arg><option>-n FILE | --primary-index-file=FILE <replaceable></replaceable></option></arg>
@@ -134,7 +134,7 @@ manpage.1: manpage.sgml
       </varlistentry>
       <varlistentry>
         <term><option>-o</option>
-          <option>--output</option>
+          <option>--output-file</option>
         </term>
         <listitem>
           <para>All output except for usage information and error messages

@@ -64,7 +64,7 @@ void usage(char *progname) {
 		printf(_("  --mode=MODE         set output mode (csv, sql, or schema)."));
 		printf("\n");
 	}
-	printf(_("  -o, --output=FILE   output data into file instead of stdout."));
+	printf(_("  -o, --output-file=FILE output data into file instead of stdout."));
 	printf("\n");
 	printf(_("  -b, --blobfile=FILE read blob data from file."));
 	printf("\n");
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
 			{"blobfile", 1, 0, 'b'},
 			{"blobprefix", 1, 0, 'p'},
 			{"recode", 1, 0, 'r'},
-			{"output", 1, 0, 'o'},
+			{"output-file", 1, 0, 'o'},
 			{"help", 0, 0, 'h'},
 			{"separator", 1, 0, 0},
 			{"enclosure", 1, 0, 1},
