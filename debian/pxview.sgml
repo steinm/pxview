@@ -90,15 +90,16 @@ manpage.1: manpage.sgml
     <para>&dhpackage; reads Paradox files and prints information about
 		  the file or dumps the records to stdout or a file. &dhpackage; is mostly
 			applied on Paradox .DB files but can also be used to show
-			information about other Paradox files.
+			information about other Paradox files. It can also read associated
+			blob files (.MB) and write each blob into a separate file.
       </para>
 		<para>&dhpackage; can be used to convert Paradox databases into spreadsheet
 		  readable CSV files (comma separated values) or SQL insert statements to
-			import the records into a relational database.</para>
+			import the records into a relational database. The sql output is optimized
+			to be used with PostgreSQL.</para>
 		<para>The programm currently supports only a subset of possible field
-		  types.  These are strings, short and long integers and decimal
-			numbers.</para>
-
+		  types.  These are strings, short and long integers, boolean, blobs
+			and decimal numbers.</para>
   </refsect1>
   <refsect1>
     <title>OPTIONS</title>
@@ -125,6 +126,15 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-o</option>
+          <option>--output</option>
+        </term>
+        <listitem>
+          <para>All output except for usage information and error messages
+					 will be written to the given file instead of stdout.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>-i</option>
           <option>--info</option>
         </term>
@@ -138,8 +148,9 @@ manpage.1: manpage.sgml
           <option>--schema</option>
         </term>
         <listitem>
-          <para>Dump schema of database as it is created by the official
-					 Paradox software, when a database is exported in CSV format.</para>
+          <para>Dump schema of database as it would be created by the official
+					 Paradox software, when a database is exported in CSV format. This
+					 option is the short form for --mode=schema.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -147,8 +158,8 @@ manpage.1: manpage.sgml
           <option>--csv</option>
         </term>
         <listitem>
-          <para>Dump data records in CSV format. If this option follows
-					  -s or --sql it will override it.</para>
+          <para>Dump data records in CSV format. This
+						option is the short form for --mode=csv.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -156,8 +167,8 @@ manpage.1: manpage.sgml
           <option>--sql</option>
         </term>
         <listitem>
-          <para>Dump data records in SQL format. If this option follows
-					  -c or --csv it will override it.</para>
+          <para>Dump data records in SQL format. This
+						option is the short form for --mode=sql.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -239,19 +250,31 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>--deletetable</option>
+        </term>
+        <listitem>
+          <para>Adds a sql command at the begining of the sql output to delete
+					 an existing table before creating the new one.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>--tablename=NAME</option>
         </term>
         <listitem>
           <para>Use given tablename instead of the one stored in the database
-					 file. This option does not affect the info output.</para>
+					 file. This option does only affect schema and sql output.</para>
         </listitem>
       </varlistentry>
     </variablelist>
 
 		<para>The none optional parameter FILE is the Paradox file which shall
-		  be read.</para>
-		<para>The default field separator if exporting csv format is a tabular.
-		 Fields will be enclosed in "</para>
+		 be read.</para>
+		<para>if you pass two or more options to set the output format then
+		 each format
+		 will be output one after the other starting with csv followed by
+		 sql.</para>
+		<para>The default field separator if exporting csv format is a tabulator.
+		 Fields will be enclosed in ".</para>
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>
