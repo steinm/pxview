@@ -22,6 +22,8 @@ void usage(char *progname) {
 	printf("\n\n");
 	printf(_("  -h, --help          this usage information."));
 	printf("\n");
+	printf(_("  -v, --verbose       be more verbose."));
+	printf("\n");
 	if(!strcmp(progname, "pxview")) {
 		printf(_("  -i, --info          show information about file."));
 		printf("\n");
@@ -94,6 +96,7 @@ int main(int argc, char *argv[]) {
 	int outputdebug = 0;
 	int includeblobs = 0;
 	int deletetable = 0;
+	int verbose = 0;
 	char delimiter = '\t';
 	char enclosure = '"';
 	char *inputfile = NULL;
@@ -121,6 +124,7 @@ int main(int argc, char *argv[]) {
 			{"csv", 0, 0, 'c'},
 			{"sql", 0, 0, 's'},
 			{"schema", 0, 0, 't'},
+			{"verbose", 0, 0, 'v'},
 			{"blobfile", 1, 0, 'b'},
 			{"blobprefix", 1, 0, 'p'},
 			{"recode", 1, 0, 'r'},
@@ -135,7 +139,7 @@ int main(int argc, char *argv[]) {
 			{"mode", 1, 0, 4},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icstf:b:r:p:o:h",
+		c = getopt_long (argc, argv, "icsvtf:b:r:p:o:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -169,6 +173,9 @@ int main(int argc, char *argv[]) {
 			case 'h':
 				usage(progname);
 				exit(0);
+				break;
+			case 'v':
+				verbose = 1;
 				break;
 			case 't':
 				outputschema = 1;
@@ -305,6 +312,11 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
 		fprintf(outfp, _("Write protected:     %d\n"), pxh->px_writeprotected);
 		fprintf(outfp, _("Code Page:           %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
+		if(verbose) {
+			fprintf(outfp, _("Record size:         %d (0x%X)\n"), pxh->px_recordsize, pxh->px_recordsize);
+			fprintf(outfp, _("Sort order:          %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
+			fprintf(outfp, _("Auto increment:      %d (0x%X)\n"), pxh->px_autoinc, pxh->px_autoinc);
+		}
 		fprintf(outfp, "\n");
 
 		fprintf(outfp, _("Fieldname          | Type\n"));
@@ -505,34 +517,12 @@ int main(int argc, char *argv[]) {
 							case pxfAlpha: {
 								char *value;
 								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									if(enclosure)
+									if(enclosure && strchr(value, delimiter))
 										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
 									else
 										fprintf(outfp, "%s", value);
 								}
 								first = 1;
-
-/*								if(targetencoding != NULL) {
-									outbuffer = PX_recode_buffer(pxdoc, &data[offset], pxf->px_flen);
-								} else {
-									buffer = (char *) pxdoc->realloc(pxdoc, buffer, pxf->px_flen+1,  _("Could not reallocate memory for field data."));
-									memcpy(buffer, &data[offset], pxf->px_flen);
-									outbuffer = buffer;
-									outbuffer[pxf->px_flen] = '\0';
-								}
-								if(outbuffer) {
-									if(enclosure)
-										fprintf(outfp, "%c%s%c", enclosure, outbuffer, enclosure);
-									else
-										fprintf(outfp, "%s", outbuffer);
-									first = 1;
-
-									if(targetencoding != NULL) {
-										free(outbuffer);
-										outbuffer = NULL;
-									}
-								}
-*/
 								break;
 							}
 							case pxfDate: {
@@ -629,6 +619,23 @@ int main(int argc, char *argv[]) {
 					}
 					offset += pxf->px_flen;
 					pxf++;
+				}
+				if(pxh->px_filetype == pxfFileTypPrimIndex) {
+					short int value;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "%c", delimiter);
+						fprintf(outfp, "%d", value);
+					}
+					offset += 2;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "%c", delimiter);
+						fprintf(outfp, "%d", value);
+					}
+					offset += 2;
+					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
+						fprintf(outfp, "%c", delimiter);
+						fprintf(outfp, "%d", value);
+					}
 				}
 				fprintf(outfp, "\n");
 			} else {
