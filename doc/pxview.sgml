@@ -308,8 +308,8 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>This option allows to select certain fields by specifying
-					 an extended regular expression. It will only effect the csv, html
-					 and sql output. "field1|field23$" will select all fields whose name
+					 an extended regular expression. It will only effect the csv, html,
+					 sql, and sqlite output. "field1|field23$" will select all fields whose name
 					 contains "field1" or end in "field23". If this option is not used
 					 als fields will be shown. The field name is case insensitive.</para>
         </listitem>
