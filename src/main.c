@@ -89,6 +89,7 @@ int main(int argc, char *argv[]) {
 	int outputinfo = 0;
 	int outputsql = 0;
 	int outputschema = 0;
+	int outputdebug = 0;
 	int includeblobs = 0;
 	int deletetable = 0;
 	char delimiter = '\t';
@@ -154,6 +155,8 @@ int main(int argc, char *argv[]) {
 					outputsql = 1;
 				} else if(!strcmp(optarg, "schema")) {
 					outputschema = 1;
+				} else if(!strcmp(optarg, "debug")) {
+					outputdebug = 1;
 				}
 				break;
 			case 5:
@@ -203,7 +206,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* if none the output modes is selected then display info */
-	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0)
+	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0 && outputdebug == 0)
 		outputinfo = 1;
 
 	if (optind < argc) {
@@ -357,6 +360,7 @@ int main(int argc, char *argv[]) {
 			}
 			pxf++;
 		}
+		fprintf(outfp, "------------------------------------\n");
 	}
 
 	if(outputschema) {
@@ -499,40 +503,43 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 							case pxfDate:
-								data[offset] ^= data[offset];
-								fprintf(outfp, "%d", *((int *)(&data[offset])));
-								first = 1;
-								break;
-							case pxfShort:
-								if(data[offset] & 0x80)
-									fprintf(outfp, "%d", *((short int *)(&data[offset]))&0x7f);
-								else if(*((short int *)(&data[offset])) != 0) {
-									data[offset] |= 0x80;
-									fprintf(outfp, "%d", *((short int *)(&data[offset])));
-								}
-								first = 1;
-								break;
-							case pxfAutoInc:
-							case pxfLong:
-								if(data[offset] & 0x80)
-									fprintf(outfp, "%ld", *((long int *)(&data[offset]))&0x7f);
-								else if(*((long int *)(&data[offset])) != 0) {
-									data[offset] |= 0x80;
-									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
-								}
-								first = 1;
-								break;
-							case pxfCurrency:
-							case pxfNumber:
 								if(data[offset] & 0x80) {
 									data[offset] &= 0x7f;
-									fprintf(outfp, "%f", *((double *)(&data[offset])));
-								} else if(*((long long int *)(&data[offset])) != 0) {
-									j = 0;
-									for(j=0; j<8; j++)
-										data[offset+j] = ~data[offset+j];
-									fprintf(outfp, "%f", *((double *)(&data[offset])));
+									fprintf(outfp, "%d", *((long int *)(&data[offset])));
 								}
+								first = 1;
+								break;
+							case pxfShort: {
+								short int value;
+								if(PX_get_data_short(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%d", value);
+								}
+								first = 1;
+								break;
+								}
+							case pxfAutoInc:
+							case pxfLong: {
+								long value;
+								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%ld", value);
+								}
+								first = 1;
+								break;
+								}
+							case pxfTime: {
+								long value;
+								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+								}
+								first = 1;
+								break;
+								}
+							case pxfCurrency:
+							case pxfNumber: {
+								double value;
+								if(PX_get_data_double(&data[offset], pxf->px_flen, &value))
+									fprintf(outfp, "%f", value);
+								} 
 								first = 1;
 								break;
 							case pxfLogical:
@@ -715,6 +722,7 @@ int main(int argc, char *argv[]) {
 					case pxfShort:
 					case pxfLong:
 					case pxfAutoInc:
+					case pxfTime:
 					case pxfCurrency:
 					case pxfNumber:
 					case pxfLogical:
@@ -753,24 +761,10 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 							case pxfDate:
-								data[offset] ^= data[offset];
-								fprintf(outfp, "%d", *((int *)(&data[offset])));
-								first = 1;
-								break;
-							case pxfShort:
-								if(data[offset] & 0x80)
-									fprintf(outfp, "%d", *((short int *)(&data[offset]))&0x7f);
-								else if(*((short int *)(&data[offset])) != 0) {
-									data[offset] |= 0x80;
-									fprintf(outfp, "%d", *((short int *)(&data[offset])));
-								}
-								first = 1;
-								break;
-							case pxfAutoInc:
-							case pxfLong:
-								if(data[offset] & 0x80)
-									fprintf(outfp, "%ld", *((long int *)(&data[offset]))&0x7f);
-								else if(*((long int *)(&data[offset])) != 0) {
+								if(data[offset] & 0x80) {
+									data[offset] &= 0x7f;
+									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
+								} else if(*((long int *)(&data[offset])) != 0) {
 									data[offset] |= 0x80;
 									fprintf(outfp, "%ld", *((long int *)(&data[offset])));
 								} else {
@@ -778,21 +772,48 @@ int main(int argc, char *argv[]) {
 								}
 								first = 1;
 								break;
-							case pxfCurrency:
-							case pxfNumber:
-								if(data[offset] & 0x80) {
-									data[offset] &= 0x7f;
-									fprintf(outfp, "%.2f", *((double *)(&data[offset])));
-								} else if(*((long long int *)(&data[offset])) != 0) {
-									j = 0;
-									for(j=0; j<8; j++)
-										data[offset+j] = ~data[offset+j];
-									fprintf(outfp, "%.2f", *((double *)(&data[offset])));
+							case pxfShort: {
+								short int value;
+								if(PX_get_data_short(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%d", value);
 								} else {
 									fprintf(outfp, "\\N");
 								}
 								first = 1;
 								break;
+								}
+							case pxfAutoInc:
+							case pxfLong: {
+								long value;
+								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%ld", value);
+								} else {
+									fprintf(outfp, "\\N");
+								}
+								first = 1;
+								break;
+								}
+							case pxfTime: {
+								long value;
+								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+								} else {
+									fprintf(outfp, "\\N");
+								}
+								first = 1;
+								break;
+								}
+							case pxfCurrency:
+							case pxfNumber: {
+								double value;
+								if(PX_get_data_double(&data[offset], pxf->px_flen, &value)) {
+									fprintf(outfp, "%f", value);
+								} else {
+									fprintf(outfp, "\\N");
+								}
+								first = 1;
+								break;
+								}
 							case pxfLogical:
 								if(*((char *)(&data[offset])) & 0x80) {
 									data[offset] &= 0x7f;
@@ -827,6 +848,37 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		fprintf(outfp, "\\.\n");
+		px_free(pxdoc, data);
+	}
+
+	if(outputdebug) {
+		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+			if(selectedfields)
+				px_free(pxdoc, selectedfields);
+			PX_close(pxdoc);
+			exit(1);
+		}
+
+		for(j=0; j<pxh->px_numrecords; j++) {
+			int offset;
+			if(PX_get_record(pxdoc, j, data)) {
+				pxf = pxh->px_fields;
+				offset = 0;
+				first = 0;  // set to 1 when first field has been output
+				for(i=0; i<pxh->px_numfields; i++) {
+					if(fieldregex == NULL || selectedfields[i]) {
+						fprintf(outfp, "%s: ", pxf->px_fname);
+						hex_dump(&data[offset], pxf->px_flen);
+						fprintf(outfp, "\n");
+					}
+					offset += pxf->px_flen;
+					pxf++;
+				}
+				fprintf(outfp, "\n");
+			} else {
+				fprintf(stderr, _("Couldn't get record\n"));
+			}
+		}
 		px_free(pxdoc, data);
 	}
 
