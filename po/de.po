@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-09-29 16:09+0200\n"
+"POT-Creation-Date: 2003-10-23 14:46+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -138,15 +138,20 @@ msgstr ""
 msgid "  --output-deleted    output also records which were deleted."
 msgstr "  --output-deleted    gebe auch gelöschte Datensätze aus."
 
-#: src/main.c:94
+#: src/main.c:95
+msgid "  --use-gsf           use gsf library to read input file."
+msgstr ""
+"  --use-gsf           benutze gsf-Bibliothek zum Lesen der Eingabedatei."
+
+#: src/main.c:100
 msgid "  --tablename=NAME    overwrite name of database table."
 msgstr "  --tablename=NAME    überschreibe den Namen der Datenbanktable."
 
-#: src/main.c:98
+#: src/main.c:104
 msgid "  --delete-table      delete existing sql database table."
 msgstr "  --delete-table      lösche bestehende SQL Datenbanktable."
 
-#: src/main.c:103
+#: src/main.c:109
 msgid ""
 "If you do not specify any of the options -i, -c, -s, -x, or -t\n"
 "then -i will be used."
@@ -154,11 +159,11 @@ msgstr ""
 "Wenn Sie keine der Optionen -i, -c, -s, -x oder -t angeben,\n"
 "dann wird die Option -i verwendet."
 
-#: src/main.c:107
+#: src/main.c:113
 msgid "The option --fields will only affect csv, html and sql output."
 msgstr "Die Option --fields beeinflusst nur die CSV-, HTML- und SQL-Ausgabe."
 
-#: src/main.c:109
+#: src/main.c:115
 msgid ""
 "The options --separator, --enclosure and --mark-deleted will only affect csv "
 "output."
@@ -166,7 +171,7 @@ msgstr ""
 "Die Optionen --separator, --enclosure und --mark-deleted beeinflussen nur "
 "die CSV-Ausgabe."
 
-#: src/main.c:113
+#: src/main.c:119
 msgid ""
 "If exporting csv format fields will be separated by tabulator\n"
 "and enclosed into \"."
@@ -174,276 +179,298 @@ msgstr ""
 "Beim Export im CSV-Format werden Felder standardmäßig mit einem\n"
 "Tabulator getrennt und durch Anführungsstriche eingeschlossen."
 
-#: src/main.c:120
+#: src/main.c:126
 msgid "libpx uses librecode for recoding."
 msgstr "libpx benutzt librecode zum reencodieren."
 
-#: src/main.c:123
+#: src/main.c:129
 msgid "libpx uses iconv for recoding."
 msgstr "libpx benutzt iconv zum reencodieren."
 
-#: src/main.c:126
+#: src/main.c:132
 msgid "libpx has no support for recoding."
 msgstr "libpx unterstützt nicht das reencodieren."
 
-#: src/main.c:131
+#: src/main.c:137
 msgid "libpx has been compiled for big endian architecture."
 msgstr "libpx wurde für Architekturen mit big endian übersetzt."
 
-#: src/main.c:133
+#: src/main.c:139
 msgid "libpx has been compiled for little endian architecture."
 msgstr "libpx wurde für Architekturen mit little endian übersetzt."
 
-#: src/main.c:321
+#: src/main.c:141
+#, c-format
+msgid "libpx has gsf support: %s"
+msgstr "libpx hat Unterstützung für die gsf-Bibliothek: %s"
+
+#: src/main.c:141
+msgid "Yes"
+msgstr "Ja"
+
+#: src/main.c:141
+msgid "No"
+msgstr "Nein"
+
+#: src/main.c:143
+#, c-format
+msgid "libpx has version: %d.%d.%d"
+msgstr "libpx ist Version: %d.%d.%d"
+
+#: src/main.c:336
 msgid "You must at least specify an input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:333
+#: src/main.c:348
 msgid "Could not open output file."
 msgstr "Konnte Ausgabedate nicht öffnen."
 
-#: src/main.c:340
+#: src/main.c:355
 msgid "Could not create new paradox instance."
 msgstr "Konnte eine neue Paradox-Instanz nicht anlegen."
 
-#: src/main.c:346
+#: src/main.c:373
+msgid "Could not open gsf input file."
+msgstr "Konnte Eingabedatei mit gsf-Bibliothek nicht öffnen."
+
+#: src/main.c:382 src/main.c:388
 msgid "Could not open input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:353
+#: src/main.c:396
 msgid "Could not open primary index file."
 msgstr "Konnte die Primärindexdatei nicht öffnen."
 
-#: src/main.c:358
+#: src/main.c:401
 msgid "Could not read primary index file."
 msgstr "Konnte die Primärindexdatei nicht lesen."
 
-#: src/main.c:363
+#: src/main.c:406
 msgid "Could not add primary index file."
 msgstr "Konnte den Primärindex nicht hinzufügen."
 
-#: src/main.c:377
+#: src/main.c:420
 msgid "Could not open blob file."
 msgstr "Konte Blob-Datei nicht öffnen."
 
-#: src/main.c:387
+#: src/main.c:430
 #, c-format
 msgid "File Version:            %1.1f\n"
 msgstr "Datei Version:           %1.1f\n"
 
-#: src/main.c:388
+#: src/main.c:431
 msgid "File Type:               "
 msgstr "Dateityp:                "
 
-#: src/main.c:391
+#: src/main.c:434
 msgid "indexed .DB data file"
 msgstr "indizierte .DB Datendatei"
 
-#: src/main.c:394
+#: src/main.c:437
 msgid "primary index .PX file"
 msgstr "Primärindex .PX Datei"
 
-#: src/main.c:397
+#: src/main.c:440
 msgid "non-indexed .DB data file"
 msgstr "Nicht-indizierte .DB Datendatei"
 
-#: src/main.c:400
+#: src/main.c:443
 msgid "non-incrementing secondary index .Xnn file"
 msgstr "Nicht inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:403
+#: src/main.c:446
 msgid "secondary index .Ynn file (inc or non-inc)"
 msgstr "Sekundre Index .Ynn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:406
+#: src/main.c:449
 msgid "incrementing secondary index .Xnn file"
 msgstr "Inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:409
+#: src/main.c:452
 msgid "non-incrementing secondary index .XGn file"
 msgstr "Nicht inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:412
+#: src/main.c:455
 msgid "secondary index .YGn file (inc or non inc)"
 msgstr "Sekundre Index .YGn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:415
+#: src/main.c:458
 msgid "incrementing secondary index .XGn file"
 msgstr "Inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:419
+#: src/main.c:462
 #, c-format
 msgid "Tablename:               %s\n"
 msgstr "Tabellenname:            %s\n"
 
-#: src/main.c:420
+#: src/main.c:463
 #, c-format
 msgid "Num. of Records:         %d\n"
 msgstr "Anz. der Datensätze:     %d\n"
 
-#: src/main.c:421
+#: src/main.c:464
 #, c-format
 msgid "Theor. Num. of Rec.:     %d\n"
 msgstr "Theo. Anz. der Datensätze: %d\n"
 
-#: src/main.c:422
+#: src/main.c:465
 #, c-format
 msgid "Num. of Fields:          %d\n"
 msgstr "Anz. der Felder:         %d\n"
 
-#: src/main.c:423
+#: src/main.c:466
 #, c-format
 msgid "Header size:             %d (0x%X)\n"
 msgstr "Größe der Präambel:      %d (0x%X)\n"
 
-#: src/main.c:424
+#: src/main.c:467
 #, c-format
 msgid "Max. Table size:         %d (0x%X)\n"
 msgstr "Max. Tabellengröße:      %d (0x%X)\n"
 
-#: src/main.c:425
+#: src/main.c:468
 #, c-format
 msgid "Num. of Data Blocks:     %d\n"
 msgstr "Anz. der Datenblöcke:    %d\n"
 
-#: src/main.c:426
+#: src/main.c:469
 #, c-format
 msgid "Num. of 1st Data Block:  %d\n"
 msgstr "Nr. des ersten Datenblocks: %d\n"
 
-#: src/main.c:427
+#: src/main.c:470
 #, c-format
 msgid "Num. of last Data Block: %d\n"
 msgstr "Nr. des letzten Datenblocks: %d\n"
 
-#: src/main.c:430
+#: src/main.c:473
 #, c-format
 msgid "Num. of Index Field:     %d\n"
 msgstr "Num. des Indexfeldes:    %d\n"
 
-#: src/main.c:431
+#: src/main.c:474
 #, c-format
 msgid "Sort order of Field:     %d\n"
 msgstr "Sortierung des Feldes:   %d\n"
 
-#: src/main.c:435
+#: src/main.c:478
 #, c-format
 msgid "Num. of prim. Key fields: %d\n"
 msgstr "Anz. der Primärschl.felder: %d\n"
 
-#: src/main.c:436
+#: src/main.c:479
 #, c-format
 msgid "Next auto inc. value:    %d\n"
 msgstr "Näch. Auto ink. Wert:    %d\n"
 
-#: src/main.c:438
+#: src/main.c:481
 #, c-format
 msgid "Write protected:         %d\n"
 msgstr "Schreibschutz:           %d\n"
 
-#: src/main.c:439
+#: src/main.c:482
 #, c-format
 msgid "Code Page:               %d (0x%X)\n"
 msgstr "Code Page:               %d (0x%X)\n"
 
-#: src/main.c:441
+#: src/main.c:484
 #, c-format
 msgid "Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"
 msgstr "Letzte Aktualisierung:   %d.%d.%d %d:%02d:%02d (%d)\n"
 
-#: src/main.c:443
+#: src/main.c:486
 #, c-format
 msgid "Record size:             %d (0x%X)\n"
 msgstr "Größe eines Datens.:     %d (0x%X)\n"
 
-#: src/main.c:444
+#: src/main.c:487
 #, c-format
 msgid "Sort order:              %d (0x%X)\n"
 msgstr "Sortierreihenfolge:      %d (0x%X)\n"
 
-#: src/main.c:445
+#: src/main.c:488
 #, c-format
 msgid "Auto increment:          %d (0x%X)\n"
 msgstr "Auto inkrement:          %d (0x%X)\n"
 
-#: src/main.c:446
+#: src/main.c:489
 #, c-format
 msgid "Modified Flags 1:        %d (0x%X)\n"
 msgstr "Modifiziert Flags 1:     %d (0x%X)\n"
 
-#: src/main.c:447
+#: src/main.c:490
 #, c-format
 msgid "Modified Flags 2:        %d (0x%X)\n"
 msgstr "Modifiziert Flags 2      %d (0x%X)\n"
 
-#: src/main.c:451
+#: src/main.c:494
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
 
-#: src/main.c:516
+#: src/main.c:559
 #, c-format
 msgid "     Record length | %d (0x%X)\n"
 msgstr "Größe eines Datens.: %d (0x%X)\n"
 
-#: src/main.c:524
+#: src/main.c:567
 msgid "Schema output is only reasonable for DB files."
 msgstr "Schema-Ausgabe macht nur bei DB-Dateien Sinn."
 
-#: src/main.c:620
+#: src/main.c:663
 msgid "Could not compile regular expression to select fields."
 msgstr "Konnte regulären Ausdruck nicht übersetzen."
 
 #. allocate memory for selected field array
-#: src/main.c:625
+#: src/main.c:668
 msgid "Could not allocate memory for array of selected fields."
 msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 
-#: src/main.c:643 src/main.c:823 src/main.c:1124 src/main.c:1294
+#: src/main.c:686 src/main.c:867 src/main.c:1168 src/main.c:1338
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:804 src/main.c:1006 src/main.c:1283 src/main.c:1348
+#: src/main.c:848 src/main.c:1050 src/main.c:1327 src/main.c:1392
 #, c-format
 msgid "Couldn't get record number %d\n"
 msgstr "Konnte auf Datensatz Nummer %d nicht zugreifen.\n"
 
-#: src/main.c:1017
+#: src/main.c:1061
 msgid "SQL output is only reasonable for DB files."
 msgstr "SQL-Ausgabe macht nur bei DB-Dateien Sinn."
 
-#: src/main.c:1314
+#: src/main.c:1358
 msgid "Previous block number according to header: "
 msgstr "Vorherige Blocknummer gemäß Header: "
 
-#: src/main.c:1316
+#: src/main.c:1360
 msgid "Next block number according to header: "
 msgstr "Nächste Blocknummer gemäß Header: "
 
-#: src/main.c:1318
+#: src/main.c:1362
 msgid "Real block number in file: "
 msgstr "Blocknummer in der Datei: "
 
-#: src/main.c:1320
+#: src/main.c:1364
 msgid "Block size: "
 msgstr "Blockgröße: "
 
-#: src/main.c:1322
+#: src/main.c:1366
 msgid "Record number in block: "
 msgstr "Datensatznummer innerhalb des Blocks: "
 
-#: src/main.c:1324
+#: src/main.c:1368
 msgid "Number of records in block: "
 msgstr "Anzahl der Datensätze im Block: "
 
-#: src/main.c:1326
+#: src/main.c:1370
 msgid "Block position in file: "
 msgstr "Blockposition in der Datei: "
 
-#: src/main.c:1328
+#: src/main.c:1372
 msgid "Record position in file: "
 msgstr "Datensatzposition in der Datei: "
 
-#: src/main.c:1331
+#: src/main.c:1375
 msgid "Record deleted: "
 msgstr "Datensatz gelöscht: "
 
