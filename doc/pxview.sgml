@@ -76,11 +76,11 @@ manpage.1: manpage.sgml
       <arg><option>-o FILE | --output-file=FILE <replaceable></replaceable></option></arg>
       <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
       <arg><option>-p PREFIX | --blobprefix=PREFIX <replaceable></replaceable></option></arg>
+      <arg><option>--blobextension=EXT <replaceable></replaceable></option></arg>
       <arg><option>-n FILE | --primary-index-file=FILE <replaceable></replaceable></option></arg>
       <arg><option>-r ENCODING | --recode=ENCODING <replaceable></replaceable></option></arg>
       <arg><option>--separator=CHAR <replaceable></replaceable></option></arg>
       <arg><option>--enclosure=CHAR <replaceable></replaceable></option></arg>
-      <arg><option>--include-blobs <replaceable></replaceable></option></arg>
       <arg><option>--fields=REGEX <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
       <arg><option>--delete-table <replaceable></replaceable></option></arg>
@@ -111,7 +111,7 @@ manpage.1: manpage.sgml
 			import the records into a relational database. The sql output is optimized
 			to be used with PostgreSQL.</para>
 		<para>The programm currently supports only a subset of possible field
-		  types.  These are strings, short and long integers, boolean, blobs
+		  types.  These are strings, short and long integers, boolean, bcd, blobs
 			and decimal numbers.</para>
   </refsect1>
   <refsect1>
@@ -237,8 +237,11 @@ manpage.1: manpage.sgml
 					 then read them from the
 					 given file and write each blob of type Blob, OLE, and Graphic
 					 into a single file. The filename will
-					 be constructed from the blobprefix option, an underscore, the
-					 internal number of the blob and the extension .blob. Blobs of
+					 be constructed from the blobprefix option (or the tablename if no
+					 prefix is given), an underscore, the
+					 internal number of the blob and the value from the
+					 blobextension option (`blob' if
+					 no extension is given) separated by a dot. Blobs of
 					 type Memo and FmtMemo are treated like alpha fields and
 					 its content will be inserted into the regular output.</para>
         </listitem>
@@ -252,6 +255,15 @@ manpage.1: manpage.sgml
 				   all blobs into a single directory by specifying a valid directory
 					 path name. You will have to make sure the directory exists before
 					 running &dhpackage;.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--blobextension=EXT</option>
+        </term>
+        <listitem>
+          <para>Use this extension for each filename of a blob. If no extension
+					  is given, then `blob' will be used instead.
+					 </para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -293,15 +305,6 @@ manpage.1: manpage.sgml
 					 The enclosure will only take place if the delimiter between fields
 					 is part of the field value.  Other output formats will not
 					 be affected by this option. The default value is '"'.</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
-        <term><option>--include-blobs</option>
-        </term>
-        <listitem>
-          <para>Includes blob fields in sql output. The field value itself
-					 will be set to null. Currently only PostgreSQL syntax is
-					 supported.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -412,7 +415,7 @@ manpage.1: manpage.sgml
 						`number', `logical', `memoblob', `blob', `fmtblob', `ole',
 						`graphic', `time', `timestamp',
 						`autoinc', `bcd', or `bytes'. The sql type can be any available
-						type like real, integer or text. It is up to you to specify
+						type like real, integer or text. It is up to the user to specify
 						a valid type. If the sql type requires
 						a length (e.g char(x)), then it can put into
 						the type specification with the placeholder `%d', e.g.
@@ -445,9 +448,9 @@ manpage.1: manpage.sgml
   </refsect1>
 	<refsect1>
 	  <title>BLOB FILES</title>
-		<para>Fields of type blob will be default be disregarded in the output
-		  unless you pass the option <option>--include-blobs</option> and set
-			the file containing the blobs (usually a .MB file). Paradox distinguishes
+		<para>Fields of type blob will only be regarded in the output
+		  if a file is set with the option <option>--blobfile</option>
+			containing the blobs (usually a .MB file). Paradox distinguishes
 			five different types of blobs of which two of them are actually pure
 			text and the remaining three are binary data. The two text blobs
 			(Memo and FmtMemo) are treaded like alpha fields and its content will
