@@ -2,4 +2,4 @@
 
 SUBDIRS = po src
 
-EXTRA_DIST = COPYING INSTALL
+EXTRA_DIST = COPYING INSTALL intltool-extract.in intltool-merge.in intltool-update.in
