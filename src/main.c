@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <getopt.h>
 #include <libintl.h>
 #include <sys/types.h>
@@ -382,6 +383,7 @@ int main(int argc, char *argv[]) {
 
 	if(outputinfo) {
 		int reclen;
+		struct tm time_tm;
 		fprintf(outfp, _("File Version:            %1.1f\n"), (float) pxh->px_fileversion/10.0);
 		fprintf(outfp, _("File Type:               "));
 		switch(pxh->px_filetype) {
@@ -433,6 +435,8 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
 		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
+		localtime_r((time_t *) &(pxh->px_fileupdatetime), &time_tm);
+		fprintf(outfp, _("Update time:             %d.%d.%d (%d)\n"), time_tm.tm_mday, time_tm.tm_mon, time_tm.tm_year+1900, pxh->px_fileupdatetime);
 		if(verbose) {
 			fprintf(outfp, _("Record size:             %d (0x%X)\n"), pxh->px_recordsize, pxh->px_recordsize);
 			fprintf(outfp, _("Sort order:              %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
@@ -1306,10 +1310,12 @@ int main(int argc, char *argv[]) {
 			isdeleted = presetdeleted;
 			pxdatablockinfo_t pxdbinfo;
 			if(PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
-				fprintf(outfp, _("Block number according to header: "));
-				fprintf(outfp, "%d\n", pxdbinfo.number);
+				fprintf(outfp, _("Previous block number according to header: "));
+				fprintf(outfp, "%d\n", pxdbinfo.prev);
+				fprintf(outfp, _("Next block number according to header: "));
+				fprintf(outfp, "%d\n", pxdbinfo.next);
 				fprintf(outfp, _("Real block number in file: "));
-				fprintf(outfp, "%d\n", pxdbinfo.realnumber);
+				fprintf(outfp, "%d\n", pxdbinfo.number);
 				fprintf(outfp, _("Block size: "));
 				fprintf(outfp, "%d\n", pxdbinfo.size);
 				fprintf(outfp, _("Record number in block: "));
