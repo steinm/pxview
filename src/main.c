@@ -958,7 +958,7 @@ int main(int argc, char *argv[]) {
 							case pxfNumber: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%f", value);
+									fprintf(outfp, "%g", value);
 								} 
 								first = 1;
 								break;
@@ -1322,7 +1322,7 @@ int main(int argc, char *argv[]) {
 								case pxfNumber: {
 									double value;
 									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										pbuffer(buffer, "%f", value);
+										pbuffer(buffer, "%g", value);
 									} else {
 										pbuffer(buffer, "NULL");
 									}
@@ -1536,7 +1536,7 @@ int main(int argc, char *argv[]) {
 							case pxfNumber: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%f", value);
+									fprintf(outfp, "%g", value);
 								} 
 								break;
 							} 
@@ -1849,7 +1849,7 @@ int main(int argc, char *argv[]) {
 								case pxfNumber: {
 									double value;
 									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										fprintf(outfp, "%f", value);
+										fprintf(outfp, "%g", value);
 									} else {
 										fprintf(outfp, "\\N");
 									}

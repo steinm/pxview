@@ -1,3 +1,6 @@
+Version 0.1.8
+	- All float values will formated with %g and not %f
+
 Version 0.1.7
 	- First line of HTML output uses <th> instead of <td><b>
 	- added configure option --with-memory-debug
