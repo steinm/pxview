@@ -11,6 +11,8 @@
 #define _(String) gettext(String)
 
 void usage(char *progname) {
+	int recode;
+
 	printf(_("Version: %s %s http://sourceforge.net/projects/pxlib"), progname, VERSION);
 	printf("\n");
 	printf(_("Copyright: Copyright (C) 2003 Uwe Steinmann <uwe@steinmann.cx>"));
@@ -77,6 +79,24 @@ void usage(char *progname) {
 		printf(_("If exporting csv format fields will be separated by tabulator\nand enclosed into \"."));
 		printf("\n\n");
 	}
+	recode = PX_has_recode_support();
+	switch(recode) {
+		case 1:
+			printf(_("libpx uses iconv for recoding."));
+			break;
+		case 2:
+			printf(_("libpx uses librecode for recoding."));
+			break;
+		case 0:
+			printf(_("libpx has no support for recoding."));
+			break;
+	}
+	printf("\n\n");
+  if(PX_is_bigendian())
+		printf(_("libpx has been compiled for big endian architecture."));
+	else
+		printf(_("libpx has been compiled for little endian architecture."));
+	printf("\n\n");
 }
 
 int main(int argc, char *argv[]) {
