@@ -88,6 +88,7 @@ manpage.1: manpage.sgml
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg><option>--short-insert <replaceable></replaceable></option></arg>
       <arg><option>--set-sql-type=SPEC <replaceable></replaceable></option></arg>
+      <arg><option>--empty-string-is-null <replaceable></replaceable></option></arg>
       <arg><option>--output-deleted <replaceable></replaceable></option></arg>
       <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
@@ -416,6 +417,18 @@ manpage.1: manpage.sgml
 						type mapping.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term><option>--empty-string-is-null</option>
+        </term>
+        <listitem>
+          <para>Outputs NULL in the sql ouput for all empty strings in the
+					  paradox file. This option only affects sql and sqlite output.
+						Paradox does not distinguish between fields of type alpha
+						which has no characters or contain the NULL string. The default
+						is to tread them as empty strings. By passing this option they
+						will be treaded as NULL strings in the sql output.</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
 
 		<para>The none optional parameter FILE is the Paradox file which shall
@@ -433,14 +446,15 @@ manpage.1: manpage.sgml
 		  files but also
 		  of primary and secondary index files (PX, XGx, YGx files). This section
 			will only focus on primary index files. Do not confuse this with the
-			option <option>--primary-index-file</option> which is just for
-			accelerated access on database records in a .DB file.</para>
+			option <option>--primary-index-file</option> which is just
+			accelerated access on database records in a .DB file, but this section
+			is about outputting the content of a primary index file.</para>
 		<para>An index file
 			has the same basename as the database file. If it exists the database
 			file will have the header field 'Num. of prim. Key fields' set to a
 			value greater than 0. An index file is actually a regular database file
 			with some extra columns and a slightly different header. There is no
-			further reference between the database and index file beside the file
+			further reference between the database and the index file beside the file
 			name. You can always read a database without its primary index, but
 			access will be slower.</para>
 		<para>Each database file may have 1 or more primary key fields. The number
@@ -472,19 +486,19 @@ manpage.1: manpage.sgml
 			other index blocks in the primary index itself. The reason for this is
 			the tree structure of the index which is explained in the file
 			/usr/share/doc/pxlib-doc/paradox4.txt. The number of records in this
-			index blocks is the sum of all records referenzed by the records in
+			index blocks is the sum of all records referenced by the records in
 			the block this block references. If for example you have 100 records
 			each pointing to a data block in the database with 5 records each,
 			and those 100 records are store in a datablock number 1 in the index
-			file, then the reference from an index record to this block number
-			1 will have a record count 100*5. The index record itself will be part
+			file, then the reference from an index record to this block number 1
+			will have a record count 100*5. The index record itself will be part
 			of an index block.</para>
 		<para>The last column has some unknown meaning. It is often set to
 		  zero.</para>
 		<para>When you output the content of an primary index file you will
 		  notice a forth extra column. This one is added by &dhpackage; itself.
 			It is the block number the current record is stored in. It is very
-			helpful when investigating the tree structure of the index file.
+			helpful for investigating the tree structure of the index file.
 			Quite often one will find index blocks at the begining of an index
 			file.</para>
 	</refsect1>
