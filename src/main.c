@@ -235,6 +235,8 @@ struct sql_type_map {
 	char *sqltype;
 };
 
+/* set_default_sql_types() {{{
+ */
 void set_default_sql_types(struct sql_type_map *typemap) {
 	memset(typemap, 0, (pxfBytes+1) * sizeof(struct sql_type_map));
 	typemap[0].pxtype = NULL;
@@ -274,7 +276,10 @@ void set_default_sql_types(struct sql_type_map *typemap) {
 	typemap[pxfBytes].pxtype = strdup("bytes");
 	typemap[pxfBytes].sqltype = strdup("text");
 }
+/* }}} */
 
+/* set_sql_type() {{{
+ */
 void set_sql_type(struct sql_type_map *typemap, int pxtype, char *sqltype) {
 	if(pxtype < 1 || pxtype > pxfBytes) {
 		return;
@@ -286,7 +291,10 @@ void set_sql_type(struct sql_type_map *typemap, int pxtype, char *sqltype) {
 		free(typemap[pxtype].sqltype);
 	typemap[pxtype].sqltype = strdup(sqltype);
 }
+/* }}} */
 
+/* get_sql_type() {{{
+ */
 char *get_sql_type(struct sql_type_map *typemap, int pxtype, int len) {
 	static char buffer[200];
 	if(pxtype < 1 || pxtype > pxfBytes) {
@@ -295,10 +303,14 @@ char *get_sql_type(struct sql_type_map *typemap, int pxtype, int len) {
 	snprintf(buffer, 200, typemap[pxtype].sqltype, len);
 	return(buffer);
 }
+/* }}} */
 
+/* errorhandler() {{{
+ */
 void errorhandler(pxdoc_t *p, int error, const char *str, void *data) {
 	  fprintf(stderr, "PXLib: %s\n", str);
 }
+/* }}} */
 
 /* usage() {{{
  * Output usage information
@@ -405,6 +417,8 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  --set-sql-type=SPEC sets the type for a sql field."));
 		printf("\n");
+		printf(_("  --empty-string-is-null tread empty string as null."));
+		printf("\n");
 	}
 	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
 		printf("\n");
@@ -501,6 +515,7 @@ int main(int argc, char *argv[]) {
 	int usegsf = 0;
 	int verbose = 0;
 	int withouthead = 0;
+	int emptystringisnull = 0;
 	char delimiter = ',';
 	char enclosure = '"';
 	char *inputfile = NULL;
@@ -567,6 +582,7 @@ int main(int argc, char *argv[]) {
 			{"skip-schema", 0, 0, 12},
 			{"short-insert", 0, 0, 13},
 			{"set-sql-type", 1, 0, 14},
+			{"empty-string-is-null", 0, 0, 15},
 			{"primary-index-file", 1, 0, 'n'},
 			{"version", 0, 0, 11},
 			{0, 0, 0, 0}
@@ -665,6 +681,9 @@ int main(int argc, char *argv[]) {
 				}
 				break;
 			}
+			case 15:
+				emptystringisnull = 1;
+				break;
 			case 'h':
 				usage(progname);
 				printf(_("Predefined paradox to sql field type mapping:"));
@@ -2125,52 +2144,6 @@ int main(int argc, char *argv[]) {
 							}
 							break;
 					}
-					/*
-					switch(pxf->px_ftype) {
-						case pxfAlpha:
-							fprintf(outfp, "char(%d)", pxf->px_flen);
-							break;
-						case pxfDate:
-							fprintf(outfp, "date");
-							break;
-						case pxfShort:
-							fprintf(outfp, "smallint");
-							break;
-						case pxfLong:
-						case pxfAutoInc:
-							fprintf(outfp, "integer");
-							break;
-						case pxfCurrency:
-						case pxfNumber:
-							fprintf(outfp, "double");
-							break;
-						case pxfLogical:
-							fprintf(outfp, "boolean");
-							break;
-						case pxfMemoBLOb:
-						case pxfBLOb:
-						case pxfFmtMemoBLOb:
-						case pxfGraphic:
-							if(includeblobs)
-								fprintf(outfp, "oid");
-							break;
-						case pxfOLE:
-							break;
-						case pxfTime:
-							fprintf(outfp, "time");
-							break;
-						case pxfTimestamp:
-							fprintf(outfp, "timestamp");
-							break;
-						case pxfBCD:
-							fprintf(outfp, "decimal(34,%d)", pxf->px_flen);
-							break;
-						case pxfBytes:
-							fprintf(outfp, "char(%d)", pxf->px_flen);
-							break;
-						default:
-							break;
-					} */
 					fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 					if(i < pxh->px_primarykeyfields)
 						fprintf(outfp, " unique");
@@ -2259,6 +2232,9 @@ int main(int argc, char *argv[]) {
 											else
 												fprintf(outfp, "%s", value);
 											pxdoc->free(pxdoc, value);
+										} else {
+											if(emptystringisnull)
+												fprintf(outfp, "\\N");
 										}
 										first = 1;
 
@@ -2436,7 +2412,10 @@ int main(int argc, char *argv[]) {
 												fprintf(outfp, "'%s'", value);
 											pxdoc->free(pxdoc, value);
 										} else {
-											fprintf(outfp, "''", value);
+											if(emptystringisnull)
+												fprintf(outfp, "NULL", value);
+											else
+												fprintf(outfp, "''", value);
 										}
 										first = 1;
 
