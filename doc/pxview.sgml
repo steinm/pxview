@@ -57,7 +57,7 @@ manpage.1: manpage.sgml
   <refnamediv>
     <refname>&dhpackage;</refname>
 
-    <refpurpose>pxview reads Paradox files and shows information or dumps the records in different formats</refpurpose>
+    <refpurpose>Read Paradox file and show information or dump the records in different formats</refpurpose>
   </refnamediv>
   <refsynopsisdiv>
     <cmdsynopsis>
@@ -198,12 +198,27 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-q</option>
+          <option>--sqlite</option>
+        </term>
+        <listitem>
+          <para>Dump data records into a sqlite database. This
+						option is the short form for --mode=sqlite. sqlite output always
+						requires to specify an output file with the option --output-file.
+						If the sqlite database file already exists, then &dhpackage; will
+						create a new table within that file. If a table with the same name
+						already exists, it will not be overwritten unless you pass the
+						option --delete-table.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>--mode=MODE</option>
         </term>
         <listitem>
           <para>Sets the ouput mode. This options provides a different way
 					 to set the output format. --mode=sql is equivalent to --sql,
-					 --mode=csv to --csv, --mode=html to --html and --mode=schema
+					 --mode=csv to --csv, --mode=html to --html, --mode=sqlite to
+					 --sqlite and --mode=schema
 					 to --schema.</para>
         </listitem>
       </varlistentry>
