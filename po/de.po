@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-09-23 23:31+0200\n"
+"POT-Creation-Date: 2003-09-24 22:10+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -90,8 +90,8 @@ msgid "  --mode=MODE         set output mode (csv, sql, or schema)."
 msgstr "  --mode=MODE         setze Ausgabemodus (csv, sql oder schema)."
 
 #: src/main.c:67
-msgid "  -o, --output=FILE   output data into file instead of stdout."
-msgstr "  -o, --output=DATEI  schreibe Ausgabe in Datei statt nach stdout."
+msgid "  -o, --output-file=FILE output data into file instead of stdout."
+msgstr "  -o, --output-file=DATEI schreibe Ausgabe in Datei statt nach stdout."
 
 #: src/main.c:69
 msgid "  -b, --blobfile=FILE read blob data from file."
@@ -338,8 +338,8 @@ msgstr "Code Page:               %d (0x%X)\n"
 
 #: src/main.c:439
 #, c-format
-msgid "Update time:             %d.%d.%d (%d)\n"
-msgstr "Letzte Aktualisierung:   %d.%d.%d (%d)\n"
+msgid "Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"
+msgstr "Letzte Aktualisierung:   %d.%d.%d %d:%02d:%02d (%d)\n"
 
 #: src/main.c:441
 #, c-format
