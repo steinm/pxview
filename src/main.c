@@ -1798,7 +1798,6 @@ int main(int argc, char *argv[]) {
 				} else {
 					fprintf(stderr, _("Couldn't get record number %d\n"), j);
 				}
-printf("%s", str_buffer_get(pxdoc, sbuf));
 
 				if(SQLITE_OK != sqlite_exec(sql, str_buffer_get(pxdoc, sbuf), NULL, NULL, &sqlerror)) {
 					sqlite_close(sql);
