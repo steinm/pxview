@@ -26,7 +26,7 @@ make
 rm -rf ${RPM_BUILD_ROOT}
 install -d -m 755 ${RPM_BUILD_ROOT}
 make DESTDIR=${RPM_BUILD_ROOT} install
-(cd ${RPM_BUILD_ROOT}/usr/bin; ln -s pxview px2sql; ln -s pxview px2csv, ln -s pxview px2html)
+(cd ${RPM_BUILD_ROOT}/usr/bin; ln -s pxview px2sql; ln -s pxview px2csv; ln -s pxview px2html; ln -s pxview px2sqlite)
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
