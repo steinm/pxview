@@ -741,158 +741,161 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(outfp, "\n);\n\n");
 
-		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
-			if(selectedfields)
-				px_free(pxdoc, selectedfields);
-			PX_close(pxdoc);
-			exit(1);
-		}
+		/* Only output data if we have at least one record */
+		if(pxh->px_numrecords > 0) {
+			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+				if(selectedfields)
+					px_free(pxdoc, selectedfields);
+				PX_close(pxdoc);
+				exit(1);
+			}
 
-		if(tablename)
-			fprintf(outfp, "COPY %s (", tablename);
-		else
-			fprintf(outfp, "COPY %s (", pxh->px_tablename);
-		first = 0;  // set to 1 when first field has been output
-		pxf = pxh->px_fields;
-		/* output field name */
-		for(i=0; i<pxh->px_numfields; i++) {
-			if(fieldregex == NULL ||  selectedfields[i]) {
-				if(first == 1)
-					fprintf(outfp, ", ");
-				switch(pxf->px_ftype) {
-					case pxfAlpha:
-					case pxfDate:
-					case pxfShort:
-					case pxfLong:
-					case pxfAutoInc:
-					case pxfTime:
-					case pxfCurrency:
-					case pxfNumber:
-					case pxfLogical:
-						fprintf(outfp, "%s", pxf->px_fname);
-						first = 1;
-						break;
-					case pxfMemoBLOb:
-					case pxfBLOb:
-					case pxfFmtMemoBLOb:
-					case pxfGraphic:
-						if(includeblobs) {
+			if(tablename)
+				fprintf(outfp, "COPY %s (", tablename);
+			else
+				fprintf(outfp, "COPY %s (", pxh->px_tablename);
+			first = 0;  // set to 1 when first field has been output
+			pxf = pxh->px_fields;
+			/* output field name */
+			for(i=0; i<pxh->px_numfields; i++) {
+				if(fieldregex == NULL ||  selectedfields[i]) {
+					if(first == 1)
+						fprintf(outfp, ", ");
+					switch(pxf->px_ftype) {
+						case pxfAlpha:
+						case pxfDate:
+						case pxfShort:
+						case pxfLong:
+						case pxfAutoInc:
+						case pxfTime:
+						case pxfCurrency:
+						case pxfNumber:
+						case pxfLogical:
 							fprintf(outfp, "%s", pxf->px_fname);
 							first = 1;
-						}
-						break;
-				}
-			}
-			pxf++;
-		}
-		fprintf(outfp, ") FROM stdin;\n");
-		for(j=0; j<pxh->px_numrecords; j++) {
-			int offset;
-			if(PX_get_record(pxdoc, j, data)) {
-				first = 0;  // set to 1 when first field has been output
-				offset = 0;
-				pxf = pxh->px_fields;
-				for(i=0; i<pxh->px_numfields; i++) {
-					if(fieldregex == NULL ||  selectedfields[i]) {
-						if(first == 1)
-							fprintf(outfp, "\t");
-						switch(pxf->px_ftype) {
-							case pxfAlpha: {
-								char *value;
-								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%s", value);
-								}
+							break;
+						case pxfMemoBLOb:
+						case pxfBLOb:
+						case pxfFmtMemoBLOb:
+						case pxfGraphic:
+							if(includeblobs) {
+								fprintf(outfp, "%s", pxf->px_fname);
 								first = 1;
-
-								break;
 							}
-							case pxfDate: {
-								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%ld", value);
-								} else {
-									fprintf(outfp, "\\N");
-								}
-								first = 1;
-								break;
-							}
-							case pxfShort: {
-								short int value;
-								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%d", value);
-								} else {
-									fprintf(outfp, "\\N");
-								}
-								first = 1;
-								break;
-							}
-							case pxfAutoInc:
-							case pxfLong: {
-								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%ld", value);
-								} else {
-									fprintf(outfp, "\\N");
-								}
-								first = 1;
-								break;
-							}
-							case pxfTime: {
-								long value;
-								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
-								} else {
-									fprintf(outfp, "\\N");
-								}
-								first = 1;
-								break;
-								}
-							case pxfCurrency:
-							case pxfNumber: {
-								double value;
-								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%f", value);
-								} else {
-									fprintf(outfp, "\\N");
-								}
-								first = 1;
-								break;
-								}
-							case pxfLogical:
-								if(*((char *)(&data[offset])) & 0x80) {
-									data[offset] &= 0x7f;
-									if(data[offset])
-										fprintf(outfp, "TRUE");
-									else
-										fprintf(outfp, "FALSE");
-								} else {
-									fprintf(outfp, "\\N");
-								}
-								first = 1;
-								break;
-							case pxfMemoBLOb:
-							case pxfBLOb:
-							case pxfFmtMemoBLOb:
-							case pxfGraphic:
-								if(includeblobs) {
-									fprintf(outfp, "\\N");
-									first = 1;
-								}
-								break;
-							default:
-								fprintf(outfp, "");
-						}
+							break;
 					}
-					offset += pxf->px_flen;
-					pxf++;
 				}
-				fprintf(outfp, "\n");
-			} else {
-				fprintf(stderr, _("Couldn't get record\n"));
+				pxf++;
 			}
+			fprintf(outfp, ") FROM stdin;\n");
+			for(j=0; j<pxh->px_numrecords; j++) {
+				int offset;
+				if(PX_get_record(pxdoc, j, data)) {
+					first = 0;  // set to 1 when first field has been output
+					offset = 0;
+					pxf = pxh->px_fields;
+					for(i=0; i<pxh->px_numfields; i++) {
+						if(fieldregex == NULL ||  selectedfields[i]) {
+							if(first == 1)
+								fprintf(outfp, "\t");
+							switch(pxf->px_ftype) {
+								case pxfAlpha: {
+									char *value;
+									if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										fprintf(outfp, "%s", value);
+									}
+									first = 1;
+
+									break;
+								}
+								case pxfDate: {
+									long value;
+									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										fprintf(outfp, "%ld", value);
+									} else {
+										fprintf(outfp, "\\N");
+									}
+									first = 1;
+									break;
+								}
+								case pxfShort: {
+									short int value;
+									if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										fprintf(outfp, "%d", value);
+									} else {
+										fprintf(outfp, "\\N");
+									}
+									first = 1;
+									break;
+								}
+								case pxfAutoInc:
+								case pxfLong: {
+									long value;
+									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										fprintf(outfp, "%ld", value);
+									} else {
+										fprintf(outfp, "\\N");
+									}
+									first = 1;
+									break;
+								}
+								case pxfTime: {
+									long value;
+									if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+									} else {
+										fprintf(outfp, "\\N");
+									}
+									first = 1;
+									break;
+									}
+								case pxfCurrency:
+								case pxfNumber: {
+									double value;
+									if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										fprintf(outfp, "%f", value);
+									} else {
+										fprintf(outfp, "\\N");
+									}
+									first = 1;
+									break;
+									}
+								case pxfLogical:
+									if(*((char *)(&data[offset])) & 0x80) {
+										data[offset] &= 0x7f;
+										if(data[offset])
+											fprintf(outfp, "TRUE");
+										else
+											fprintf(outfp, "FALSE");
+									} else {
+										fprintf(outfp, "\\N");
+									}
+									first = 1;
+									break;
+								case pxfMemoBLOb:
+								case pxfBLOb:
+								case pxfFmtMemoBLOb:
+								case pxfGraphic:
+									if(includeblobs) {
+										fprintf(outfp, "\\N");
+										first = 1;
+									}
+									break;
+								default:
+									fprintf(outfp, "");
+							}
+						}
+						offset += pxf->px_flen;
+						pxf++;
+					}
+					fprintf(outfp, "\n");
+				} else {
+					fprintf(stderr, _("Couldn't get record\n"));
+				}
+			}
+			fprintf(outfp, "\\.\n");
+			px_free(pxdoc, data);
 		}
-		fprintf(outfp, "\\.\n");
-		px_free(pxdoc, data);
 	}
 
 	if(outputdebug) {

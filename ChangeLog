@@ -1,5 +1,6 @@
 Version 0.0.6
-	- put field values into enclosing char only if the delimeter is in
+	- output sql data only if num records > 0
+	- put field values into enclosing char only if the delimiter is in
 	  the field value
 	- added option -v to output more header information
 	- added spec file to create rpms
