@@ -1,4 +1,6 @@
 Version 0.1.2
+	- added option --primary-index-file to read a primary index which
+	  accelerates access 
 	- debug mode: output information about the datablock where a record is stored
 	- usage output has been to restrictive if run as pxview
 	- options --output-deleted, --delete-table has been misinterpreted
