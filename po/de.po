@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-07-29 15:51+0200\n"
+"POT-Creation-Date: 2003-07-29 21:44+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -48,70 +48,74 @@ msgstr "Optionen:"
 msgid "  -h, --help          this usage information."
 msgstr "  -h, --help          diese Hilfe."
 
-#: src/main.c:26
+#: src/main.c:25
+msgid "  -v, --verbose       be more verbose."
+msgstr "  -v, --verbose       mehr Informationen"
+
+#: src/main.c:28
 msgid "  -i, --info          show information about file."
 msgstr "  -i, --info          zeige Informationen über eine Datei."
 
-#: src/main.c:28
+#: src/main.c:30
 msgid "  -c, --csv           dump records in CSV format."
 msgstr "  -c, --csv           gebe Datensätze im CSV-Format aus."
 
-#: src/main.c:30
+#: src/main.c:32
 msgid "  -s, --sql           dump records in SQL format."
 msgstr "  -s, --sql           gebe Datensätze im SQL-Format aus."
 
-#: src/main.c:32
+#: src/main.c:34
 msgid "  -t, --shema         output schema of database."
 msgstr "  -t, --shema         gebe Schema der Datenbank aus."
 
-#: src/main.c:34
+#: src/main.c:36
 msgid "  --mode=MODE         set output mode (csv, sql, or schema)."
 msgstr "  --mode=MODE         setze Ausgabemodus (csv, sql oder schema)."
 
-#: src/main.c:37
+#: src/main.c:39
 msgid "  -o, --output=FILE   output data into file instead of stdout."
 msgstr "  -o, --output=DATEI  schreibe Ausgabe in Datei statt nach stdout."
 
-#: src/main.c:39
+#: src/main.c:41
 msgid "  -b, --blobfile=FILE read blob data from file."
 msgstr "  -b, --blobfile=DATEI lese Blobs aus Datei."
 
-#: src/main.c:41
+#: src/main.c:43
 msgid "  -p, --blobprefix=PREFIX prefix for all created files with blob data."
 msgstr "  -p, --blobprefix=PRÄFIX Präfix für erzeugte Blob-Dateien."
 
-#: src/main.c:43
+#: src/main.c:45
 msgid "  -r, --recode=ENCODING sets the target encoding."
 msgstr "  -r, --recode=ENCODING setzt Zielkodierung"
 
-#: src/main.c:46
+#: src/main.c:48
 msgid "  --separator=CHAR    character used to separate field values."
 msgstr ""
 "  --separator=CHAR    Zeichen, das zur Trennung von Feldern benutzt wird."
 
-#: src/main.c:48
+#: src/main.c:50
 msgid "  --enclosure=CHAR    character used to enclose field values."
 msgstr ""
 "  --enclosure=CHAR    Zeichen, das zum Einschließen von Feldern benutzt wird."
 
-#: src/main.c:51
+#: src/main.c:53
 msgid "  --includeblobs      add blob fields in sql output."
 msgstr "  --includeblobs      berücksichtige Blobs beim der SQL-Ausgabe."
 
-#: src/main.c:53
+#: src/main.c:55
 msgid "  --fields=REGEX      extended regular expression to select fields."
 msgstr ""
 "  --fields=REGEX      erweiterter regulärer Ausdruck zur Auswahl von Feldern."
 
-#: src/main.c:56
+#: src/main.c:58
 msgid "  --tablename=NAME    overwrite name of database table."
 msgstr "  --tablename=NAME    überschreibe den Namen der Datenbanktable."
 
-#: src/main.c:58
+#: src/main.c:60
 msgid "  --deletetable       delete existing sql database table."
 msgstr "  --deletetable       lösche bestehende SQL Datenbanktable."
 
-#: src/main.c:63
+#: src/main.c:65
 msgid ""
 "If you do not specify any of the options -i, -c, -s, or -t\n"
 "then -i will be used."
@@ -119,16 +123,16 @@ msgstr ""
 "Wenn Sie keine der Optionen -i, -c, -s oder -t angeben,\n"
 "dann wird die Option -i verwendet."
 
-#: src/main.c:67
+#: src/main.c:69
 msgid "The options --separator and --enclosure will only affect csv output."
 msgstr ""
 "Die Optionen --separator und --enclosure beeinflussen nur die CSV-Ausgabe."
 
-#: src/main.c:71
+#: src/main.c:73
 msgid "The option --fields will only affect csv and sql output."
 msgstr "Die Option --fields beeinflusst nur die CSV- und SQL-Ausgabe."
 
-#: src/main.c:75
+#: src/main.c:77
 msgid ""
 "If exporting csv format fields will be separated by tabulator\n"
 "and enclosed into \"."
@@ -136,135 +140,150 @@ msgstr ""
 "Beim Export im CSV-Format werden Felder standardmäßig mit einem\n"
 "Tabulator getrennt und durch Anführungsstriche eingeschlossen."
 
-#: src/main.c:224
+#: src/main.c:231
 msgid "You must at least specify an input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:234
+#: src/main.c:241
 msgid "Could not open output file."
 msgstr "Konnte Ausgabedate nicht öffnen."
 
-#: src/main.c:244
+#: src/main.c:251
 msgid "Could not open input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:256
+#: src/main.c:263
 msgid "Could not open blob file."
 msgstr "Konte Blob-Datei nicht öffnen."
 
-#: src/main.c:264
+#: src/main.c:271
 #, c-format
 msgid "File Version:        %1.1f\n"
 msgstr "Datei Version:       %1.1f\n"
 
-#: src/main.c:265
+#: src/main.c:272
 msgid "File Type:           "
 msgstr "Dateityp:            "
 
-#: src/main.c:268
+#: src/main.c:275
 msgid "indexed .DB data file"
 msgstr "indizierte .DB Datendatei"
 
-#: src/main.c:271
+#: src/main.c:278
 msgid "primary index .PX file"
 msgstr "Primärindex .PX Datei"
 
-#: src/main.c:274
+#: src/main.c:281
 msgid "non-indexed .DB data file"
 msgstr "Nicht-indizierte .DB Datendatei"
 
-#: src/main.c:277
+#: src/main.c:284
 msgid "non-incrementing secondary index .Xnn file"
 msgstr "Nicht inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:280
+#: src/main.c:287
 msgid "secondary index .Ynn file (inc or non-inc)"
 msgstr "Sekundre Index .Ynn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:283
+#: src/main.c:290
 msgid "incrementing secondary index .Xnn file"
 msgstr "Inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:286
+#: src/main.c:293
 msgid "non-incrementing secondary index .XGn file"
 msgstr "Nicht inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:289
+#: src/main.c:296
 msgid "secondary index .YGn file (inc or non inc)"
 msgstr "Sekundre Index .YGn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:292
+#: src/main.c:299
 msgid "incrementing secondary index .XGn file"
-msgstr "Inkrementierende, sekundre Index .XGn Datei"
+msgstr "Inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:296
+#: src/main.c:303
 #, c-format
 msgid "Tablename:           %s\n"
 msgstr "Tabellenname:        %s\n"
 
-#: src/main.c:297
+#: src/main.c:304
 #, c-format
 msgid "Num. of Records:     %d\n"
 msgstr "Anz. der Datensätze: %d\n"
 
-#: src/main.c:298
+#: src/main.c:305
 #, c-format
 msgid "Num. of Fields:      %d\n"
 msgstr "Anz. der Felder:     %d\n"
 
-#: src/main.c:299
+#: src/main.c:306
 #, c-format
 msgid "Header size:         %d (0x%X)\n"
 msgstr "Größe der Präambel:  %d (0x%X)\n"
 
-#: src/main.c:300
+#: src/main.c:307
 #, c-format
 msgid "Max. Table size:     %d (0x%X)\n"
 msgstr "Max. Tabellengröße:  %d (0x%X)\n"
 
-#: src/main.c:301
+#: src/main.c:308
 #, c-format
 msgid "Num. of Data Blocks: %d\n"
 msgstr "Anz. der Datenblöcke: %d\n"
 
-#: src/main.c:304
+#: src/main.c:311
 #, c-format
 msgid "Num. of Index Field: %d\n"
 msgstr "Anz. der Indexfelder: %d\n"
 
-#: src/main.c:305
+#: src/main.c:312
 #, c-format
 msgid "Num. of prim. Key fields: %d\n"
 msgstr "Anz. der Primärschlüsselfelder: %d\n"
 
-#: src/main.c:306
+#: src/main.c:313
 #, c-format
 msgid "Write protected:     %d\n"
 msgstr "Schreibschutz:       %d\n"
 
-#: src/main.c:307
+#: src/main.c:314
 #, c-format
 msgid "Code Page:           %d (0x%X)\n"
 msgstr "Code Page:           %d (0x%X)\n"
 
-#: src/main.c:310
+#: src/main.c:316
+#, c-format
+msgid "Record size:         %d (0x%X)\n"
+msgstr "Größe eines Datens.: %d (0x%X)\n"
+
+#: src/main.c:317
+#, c-format
+msgid "Sort order:          %d (0x%X)\n"
+msgstr "Sortierreihenfolge:  %d (0x%X)\n"
+
+#: src/main.c:318
+#, c-format
+msgid "Auto increment:      %d (0x%X)\n"
+msgstr "Auto inkrement:      %d (0x%X)\n"
+
+#: src/main.c:322
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
 
-#: src/main.c:466
+#: src/main.c:478
 msgid "Could not compile regular expression to select fields."
 msgstr "Konnte regulären Ausdruck nicht übersetzen."
 
 #. allocate memory for selected field array
-#: src/main.c:471
+#: src/main.c:483
 msgid "Could not allocate memory for array of selected fields."
 msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 
-#: src/main.c:487 src/main.c:737 src/main.c:892
+#: src/main.c:499 src/main.c:744 src/main.c:899
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:635 src/main.c:884 src/main.c:916
+#: src/main.c:642 src/main.c:891 src/main.c:923
 msgid "Couldn't get record\n"
 msgstr "Konnte auf Datensatz nicht zugreifen.\n"
 
