@@ -10,4 +10,4 @@ Architecture: any
 Depends: ${shlibs:Depends} ${misc:Depends}
 Description: Display information about Paradox files
  Displays information about various Paradox files (mostly
- DB files). It can also dump the data in CSV format.
+ DB files). It can also dump the data in CSV and SQL format.
