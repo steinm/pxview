@@ -1378,6 +1378,7 @@ int main(int argc, char *argv[]) {
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									char *str = PX_timestamp2string(pxdoc, value, "H:i:s d.m.Y");
 									fprintf(outfp, "%s", str);
+									pxdoc->free(pxdoc, str);
 								} 
 								first = 1;
 								break;
