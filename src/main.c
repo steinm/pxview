@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
 					printf("bool(%d)\n", pxf->px_flen);
 					break;
 				case pxfMemoBLOb:
-					printf("bool(%d)\n", pxf->px_flen);
+					printf("blob(%d)\n", pxf->px_flen);
 					break;
 				case pxfBLOb:
 					printf("blob(%d)\n", pxf->px_flen);
@@ -215,7 +215,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(outputcsv) {
-		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, "Could not allocate memory for record.")) == NULL) {
+		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			exit(1);
 		}
 
@@ -248,6 +248,10 @@ int main(int argc, char *argv[]) {
 							break;
 						case pxfGraphic:
 						case pxfBLOb:
+//							printf("%ld ", *((long int *)(&data[offset])));
+							printf("offset=%ld ", get_long(&data[offset]) & 0xffffff00);
+							printf("size=%ld ", get_long(&data[offset+4]));
+							printf("mod_nr=%d ", get_short(&data[offset+8]));
 							hex_dump(&data[offset], pxf->px_flen);
 							break;
 						default:
@@ -260,7 +264,7 @@ int main(int argc, char *argv[]) {
 				}
 				printf("\n");
 			} else {
-				printf("Couldn't get record\n");
+				fprintf(stderr, _("Couldn't get record\n"));
 			}
 		}
 		px_free(data);
