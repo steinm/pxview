@@ -25,12 +25,17 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  -f, --file=FILE     read input data from file."));
 	printf("\n");
+	printf(_("  -b, --blobfile=FILE read blob data from file."));
+	printf("\n");
+	printf(_("  -p, --blobprefix=FILE prefix for all created files with blob data."));
+	printf("\n");
 }
 
 int main(int argc, char *argv[]) {
 	pxhead_t *pxh;
 	pxfield_t *pxf;
 	pxdoc_t *pxdoc;
+	pxblob_t *pxblob;
 	char *data, buffer[1000];
 	int i, j, c;
 	int outputcsv = 0;
@@ -39,6 +44,8 @@ int main(int argc, char *argv[]) {
 	char delimiter = ';';
 	char enclosure = '"';
 	char *inputfile = NULL;
+	char *blobfile = NULL;
+	char *blobprefix = NULL;
 
 #ifdef ENABLE_NLS
 	setlocale (LC_ALL, "");
@@ -54,11 +61,13 @@ int main(int argc, char *argv[]) {
 			{"csv", 0, 0, 'c'},
 			{"sql", 0, 0, 's'},
 			{"file", 1, 0, 'f'},
+			{"blobfile", 1, 0, 'b'},
+			{"blobprefix", 1, 0, 'p'},
 			{"output", 1, 0, 'o'},
 			{"help", 0, 0, 'h'},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icsf:o:h",
+		c = getopt_long (argc, argv, "icsf:b:p:o:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -69,6 +78,12 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'f':
 				inputfile = strdup(optarg);
+				break;
+			case 'b':
+				blobfile = strdup(optarg);
+				break;
+			case 'p':
+				blobprefix = strdup(optarg);
 				break;
 			case 'o':
 				break;
@@ -99,9 +114,20 @@ int main(int argc, char *argv[]) {
 
 	pxdoc = PX_new();
 	if(0 > PX_open_file(pxdoc, inputfile)) {
+		fprintf(stderr, _("Could not open input file."));
 		exit(1);
 	}
 	pxh = pxdoc->px_head;
+
+	/* Open the file containing the blobs if one is given */
+	if(blobfile) {
+		pxblob = PX_new_blob(pxdoc);
+		if(0 > PX_open_blob_file(pxblob, blobfile)) {
+			fprintf(stderr, _("Could not open blob file."));
+			PX_close(pxdoc);
+			exit(1);
+		}
+	}
 
 	if(outputinfo) {
 		printf(_("File Version:        %1.1f\n"), (float) pxh->px_fileversion/10.0);
@@ -249,10 +275,33 @@ int main(int argc, char *argv[]) {
 						case pxfGraphic:
 						case pxfBLOb:
 //							printf("%ld ", *((long int *)(&data[offset])));
-							printf("offset=%ld ", get_long(&data[offset]) & 0xffffff00);
-							printf("size=%ld ", get_long(&data[offset+4]));
-							printf("mod_nr=%d ", get_short(&data[offset+8]));
-							hex_dump(&data[offset], pxf->px_flen);
+							if(pxblob) {
+								char *blobdata;
+								char filename[200];
+								FILE *fp;
+								size_t size, boffset, mod_nr;
+								size = get_long(&data[offset+4]);
+								boffset = get_long(&data[offset]) & 0xffffff00;
+								mod_nr = get_short(&data[offset+8]);
+								printf("offset=%ld ", boffset);
+								printf("size=%ld ", size);
+								printf("mod_nr=%d ", mod_nr);
+								blobdata = PX_read_blobdata(pxblob, boffset, size);
+								if(blobdata) {
+									sprintf(filename, "%s_%d.blob", blobprefix, mod_nr);
+									fp = fopen(filename, "w");
+									fwrite(blobdata, size, 1, fp);
+									fclose(fp);
+								} else {
+									fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+								}
+
+							} else {
+								printf("offset=%ld ", get_long(&data[offset]) & 0xffffff00);
+								printf("size=%ld ", get_long(&data[offset+4]));
+								printf("mod_nr=%d ", get_short(&data[offset+8]));
+								hex_dump(&data[offset], pxf->px_flen);
+							}
 							break;
 						default:
 							printf("");

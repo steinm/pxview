@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
-"POT-Creation-Date: 2003-04-30 20:42+0200\n"
+"POT-Creation-Date: 2003-05-09 14:10+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -58,113 +58,131 @@ msgstr "  -o, --output=DATEI  schreibe Ausgabe in Datei statt nach stdout."
 msgid "  -f, --file=FILE     read input data from file."
 msgstr "  -f, --file=DATEI    lese aus Eingabedatei."
 
-#: src/main.c:93
+#: src/main.c:28
+#, fuzzy
+msgid "  -b, --blobfile=FILE read blob data from file."
+msgstr "  -f, --file=DATEI    lese aus Eingabedatei."
+
+#: src/main.c:30
+msgid "  -p, --blobprefix=FILE prefix for all created files with blob data."
+msgstr ""
+
+#: src/main.c:108
 msgid "You must at least specify an input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:107
+#: src/main.c:117
+#, fuzzy
+msgid "Could not open input file."
+msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
+
+#: src/main.c:126
+msgid "Could not open blob file."
+msgstr ""
+
+#: src/main.c:133
 #, c-format
 msgid "File Version:        %1.1f\n"
 msgstr "Datei Version:       %1.1f\n"
 
-#: src/main.c:108
+#: src/main.c:134
 msgid "File Type:           "
 msgstr "Dateityp:            "
 
-#: src/main.c:111
+#: src/main.c:137
 msgid "indexed .DB data file"
 msgstr "indizierte .DB Datendatei"
 
-#: src/main.c:114
+#: src/main.c:140
 msgid "primary index .PX file"
 msgstr "Primärindex .PX Datei"
 
-#: src/main.c:117
+#: src/main.c:143
 msgid "non-indexed .DB data file"
 msgstr "Nicht-indizierte .DB Datendatei"
 
-#: src/main.c:120
+#: src/main.c:146
 msgid "non-incrementing secondary index .Xnn file"
 msgstr "Nicht inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:123
+#: src/main.c:149
 msgid "secondary index .Ynn file (inc or non-inc)"
 msgstr "Sekundre Index .Ynn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:126
+#: src/main.c:152
 msgid "incrementing secondary index .Xnn file"
 msgstr "Inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:129
+#: src/main.c:155
 msgid "non-incrementing secondary index .XGn file"
 msgstr "Nicht inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:132
+#: src/main.c:158
 msgid "secondary index .YGn file (inc or non inc)"
 msgstr "Sekundre Index .YGn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:135
+#: src/main.c:161
 msgid "incrementing secondary index .XGn file"
 msgstr "Inkrementierende, sekundre Index .XGn Datei"
 
-#: src/main.c:139
+#: src/main.c:165
 #, c-format
 msgid "Tablename:           %s\n"
 msgstr "Tabellenname:        %s\n"
 
-#: src/main.c:140
+#: src/main.c:166
 #, c-format
 msgid "Num. of Records:     %d\n"
 msgstr "Anz. der Datensätze: %d\n"
 
-#: src/main.c:141
+#: src/main.c:167
 #, c-format
 msgid "Num. of Fields:      %d\n"
 msgstr "Anz. der Felder:     %d\n"
 
-#: src/main.c:142
+#: src/main.c:168
 #, c-format
 msgid "Header size:         %d (0x%X)\n"
 msgstr "Größe der Präambel:  %d (0x%X)\n"
 
-#: src/main.c:143
+#: src/main.c:169
 #, c-format
 msgid "Max. Table size:     %d (0x%X)\n"
 msgstr "Max. Tabellengröße:  %d (0x%X)\n"
 
-#: src/main.c:144
+#: src/main.c:170
 #, c-format
 msgid "Num. of Data Blocks: %d\n"
 msgstr "Anz. der Datenblöcke: %d\n"
 
-#: src/main.c:147
+#: src/main.c:173
 #, c-format
 msgid "Num. of Index Field: %d\n"
 msgstr "Anz. der Indexfelder: %d\n"
 
-#: src/main.c:148
+#: src/main.c:174
 #, c-format
 msgid "Num. of prim. Key fields: %d\n"
 msgstr "Anz. der Primärschlüsselfelder: %d\n"
 
-#: src/main.c:149
+#: src/main.c:175
 #, c-format
 msgid "Write protected:     %d\n"
 msgstr "Schreibschutz:       %d\n"
 
-#: src/main.c:150
+#: src/main.c:176
 #, c-format
 msgid "Code Page:           %d (0x%X)\n"
 msgstr "Code Page:           %d (0x%X)\n"
 
-#: src/main.c:153
+#: src/main.c:179
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
 
-#: src/main.c:218
+#: src/main.c:244
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:263
+#: src/main.c:309
 msgid "Couldn't get record\n"
 msgstr "Konnte auf Datensatz nicht zugreifen.\n"
