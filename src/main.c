@@ -69,12 +69,18 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  -p, --blobprefix=PREFIX prefix for all created files with blob data."));
 	printf("\n");
+	printf(_("  -n, --primary-index-file=FILE read primary index from file."));
+	printf("\n");
 	printf(_("  -r, --recode=ENCODING sets the target encoding."));
 	printf("\n");
-	if(!strcmp(progname, "px2csv")) {
+	if(!strcmp(progname, "px2csv") || !strcmp(progname, "pxview")) {
 		printf(_("  --separator=CHAR    character used to separate field values."));
 		printf("\n");
 		printf(_("  --enclosure=CHAR    character used to enclose field values."));
+		printf("\n");
+	}
+	if(!strcmp(progname, "px2csv") || !strcmp(progname, "px2html") || !strcmp(progname, "pxview")) {
+		printf(_("  --mark-deleted      add extra column with 1 for deleted records."));
 		printf("\n");
 	}
 	printf(_("  --include-blobs     add blob fields in sql output."));
@@ -87,7 +93,7 @@ void usage(char *progname) {
 		printf(_("  --tablename=NAME    overwrite name of database table."));
 		printf("\n");
 	}
-	if(!strcmp(progname, "px2sql")) {
+	if(!strcmp(progname, "px2sql") || !strcmp(progname, "pxview")) {
 		printf(_("  --delete-table      delete existing sql database table."));
 		printf("\n");
 	}
@@ -99,7 +105,7 @@ void usage(char *progname) {
 	if(!strcmp(progname, "pxview")) {
 		printf(_("The option --fields will only affect csv, html and sql output."));
 		printf("\n\n");
-		printf(_("The options --separator and --enclosure will only affect csv output."));
+		printf(_("The options --separator, --enclosure and --mark-deleted will only affect csv output."));
 		printf("\n\n");
 	}
 	if(!strcmp(progname, "px2csv")) {
@@ -131,6 +137,7 @@ int main(int argc, char *argv[]) {
 	pxhead_t *pxh;
 	pxfield_t *pxf;
 	pxdoc_t *pxdoc = NULL;
+	pxdoc_t *pindexdoc = NULL;
 	pxblob_t *pxblob = NULL;
 	char *progname = NULL;
 	char *selectedfields = NULL;
@@ -146,12 +153,14 @@ int main(int argc, char *argv[]) {
 	int includeblobs = 0;
 	int deletetable = 0;
 	int outputdeleted = 0;
+	int markdeleted = 0;
 	int verbose = 0;
 	char delimiter = '\t';
 	char enclosure = '"';
 	char *inputfile = NULL;
 	char *outputfile = NULL;
 	char *blobfile = NULL;
+	char *pindexfile = NULL;
 	char *blobprefix = NULL;
 	char *fieldregex = NULL;
 	char *tablename = NULL;
@@ -187,14 +196,17 @@ int main(int argc, char *argv[]) {
 			{"include-blobs", 0, 0, 2},
 			{"fields", 1, 0, 'f'},
 			{"tablename", 1, 0, 3},
-			{"deletetable", 1, 0, 5},
-			{"delete-table", 1, 0, 5},
-			{"outputdeleted", 1, 0, 6},
-			{"output-deleted", 1, 0, 6},
 			{"mode", 1, 0, 4},
+			{"deletetable", 0, 0, 5},
+			{"delete-table", 0, 0, 5},
+			{"outputdeleted", 0, 0, 6},
+			{"output-deleted", 0, 0, 6},
+			{"markdeleted", 0, 0, 7},
+			{"mark-deleted", 0, 0, 7},
+			{"primary-index-file", 1, 0, 'n'},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icsxvtf:b:r:p:o:h",
+		c = getopt_long (argc, argv, "icsxvtf:b:r:p:o:n:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -229,6 +241,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 6:
 				outputdeleted = 1;
+				break;
+			case 7:
+				markdeleted = 1;
 				break;
 			case 'h':
 				usage(progname);
@@ -266,6 +281,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'x':
 				outputhtml = 1;
+				break;
+			case 'n':
+				pindexfile = strdup(optarg);
 				break;
 		}
 	}
@@ -323,6 +341,25 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "\n");
 		exit(1);
 	}
+	if(pindexfile) {
+		pindexdoc = PX_new2(errorhandler, NULL, NULL, NULL);
+		if(0 > PX_open_file(pindexdoc, pindexfile)) {
+			fprintf(stderr, _("Could not open primary index file."));
+			fprintf(stderr, "\n");
+			exit(1);
+		}
+		if(0 > PX_read_primary_index(pindexdoc)) {
+			fprintf(stderr, _("Could not read primary index file."));
+			fprintf(stderr, "\n");
+			exit(1);
+		}
+		if(0 > PX_add_primary_index(pxdoc, pindexdoc)) {
+			fprintf(stderr, _("Could not add primary index file."));
+			fprintf(stderr, "\n");
+			exit(1);
+		}
+	}
+
 	pxh = pxdoc->px_head;
 	if(targetencoding != NULL)
 		PX_set_targetencoding(pxdoc, targetencoding);
@@ -590,8 +627,8 @@ int main(int argc, char *argv[]) {
 
 	/* Output data as comma separated values */
 	if(outputcsv) {
-		int numrecords;
-		int isdeleted;
+		int numrecords, ireccounter = 0;
+		int isdeleted, presetdeleted;
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -601,14 +638,15 @@ int main(int argc, char *argv[]) {
 
 		if(outputdeleted) {
 			numrecords = pxh->px_theonumrecords;
-			isdeleted = 1;
+			presetdeleted = 1;
 		} else {
 			numrecords = pxh->px_numrecords;
-			isdeleted = 0;
+			presetdeleted = 0;
 		}
 		for(j=0; j<numrecords; j++) {
 			int offset;
 			int ret;
+			isdeleted = presetdeleted;
 			ret = PX_get_record2(pxdoc, j, data, &isdeleted, NULL);
 			if(ret) {
 				pxf = pxh->px_fields;
@@ -736,6 +774,7 @@ int main(int argc, char *argv[]) {
 					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "%c", delimiter);
 						fprintf(outfp, "%d", value);
+						ireccounter += value;
 					}
 					offset += 2;
 					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
@@ -743,10 +782,23 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, "%d", value);
 					}
 				}
+				if(markdeleted) {
+					fprintf(outfp, "%c", delimiter);
+					fprintf(outfp, "%d", isdeleted);
+				}
 				fprintf(outfp, "\n");
 			} else {
 				fprintf(stderr, _("Couldn't get record\n"));
 			}
+		}
+		/* Print sum over all records */
+		if(pxh->px_filetype == pxfFileTypPrimIndex) {
+			for(i=0; i<pxh->px_numfields; i++)
+				fprintf(outfp, "%c", delimiter);
+			fprintf(outfp, "%c", delimiter);
+			fprintf(outfp, "%d", ireccounter);
+			fprintf(outfp, "%c", delimiter);
+			fprintf(outfp, "\n");
 		}
 		px_free(pxdoc, data);
 	}
@@ -754,7 +806,7 @@ int main(int argc, char *argv[]) {
 	/* output HTML Table */
 	if(outputhtml) {
 		int numrecords;
-		int isdeleted;
+		int isdeleted, presetdeleted;
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -764,10 +816,10 @@ int main(int argc, char *argv[]) {
 
 		if(outputdeleted) {
 			numrecords = pxh->px_theonumrecords;
-			isdeleted = 1;
+			presetdeleted = 1;
 		} else {
 			numrecords = pxh->px_numrecords;
-			isdeleted = 0;
+			presetdeleted = 0;
 		}
 
 		fprintf(outfp, "<table>\n");
@@ -805,11 +857,15 @@ int main(int argc, char *argv[]) {
 			}
 			pxf++;
 		}
+		if(markdeleted) {
+			fprintf(outfp, "  <td><b>deleted</b></td>\n", isdeleted);
+		}
 		fprintf(outfp, " </tr>\n");
 
 		for(j=0; j<numrecords; j++) {
 			int offset;
 			int ret;
+			isdeleted = presetdeleted;
 			ret = PX_get_record2(pxdoc, j, data, &isdeleted, NULL);
 			if(ret) {
 				pxf = pxh->px_fields;
@@ -929,6 +985,9 @@ int main(int argc, char *argv[]) {
 					if(PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "  <td>%d</td>\n", value);
 					}
+				}
+				if(markdeleted) {
+					fprintf(outfp, "  <td>%d</td>\n", isdeleted);
 				}
 				fprintf(outfp, " <tr>\n");
 			} else {
@@ -1217,6 +1276,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(outputdebug) {
+		int numrecords;
+		int isdeleted, presetdeleted;
 		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
@@ -1224,9 +1285,37 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 
-		for(j=0; j<pxh->px_numrecords; j++) {
+		if(outputdeleted) {
+			numrecords = pxh->px_theonumrecords;
+			presetdeleted = 1;
+		} else {
+			numrecords = pxh->px_numrecords;
+			presetdeleted = 0;
+		}
+
+		for(j=0; j<numrecords; j++) {
 			int offset;
-			if(PX_get_record(pxdoc, j, data)) {
+			isdeleted = presetdeleted;
+			pxdatablockinfo_t pxdbinfo;
+			if(PX_get_record2(pxdoc, j, data, &isdeleted, &pxdbinfo)) {
+				fprintf(outfp, _("Block number according to header: "));
+				fprintf(outfp, "%d\n", pxdbinfo.number);
+				fprintf(outfp, _("Real block number in file: "));
+				fprintf(outfp, "%d\n", pxdbinfo.realnumber);
+				fprintf(outfp, _("Block size: "));
+				fprintf(outfp, "%d\n", pxdbinfo.size);
+				fprintf(outfp, _("Record number in block: "));
+				fprintf(outfp, "%d\n", pxdbinfo.recno);
+				fprintf(outfp, _("Number of records in block: "));
+				fprintf(outfp, "%d\n", pxdbinfo.numrecords);
+				fprintf(outfp, _("Block position in file: "));
+				fprintf(outfp, "%d (0x%X)\n", pxdbinfo.blockpos, pxdbinfo.blockpos);
+				fprintf(outfp, _("Record position in file: "));
+				fprintf(outfp, "%d (0x%X)\n", pxdbinfo.recordpos, pxdbinfo.recordpos);
+				if(markdeleted) {
+					fprintf(outfp, _("Record deleted: "));
+					fprintf(outfp, "%d\n", isdeleted);
+				}
 				pxf = pxh->px_fields;
 				offset = 0;
 				first = 0;  // set to 1 when first field has been output
@@ -1250,7 +1339,13 @@ int main(int argc, char *argv[]) {
 	if(selectedfields)
 		px_free(pxdoc, selectedfields);
 
+	if(pindexfile) {
+		PX_close(pindexdoc);
+		PX_delete(pindexdoc);
+	}
+
 	PX_close(pxdoc);
+	PX_delete(pxdoc);
 
 	exit(0);
 }
