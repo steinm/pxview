@@ -325,15 +325,15 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	if(outputfile) {
+	if((outputfile == NULL) || !strcmp(outputfile, "-")) {
+		outfp = stdout;
+	} else {
 		outfp = fopen(outputfile, "w");
 		if(outfp == NULL) {
 			fprintf(stderr, _("Could not open output file."));
 			fprintf(stderr, "\n");
 			exit(1);
 		}
-	} else {
-		outfp = stdout;
 	}
 
 	if(NULL == (pxdoc = PX_new2(errorhandler, NULL, NULL, NULL))) {
