@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-09-19 07:15+0200\n"
+"POT-Creation-Date: 2003-09-23 15:46+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -383,54 +383,53 @@ msgstr "Konnte regulären Ausdruck nicht übersetzen."
 msgid "Could not allocate memory for array of selected fields."
 msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 
-#: src/main.c:637 src/main.c:815 src/main.c:1117 src/main.c:1286
+#: src/main.c:637 src/main.c:816 src/main.c:1119 src/main.c:1289
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:796 src/main.c:999 src/main.c:1275
-msgid "Couldn't get record\n"
-msgstr "Konnte auf Datensatz nicht zugreifen.\n"
-
-#: src/main.c:1010
-msgid "SQL output is only reasonable for DB files."
-msgstr "SQL-Ausgabe macht nur bei DB-Dateien Sinn."
-
-#: src/main.c:1306
-msgid "Block number according to header: "
-msgstr "Blocknummer gemäß Header: "
-
-#: src/main.c:1308
-msgid "Real block number in file: "
-msgstr "Tatsächliche Datensatznummer innerhalb des Blocks: "
-
-#: src/main.c:1310
-msgid "Block size: "
-msgstr "Blockgröße: "
-
-#: src/main.c:1312
-msgid "Record number in block: "
-msgstr "Datensatznummer innerhalb des Blocks: "
-
-#: src/main.c:1314
-msgid "Number of records in block: "
-msgstr "Anzahl der Datensätze im Block: "
-
-#: src/main.c:1316
-msgid "Block position in file: "
-msgstr "Blockposition in der Datei: "
-
-#: src/main.c:1318
-msgid "Record position in file: "
-msgstr "Datensatzposition in der Datei: "
-
-#: src/main.c:1321
-msgid "Record deleted: "
-msgstr "Datensatz gelöscht: "
-
-#: src/main.c:1338
+#: src/main.c:797 src/main.c:1001 src/main.c:1278 src/main.c:1341
 #, c-format
 msgid "Couldn't get record number %d\n"
 msgstr "Konnte auf Datensatz Nummer %d nicht zugreifen.\n"
+
+#: src/main.c:1012
+msgid "SQL output is only reasonable for DB files."
+msgstr "SQL-Ausgabe macht nur bei DB-Dateien Sinn."
+
+#: src/main.c:1309
+msgid "Block number according to header: "
+msgstr "Blocknummer gemäß Header: "
+
+#: src/main.c:1311
+msgid "Real block number in file: "
+msgstr "Tatsächliche Datensatznummer innerhalb des Blocks: "
+
+#: src/main.c:1313
+msgid "Block size: "
+msgstr "Blockgröße: "
+
+#: src/main.c:1315
+msgid "Record number in block: "
+msgstr "Datensatznummer innerhalb des Blocks: "
+
+#: src/main.c:1317
+msgid "Number of records in block: "
+msgstr "Anzahl der Datensätze im Block: "
+
+#: src/main.c:1319
+msgid "Block position in file: "
+msgstr "Blockposition in der Datei: "
+
+#: src/main.c:1321
+msgid "Record position in file: "
+msgstr "Datensatzposition in der Datei: "
+
+#: src/main.c:1324
+msgid "Record deleted: "
+msgstr "Datensatz gelöscht: "
+
+#~ msgid "Couldn't get record\n"
+#~ msgstr "Konnte auf Datensatz nicht zugreifen.\n"
 
 #~ msgid "Block number: "
 #~ msgstr "Blocknummer: "
