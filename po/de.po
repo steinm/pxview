@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-11-03 17:05+0100\n"
+"POT-Creation-Date: 2004-11-05 21:48+0100\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -624,64 +624,64 @@ msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 msgid "Allocate memory for record."
 msgstr "Alloziere Speicher für Datensatz."
 
-#: src/main.c:1495 src/main.c:1827 src/main.c:2094 src/main.c:2396
-#: src/main.c:2627 src/main.c:2697
+#: src/main.c:1491 src/main.c:1815 src/main.c:2077 src/main.c:2360
+#: src/main.c:2580 src/main.c:2650
 #, c-format
 msgid "Couldn't get record number %d\n"
 msgstr "Konnte auf Datensatz Nummer %d nicht zugreifen.\n"
 
-#: src/main.c:1522 src/main.c:2107
+#: src/main.c:1518 src/main.c:2090
 #, c-format
 msgid "SQL output is only reasonable for DB files."
 msgstr "SQL-Ausgabe macht nur bei DB-Dateien Sinn."
 
 #. Allocate memory for record data
-#: src/main.c:1528 src/main.c:1652 src/main.c:1857 src/main.c:2182
-#: src/main.c:2643
+#: src/main.c:1524 src/main.c:1644 src/main.c:1845 src/main.c:2157
+#: src/main.c:2596
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:2663
+#: src/main.c:2616
 #, c-format
 msgid "Previous block number according to header: "
 msgstr "Vorherige Blocknummer gemäß Header: "
 
-#: src/main.c:2665
+#: src/main.c:2618
 #, c-format
 msgid "Next block number according to header: "
 msgstr "Nächste Blocknummer gemäß Header: "
 
-#: src/main.c:2667
+#: src/main.c:2620
 #, c-format
 msgid "Real block number in file: "
 msgstr "Blocknummer in der Datei: "
 
-#: src/main.c:2669
+#: src/main.c:2622
 #, c-format
 msgid "Block size: "
 msgstr "Blockgröße: "
 
-#: src/main.c:2671
+#: src/main.c:2624
 #, c-format
 msgid "Record number in block: "
 msgstr "Datensatznummer innerhalb des Blocks: "
 
-#: src/main.c:2673
+#: src/main.c:2626
 #, c-format
 msgid "Number of records in block: "
 msgstr "Anzahl der Datensätze im Block: "
 
-#: src/main.c:2675
+#: src/main.c:2628
 #, c-format
 msgid "Block position in file: "
 msgstr "Blockposition in der Datei: "
 
-#: src/main.c:2677
+#: src/main.c:2630
 #, c-format
 msgid "Record position in file: "
 msgstr "Datensatzposition in der Datei: "
 
-#: src/main.c:2680
+#: src/main.c:2633
 #, c-format
 msgid "Record deleted: "
 msgstr "Datensatz gelöscht: "
