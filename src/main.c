@@ -144,8 +144,10 @@ void usage(char *progname) {
 		printf("\n");
 		printf(_("  -s, --sql           dump records in SQL format."));
 		printf("\n");
+#ifdef HAVE_SQLITE
 		printf(_("  -q, --sqlite        dump records into sqlite database."));
 		printf("\n");
+#endif
 		printf(_("  -x, --html          dump records in HTML format."));
 		printf("\n");
 		printf(_("  -t, --shema         output schema of database."));
