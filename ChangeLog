@@ -1,3 +1,6 @@
+Version 0.2.3
+	- fixed reading and outputting timestamps
+
 Version 0.2.2
 	- No need to specify a blob file if all blobs are contained in the
 	  db file.

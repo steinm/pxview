@@ -1,3 +1,10 @@
+pxview (0.2.3-1) unstable; urgency=low
+
+  * New upstream version.
+  * fixed typo in long description
+
+ -- Uwe Steinmann <steinm@debian.org>  Mon, 20 Nov 2004 18:27:50 +0100
+
 pxview (0.2.2-1) unstable; urgency=low
 
   * New upstream version.
