@@ -5,10 +5,25 @@
 #include <libintl.h>
 #include <paradox.h>
 #include "config.h"
-#define _(String) gettext (String)
+#define _(String) gettext(String)
 
 void usage(char *progname) {
-	printf(_("Usage: %s <paradox file>"), progname);
+	printf(_("%s reads a paradox file and outputs information about the file\nor dumps the content in CSV format.\n\n"), progname);
+	printf(_("Usage: %s PARADOX FILE"), progname);
+	printf("\n\n");
+	printf(_("Options:"));
+	printf("\n\n");
+	printf(_("  -h, --help          this usage information."));
+	printf("\n");
+	printf(_("  -i, --info          show information about file."));
+	printf("\n");
+	printf(_("  -c, --csv           dump records in CSV format."));
+	printf("\n");
+	printf(_("  -s, --sql           dump records in SQL format."));
+	printf("\n");
+	printf(_("  -o, --output=FILE   output dump into file instead of stdout."));
+	printf("\n");
+	printf(_("  -f, --file=FILE     read input data from file."));
 	printf("\n");
 }
 
@@ -26,8 +41,9 @@ int main(int argc, char *argv[]) {
 	char *inputfile = NULL;
 
 #ifdef ENABLE_NLS
-	bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
-	textdomain (PACKAGE);
+	setlocale (LC_ALL, "");
+	bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
+	textdomain (GETTEXT_PACKAGE);
 #endif
 
 	while(1) {
@@ -74,7 +90,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(!inputfile) {
-		fprintf(stderr, _("You must at least specify an input file"));
+		fprintf(stderr, _("You must at least specify an input file."));
+		fprintf(stderr, "\n");
 		fprintf(stderr, "\n");
 		usage(argv[0]);
 		exit(0);
