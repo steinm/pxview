@@ -717,16 +717,17 @@ int main(int argc, char *argv[]) {
 								first = 1;
 								break;
 								} 
-							case pxfLogical:
-								if(*((char *)(&data[offset])) & 0x80) {
-									data[offset] &= 0x7f;
-									if(data[offset])
+							case pxfLogical: {
+								char value;
+								if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(value)
 										fprintf(outfp, "1");
 									else
 										fprintf(outfp, "0");
 								}
 								first = 1;
 								break;
+								}
 							case pxfGraphic:
 							case pxfBLOb:
 								if(pxblob) {
@@ -910,14 +911,14 @@ int main(int argc, char *argv[]) {
 									fprintf(outfp, "%ld", value);
 								}
 								break;
-								}
+							}
 							case pxfTime: {
 								long value;
 								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								}
 								break;
-								}
+							}
 							case pxfCurrency:
 							case pxfNumber: {
 								double value;
@@ -925,16 +926,17 @@ int main(int argc, char *argv[]) {
 									fprintf(outfp, "%f", value);
 								} 
 								break;
-								} 
-							case pxfLogical:
-								if(*((char *)(&data[offset])) & 0x80) {
-									data[offset] &= 0x7f;
-									if(data[offset])
+							} 
+							case pxfLogical: {
+								char value;
+								if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(value)
 										fprintf(outfp, "1");
 									else
 										fprintf(outfp, "0");
 								}
 								break;
+							}
 							case pxfGraphic:
 							case pxfBLOb:
 								if(pxblob) {
@@ -1225,7 +1227,7 @@ int main(int argc, char *argv[]) {
 									}
 									first = 1;
 									break;
-									}
+								}
 								case pxfCurrency:
 								case pxfNumber: {
 									double value;
@@ -1236,11 +1238,11 @@ int main(int argc, char *argv[]) {
 									}
 									first = 1;
 									break;
-									}
-								case pxfLogical:
-									if(*((char *)(&data[offset])) & 0x80) {
-										data[offset] &= 0x7f;
-										if(data[offset])
+								}
+								case pxfLogical: {
+									char value;
+									if(PX_get_data_byte(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										if(value)
 											fprintf(outfp, "TRUE");
 										else
 											fprintf(outfp, "FALSE");
@@ -1249,6 +1251,7 @@ int main(int argc, char *argv[]) {
 									}
 									first = 1;
 									break;
+								}
 								case pxfMemoBLOb:
 								case pxfBLOb:
 								case pxfFmtMemoBLOb:
