@@ -49,6 +49,9 @@ void errorhandler(pxdoc_t *p, int error, const char *str, void *data) {
 	  fprintf(stderr, "PXLib: %s\n", str);
 }
 
+/* usage() {{{
+ * Output usage information
+ */
 void usage(char *progname) {
 	int recode;
 
@@ -179,7 +182,10 @@ void usage(char *progname) {
 	printf(_("libpx has version: %d.%d.%d"), PX_get_majorversion(), PX_get_minorversion(), PX_get_subminorversion());
 	printf("\n\n");
 }
+/* }}} */
 
+/* main() {{{
+ */
 int main(int argc, char *argv[]) {
 	pxhead_t *pxh;
 	pxfield_t *pxf;
@@ -1967,6 +1973,7 @@ int main(int argc, char *argv[]) {
 
 	exit(0);
 }
+/* }}} */
 
 /*
  * Local variables:
