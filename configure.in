@@ -100,6 +100,7 @@ AC_OUTPUT([
 pxview.spec
 Makefile
 src/Makefile
+doc/Makefile
 po/Makefile.in
 ])
 

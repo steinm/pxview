@@ -36,7 +36,6 @@ build-stamp:  config.status
 
 	# Add here commands to compile the package.
 	$(MAKE)
-	/usr/bin/docbook-to-man debian/pxview.sgml > pxview.1
 
 	touch build-stamp
 
@@ -90,7 +89,7 @@ binary-arch: build install
 #	dh_installinit
 #	dh_installcron
 #	dh_installinfo
-	dh_installman $(CURDIR)/pxview.1
+	dh_installman
 	dh_link
 	dh_strip
 	dh_compress
