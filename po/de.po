@@ -63,7 +63,7 @@ msgstr "  -h, --help          diese Hilfe."
 
 #: src/main.c:50
 msgid "  -v, --verbose       be more verbose."
-msgstr "  -v, --verbose       mehr Informationen"
+msgstr "  -v, --verbose       mehr Informationen anzeigen"
 
 #: src/main.c:53
 msgid "  -i, --info          show information about file."
