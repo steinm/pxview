@@ -75,6 +75,7 @@ manpage.1: manpage.sgml
       <arg><option>-o FILE | --output=FILE <replaceable></replaceable></option></arg>
       <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
       <arg><option>-p PREFIX | --blobprefix=PREFIX <replaceable></replaceable></option></arg>
+      <arg><option>-n FILE | --primary-index-file=FILE <replaceable></replaceable></option></arg>
       <arg><option>-r ENCODING | --recode=ENCODING <replaceable></replaceable></option></arg>
       <arg><option>--separator=CHAR <replaceable></replaceable></option></arg>
       <arg><option>--enclosure=CHAR <replaceable></replaceable></option></arg>
@@ -236,6 +237,15 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-n FILE</option>
+          <option>--primary-index-file=FILE</option>
+        </term>
+        <listitem>
+          <para>Read the primary index from file. This option is only valid
+					  it you are reading a database file.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>-r ENCODING</option>
           <option>--recode=ENCODING</option>
         </term>
@@ -302,11 +312,26 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>--mark-deleted</option>
+        </term>
+        <listitem>
+          <para>Adds an additional column to the csv and html output which
+					  indicates whether a record is deleted or actually available.
+						This option is only available in csv and html mode and makes
+						only sense if the option <option>--ouput-deleted</option> is
+						passed as well. If you do not pass
+						<option>--output-deleted</option> you will get
+						an extra column with just zeros because none of the records is 
+						deleted, otherwise it would not be shown.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>--delete-table</option>
         </term>
         <listitem>
           <para>Adds a sql command at the begining of the sql output to delete
-					 an existing table before creating the new one.</para>
+					 an existing table before creating the new one. This option only
+					 affects schema and sql output.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -314,20 +339,63 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Use given tablename instead of the one stored in the database
-					 file. This option does only affect schema and sql output.</para>
+					 file. This option only affects schema and sql output.</para>
         </listitem>
       </varlistentry>
     </variablelist>
 
 		<para>The none optional parameter FILE is the Paradox file which shall
 		 be read.</para>
-		<para>if you pass two or more options to set the output format then
+		<para>If you pass two or more options to set the output format then
 		 each format
 		 will be output one after the other starting with csv followed by
 		 html and finally sql.</para>
 		<para>The default field separator if exporting csv format is a tabulator.
-		 Fields will be enclosed in ".</para>
+		 Fields will be enclosed in " if required.</para>
   </refsect1>
+	<refsect1>
+	  <title>PRIMARY INDEX FILES</title>
+		<para>&dhpackage; supports not just the reading and outputting of DB
+		  files but also
+		  of primary and secondary index files (PX, XGx, YGx files). This section
+			will only focus on primary index files. Do not confuse this with the
+			option <option>--primary-index-file</option> which is just for
+			accelerated access on database records in a .DB file.</para>
+		<para>An index file
+			has the same basename as the database file. If it exists the database
+			file will have the header field 'Num. of prim. Key fields' set to a
+			value greater than 0. An index file is actually a regular database file
+			with some extra columns and a slightly different header. There is not
+			further reference between the database and index file beside the file
+			name.</para>
+		<para>Each database file may have 1 or more primary key fields. The number
+			is stored in the header of the database file.  Primary key fields
+			must be in the first n columns of the database file. If for
+			example the number of primary key fields is set to two, then the
+			first two fields in the database file are primary keys.
+			Consequently the .PX file will have these two fields as well. The
+			values of the primay key fields in the index file are those of the
+			first record in the referenced data block (see below).</para>
+		<para>Each primary index file has beside the key fields three further
+		  columns which point to data blocks in the database file. In order
+			to understand these columns you need to know that database files are
+			segmented into datablocks. The size of each data block can be calculated
+			from the 'Max. Table size' value in the database file header. Each
+			data block is prefaced by a six byte data block header which is here
+			of no further relevance except for its size.</para>
+		<para>The n+1 column (with n being the number of primary key fields) in the
+		  primary index file contains the block number in the database file.
+			The first block has number 1. This block number may not be confused
+			with the block number in the data block header. The block number is
+			used to locate the data block in the database file. It can be calculated
+			by `(blocknumber - 1) * datablocksize + headersize'.</para>
+		<para>The n+2 column contains the number of records in the
+		  referenced data block.
+		  Though data block sizes are equal, this number may vary if records
+			has been deleted from the database file.</para>
+		<para>The last column has some unknown meaning. It is often set to
+		  zero.</para>
+	</refsect1>
   <refsect1>
     <title>SEE ALSO</title>
 
