@@ -399,16 +399,17 @@ manpage.1: manpage.sgml
         <listitem>
           <para>Overrides the default mapping from a paradox field type to
 					  a sql field type. This option only affects sql and sqlite output
-						and should be use with care. You can output the predefined
+						and should be used with care. You can output the predefined
 						mapping by
 						passing the option <option>--help</option>. SPEC is a colon
 						separated pair of field types. The one left to the colon is
 						the paradox type, the other one is the sql type. The paradox
-						type is one of 'alpha', 'date', 'short', 'long', 'currency',
-						'number', 'logical', 'memoblob', 'blob', 'fmtblob', 'ole',
-						'graphic', 'time', 'timestamp',
-						'autoinc', 'bcd', or 'bytes'. The sql type can be any available
-						type like real, integer or text. If the sql type requires
+						type is one of `alpha', `date', `short', `long', `currency',
+						`number', `logical', `memoblob', `blob', `fmtblob', `ole',
+						`graphic', `time', `timestamp',
+						`autoinc', `bcd', or `bytes'. The sql type can be any available
+						type like real, integer or text. It is up to you to specify
+						a valid type. If the sql type requires
 						a length (e.g char(x)), then it can put into
 						the type specification with the placeholder '%d', e.g.
 						'alpha:char(%d)'. There is currently no check for reasonable

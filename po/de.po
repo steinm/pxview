@@ -367,7 +367,7 @@ msgstr "Argument von --set-sql-type beinhaltet nicht das Trennzeichen ':'."
 #: src/main.c:670
 #, c-format
 msgid "Predefined paradox to sql field type mapping:"
-msgstr "Vordefiniert Paradox nach SQL Feldtyp-Zuordnung:"
+msgstr "Vordefinierte Paradox nach SQL Feldtyp-Zuordnung:"
 
 #: src/main.c:731
 #, c-format
