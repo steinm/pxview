@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
-"POT-Creation-Date: 2003-05-09 14:10+0200\n"
+"POT-Creation-Date: 2003-06-05 16:28+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -15,6 +15,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: src/main.c:11
+#, c-format
+msgid "Version: %s %s http://sourceforge.net/projects/pxlib"
+msgstr "Version: %s %s http://sourceforge.net/projects/pxlib"
+
+#: src/main.c:13
+msgid "Copyright: Copyright (C) 2003 Uwe Steinmann <uwe@steinmann.cx>"
+msgstr "Copyright: Copyright (C) 2003 Uwe Steinmann <uwe@steinmann.cx>"
+
+#: src/main.c:15
 #, c-format
 msgid ""
 "%s reads a paradox file and outputs information about the file\n"
@@ -25,164 +34,174 @@ msgstr ""
 "Datei an oder gibt den Inhalt im CSV- oder SQL-Format aus.\n"
 "\n"
 
-#: src/main.c:12
+#: src/main.c:16
 #, c-format
-msgid "Usage: %s [OPTION] [PARADOX FILE]"
+msgid "Usage: %s [OPTIONS] [PARADOX FILE]"
 msgstr "Aufruf: %s [OPTION] [PARADOX DATEI]"
 
-#: src/main.c:14
+#: src/main.c:18
 msgid "Options:"
 msgstr "Optionen:"
 
-#: src/main.c:16
+#: src/main.c:20
 msgid "  -h, --help          this usage information."
 msgstr "  -h, --help          diese Hilfe."
 
-#: src/main.c:18
+#: src/main.c:22
 msgid "  -i, --info          show information about file."
 msgstr "  -i, --info          zeige Informationen über eine Datei."
 
-#: src/main.c:20
+#: src/main.c:24
 msgid "  -c, --csv           dump records in CSV format."
-msgstr "  -c, --csv           gebe Datensätze im CVS-Format aus."
+msgstr "  -c, --csv           gebe Datensätze im CSV-Format aus."
 
-#: src/main.c:22
+#: src/main.c:26
 msgid "  -s, --sql           dump records in SQL format."
 msgstr "  -s, --sql           gebe Datensätze im SQL-Format aus."
 
-#: src/main.c:24
-msgid "  -o, --output=FILE   output dump into file instead of stdout."
+#: src/main.c:28
+msgid "  -t, --shema         output schema of database."
+msgstr "  -t, --shema         gebe Schema der Datenbank aus."
+
+#: src/main.c:30
+msgid "  -o, --output=FILE   output data into file instead of stdout."
 msgstr "  -o, --output=DATEI  schreibe Ausgabe in Datei statt nach stdout."
 
-#: src/main.c:26
+#: src/main.c:32
 msgid "  -f, --file=FILE     read input data from file."
 msgstr "  -f, --file=DATEI    lese aus Eingabedatei."
 
-#: src/main.c:28
-#, fuzzy
+#: src/main.c:34
 msgid "  -b, --blobfile=FILE read blob data from file."
-msgstr "  -f, --file=DATEI    lese aus Eingabedatei."
+msgstr "  -b, --blobfile=DATEI lese Blobs aus Datei."
 
-#: src/main.c:30
-msgid "  -p, --blobprefix=FILE prefix for all created files with blob data."
+#: src/main.c:36
+msgid "  -p, --blobprefix=PREFIX prefix for all created files with blob data."
+msgstr "  -p, --blobprefix=PRÄFIX Präfix für erzeugte Blob-Dateien."
+
+#: src/main.c:38
+msgid ""
+"If you do not specify any of the options -i, -c, -s, or -t\n"
+"then -i will be used."
 msgstr ""
+"Wenn Sie keine der Optionen -i, -c, -s oder -t angeben,\n"
+"dann wird die Option -i verwendet."
 
-#: src/main.c:108
+#: src/main.c:124
 msgid "You must at least specify an input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:117
-#, fuzzy
+#: src/main.c:133
 msgid "Could not open input file."
 msgstr "Sie müssen mindestes eine Eingabedatei angegeben."
 
-#: src/main.c:126
+#: src/main.c:143
 msgid "Could not open blob file."
-msgstr ""
+msgstr "Konte Blob-Datei nicht öffnen."
 
-#: src/main.c:133
+#: src/main.c:151
 #, c-format
 msgid "File Version:        %1.1f\n"
 msgstr "Datei Version:       %1.1f\n"
 
-#: src/main.c:134
+#: src/main.c:152
 msgid "File Type:           "
 msgstr "Dateityp:            "
 
-#: src/main.c:137
+#: src/main.c:155
 msgid "indexed .DB data file"
 msgstr "indizierte .DB Datendatei"
 
-#: src/main.c:140
+#: src/main.c:158
 msgid "primary index .PX file"
 msgstr "Primärindex .PX Datei"
 
-#: src/main.c:143
+#: src/main.c:161
 msgid "non-indexed .DB data file"
 msgstr "Nicht-indizierte .DB Datendatei"
 
-#: src/main.c:146
+#: src/main.c:164
 msgid "non-incrementing secondary index .Xnn file"
 msgstr "Nicht inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:149
+#: src/main.c:167
 msgid "secondary index .Ynn file (inc or non-inc)"
 msgstr "Sekundre Index .Ynn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:152
+#: src/main.c:170
 msgid "incrementing secondary index .Xnn file"
 msgstr "Inkrementierende, sekundäre Index .Xnn Datei"
 
-#: src/main.c:155
+#: src/main.c:173
 msgid "non-incrementing secondary index .XGn file"
 msgstr "Nicht inkrementierende, sekundäre Index .XGn Datei"
 
-#: src/main.c:158
+#: src/main.c:176
 msgid "secondary index .YGn file (inc or non inc)"
 msgstr "Sekundre Index .YGn Datei (nicht- und inkrementierend)"
 
-#: src/main.c:161
+#: src/main.c:179
 msgid "incrementing secondary index .XGn file"
 msgstr "Inkrementierende, sekundre Index .XGn Datei"
 
-#: src/main.c:165
+#: src/main.c:183
 #, c-format
 msgid "Tablename:           %s\n"
 msgstr "Tabellenname:        %s\n"
 
-#: src/main.c:166
+#: src/main.c:184
 #, c-format
 msgid "Num. of Records:     %d\n"
 msgstr "Anz. der Datensätze: %d\n"
 
-#: src/main.c:167
+#: src/main.c:185
 #, c-format
 msgid "Num. of Fields:      %d\n"
 msgstr "Anz. der Felder:     %d\n"
 
-#: src/main.c:168
+#: src/main.c:186
 #, c-format
 msgid "Header size:         %d (0x%X)\n"
 msgstr "Größe der Präambel:  %d (0x%X)\n"
 
-#: src/main.c:169
+#: src/main.c:187
 #, c-format
 msgid "Max. Table size:     %d (0x%X)\n"
 msgstr "Max. Tabellengröße:  %d (0x%X)\n"
 
-#: src/main.c:170
+#: src/main.c:188
 #, c-format
 msgid "Num. of Data Blocks: %d\n"
 msgstr "Anz. der Datenblöcke: %d\n"
 
-#: src/main.c:173
+#: src/main.c:191
 #, c-format
 msgid "Num. of Index Field: %d\n"
 msgstr "Anz. der Indexfelder: %d\n"
 
-#: src/main.c:174
+#: src/main.c:192
 #, c-format
 msgid "Num. of prim. Key fields: %d\n"
 msgstr "Anz. der Primärschlüsselfelder: %d\n"
 
-#: src/main.c:175
+#: src/main.c:193
 #, c-format
 msgid "Write protected:     %d\n"
 msgstr "Schreibschutz:       %d\n"
 
-#: src/main.c:176
+#: src/main.c:194
 #, c-format
 msgid "Code Page:           %d (0x%X)\n"
 msgstr "Code Page:           %d (0x%X)\n"
 
-#: src/main.c:179
+#: src/main.c:197
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
 
-#: src/main.c:244
+#: src/main.c:346
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:309
+#: src/main.c:418
 msgid "Couldn't get record\n"
 msgstr "Konnte auf Datensatz nicht zugreifen.\n"
