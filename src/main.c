@@ -1656,7 +1656,7 @@ int main(int argc, char *argv[]) {
 									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
 										if(strchr(value, '\'')) {
 											str_buffer_print(pxdoc, sbuf, "'");
-											str_buffer_printmask(pxdoc, sbuf, value, '\'', '\\');
+											str_buffer_printmask(pxdoc, sbuf, value, '\'', '\'');
 											str_buffer_print(pxdoc, sbuf, "'");
 										} else
 											str_buffer_print(pxdoc, sbuf, "'%s'", value);
