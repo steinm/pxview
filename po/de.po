@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2003-07-23 11:37+0200\n"
+"POT-Creation-Date: 2003-07-29 15:51+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -260,11 +260,11 @@ msgstr "Konnte regulären Ausdruck nicht übersetzen."
 msgid "Could not allocate memory for array of selected fields."
 msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 
-#: src/main.c:487 src/main.c:737 src/main.c:895
+#: src/main.c:487 src/main.c:737 src/main.c:892
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: src/main.c:635 src/main.c:887 src/main.c:919
+#: src/main.c:635 src/main.c:884 src/main.c:916
 msgid "Couldn't get record\n"
 msgstr "Konnte auf Datensatz nicht zugreifen.\n"
 
