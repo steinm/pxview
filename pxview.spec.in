@@ -19,7 +19,7 @@ write each object to a single file.
 %setup
 
 %build
-./configure --prefix=%prefix --mandir=%prefix/share/man --infodir=%prefix/share/info
+./configure --prefix=%prefix --with-sqlite --mandir=%prefix/share/man --infodir=%prefix/share/info
 make
 
 %install
