@@ -1,0 +1,22 @@
+Document: pxview
+Title: Debian pxview Manual
+Author: <insert document author here>
+Abstract: This manual describes what pxview is
+ and how it can be used to
+ manage online manuals on Debian systems.
+Section: unknown
+
+Format: debiandoc-sgml
+Files: /usr/share/doc/pxview/pxview.sgml.gz
+
+Format: postscript
+Files: /usr/share/doc/pxview/pxview.ps.gz
+
+Format: text
+Files: /usr/share/doc/pxview/pxview.text.gz
+
+Format: HTML
+Index: /usr/share/doc/pxview/html/index.html
+Files: /usr/share/doc/pxview/html/*.html
+
+  

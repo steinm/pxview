@@ -1,0 +1,108 @@
+#: src/main.c:11
+#, c-format
+msgid "Usage: %s <paradox file>"
+msgstr "Aufruf: %s <paradox Datei>"
+
+#: src/main.c:77
+#, fuzzy
+msgid "You must at least specify an input file"
+msgstr "Sie mssen mindestes eine Eingabedatei angegeben"
+
+#: src/main.c:90
+#, c-format
+msgid "File Version:        %1.1f\n"
+msgstr "Datei Version:       %1.1f\n"
+
+#: src/main.c:91
+msgid "File Type:           "
+msgstr "Dateityp:            "
+
+#: src/main.c:94
+msgid "indexed .DB data file"
+msgstr "indizierte .DB Datendatei"
+
+#: src/main.c:97
+msgid "primary index .PX file"
+msgstr "Primrindex .PX Datei"
+
+#: src/main.c:100
+msgid "non-indexed .DB data file"
+msgstr "Nicht-indizierte .DB Datendatei"
+
+#: src/main.c:103
+msgid "non-incrementing secondary index .Xnn file"
+msgstr "Nicht inkrementierende, sekundre Index .Xnn Datei"
+
+#: src/main.c:106
+msgid "secondary index .Ynn file (inc or non-inc)"
+msgstr "Sekundre Index .Ynn Datei (nicht- und inkrementierend)"
+
+#: src/main.c:109
+msgid "incrementing secondary index .Xnn file"
+msgstr "Inkrementierende, sekundre Index .Xnn Datei"
+
+#: src/main.c:112
+msgid "non-incrementing secondary index .XGn file"
+msgstr "Nicht inkrementierende, sekundre Index .XGn Datei"
+
+#: src/main.c:115
+msgid "secondary index .YGn file (inc or non inc)"
+msgstr "Sekundre Index .YGn Datei (nicht- und inkrementierend)"
+
+#: src/main.c:118
+msgid "incrementing secondary index .XGn file"
+msgstr "Inkrementierende, sekundre Index .XGn Datei"
+
+#: src/main.c:122
+#, c-format
+msgid "Tablename:           %s\n"
+msgstr "Tabellenname:        %s\n"
+
+#: src/main.c:123
+#, c-format
+msgid "Num. of Records:     %d\n"
+msgstr "Anz. der Datenstze: %d\n"
+
+#: src/main.c:124
+#, c-format
+msgid "Num. of Fields:      %d\n"
+msgstr "Anz. der Felder:     %d\n"
+
+#: src/main.c:125
+#, c-format
+msgid "Header size:         %d (0x%X)\n"
+msgstr "Gre der Prambel:  %d (0x%X)\n"
+
+#: src/main.c:126
+#, c-format
+msgid "Max. Table size:     %d (0x%X)\n"
+msgstr "Max. Tabellengre:  %d (0x%X)\n"
+
+#: src/main.c:127
+#, c-format
+msgid "Num. of Data Blocks: %d\n"
+msgstr ""
+
+#: src/main.c:130
+#, c-format
+msgid "Num. of Index Field: %d\n"
+msgstr ""
+
+#: src/main.c:131
+#, c-format
+msgid "Num. of prim. Key fields: %d\n"
+msgstr ""
+
+#: src/main.c:132
+#, c-format
+msgid "Write protected:     %d\n"
+msgstr ""
+
+#: src/main.c:133
+#, c-format
+msgid "Code Page:           %d (0x%X)\n"
+msgstr ""
+
+#: src/main.c:136
+msgid "Fieldname          | Type\n"
+msgstr ""
