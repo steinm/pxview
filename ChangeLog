@@ -1,4 +1,10 @@
 Version 0.1.9
+	- use ',' as the default separator for fields in csv output
+	- Mask the enclosure char in csv output if it occurs in a field value
+	- pxfCurrency and pxfNumber are mapped to double in sql output
+	- fixed BCD and Date fields in sql output
+	- columns without a name will be named 'column%d' (such columns
+	  exist in primary index files)
 	- added option --version
 	- New option --without-head to suppress first line with field
 	  names in csv output
@@ -6,7 +12,7 @@ Version 0.1.9
 
 Version 0.1.8
 	- All float values will formated with %g and not %f
-	- sql output use by default INSERT-statements, --use-copy
+	- sql output uses by default INSERT-statements, --use-copy
 	  enforces the use of the COPY-statement which was the default
 	  up to version 0.1.7
 
