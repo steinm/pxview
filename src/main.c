@@ -496,6 +496,8 @@ int main(int argc, char *argv[]) {
 	char *progname = NULL;
 	char *selectedfields = NULL;
 	char *data;
+	float frecordsize, ffiletype, fprimarykeyfields, ftheonumrecords;
+	int recordsize, filetype, primarykeyfields, theonumrecords;
 	int i, j, c; // general counters
 	int first; // used to indicate if output has started or not
 	int outputcsv = 0;
@@ -888,12 +890,22 @@ int main(int argc, char *argv[]) {
 	}
 	/* }}} */
 
+	/* Set various variables with values from the header. */
 	pxh = pxdoc->px_head;
+	PX_get_value(pxdoc, "recordsize", &frecordsize);
+	recordsize = (int) frecordsize;
+	PX_get_value(pxdoc, "filetype", &ffiletype);
+	filetype = (int) ffiletype;
+	PX_get_value(pxdoc, "primarykeyfields", &fprimarykeyfields);
+	primarykeyfields = (int) fprimarykeyfields;
+	PX_get_value(pxdoc, "theonumrecords", &ftheonumrecords);
+	theonumrecords = (int) ftheonumrecords;
+
 	if(targetencoding != NULL)
 		PX_set_targetencoding(pxdoc, targetencoding);
 
 	/* Set tablename to the one in the header if it wasn't set before */
-	/* The memory for tablename must be freed later on, which isn't done yet. */
+	/* FIXME: The memory for tablename must be freed later on, which isn't done yet. */
 	if(tablename == NULL) {
 		PX_get_parameter(pxdoc, "tablename", &tablename);
 		tablename = strdup(tablename);
@@ -926,7 +938,7 @@ int main(int argc, char *argv[]) {
 		struct tm time_tm;
 		fprintf(outfp, _("File Version:            %1.1f\n"), (float) pxh->px_fileversion/10.0);
 		fprintf(outfp, _("File Type:               "));
-		switch(pxh->px_filetype) {
+		switch(filetype) {
 			case pxfFileTypIndexDB:
 				fprintf(outfp, _("indexed .DB data file"));
 				break;
@@ -958,24 +970,24 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, "\n");
 		fprintf(outfp, _("Tablename:               %s\n"), pxh->px_tablename);
 		fprintf(outfp, _("Num. of Records:         %d\n"), PX_get_num_records(pxdoc));
-		fprintf(outfp, _("Theor. Num. of Rec.:     %d\n"), pxh->px_theonumrecords);
+		fprintf(outfp, _("Theor. Num. of Rec.:     %d\n"), theonumrecords);
 		fprintf(outfp, _("Num. of Fields:          %d\n"), PX_get_num_fields(pxdoc));
 		fprintf(outfp, _("Header size:             %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
 		fprintf(outfp, _("Max. Table size:         %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
 		fprintf(outfp, _("Num. of Data Blocks:     %d\n"), pxh->px_fileblocks);
 		fprintf(outfp, _("Num. of 1st Data Block:  %d\n"), pxh->px_firstblock);
 		fprintf(outfp, _("Num. of last Data Block: %d\n"), pxh->px_lastblock);
-		if((pxh->px_filetype == pxfFileTypNonIncSecIndex) ||
-		   (pxh->px_filetype == pxfFileTypIncSecIndex)) {
+		if((filetype == pxfFileTypNonIncSecIndex) ||
+		   (filetype == pxfFileTypIncSecIndex)) {
 			fprintf(outfp, _("Num. of Index Field:     %d\n"), pxh->px_indexfieldnumber);
 			fprintf(outfp, _("Sort order of Field:     %d\n"), pxh->px_refintegrity);
 		}
-		if((pxh->px_filetype == pxfFileTypIndexDB) ||
-		   (pxh->px_filetype == pxfFileTypNonIndexDB)) {
-			fprintf(outfp, _("Num. of prim. Key fields: %d\n"), pxh->px_primarykeyfields);
+		if((filetype == pxfFileTypIndexDB) ||
+		   (filetype == pxfFileTypNonIndexDB)) {
+			fprintf(outfp, _("Num. of prim. Key fields: %d\n"), primarykeyfields);
 			fprintf(outfp, _("Next auto inc. value:    %d\n"), pxh->px_autoinc);
 		}
-		if(pxh->px_filetype == pxfFileTypPrimIndex) {
+		if(filetype == pxfFileTypPrimIndex) {
 			fprintf(outfp, _("Root index block number: %d\n"), pxh->px_indexroot);
 			fprintf(outfp, _("Num. of index levels:    %d\n"), pxh->px_numindexlevels);
 		}
@@ -984,7 +996,7 @@ int main(int argc, char *argv[]) {
 		localtime_r((time_t *) &(pxh->px_fileupdatetime), &time_tm);
 		fprintf(outfp, _("Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"), time_tm.tm_mday, time_tm.tm_mon+1, time_tm.tm_year+1900, time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, pxh->px_fileupdatetime);
 		if(verbose) {
-			fprintf(outfp, _("Record size:             %d (0x%X)\n"), pxh->px_recordsize, pxh->px_recordsize);
+			fprintf(outfp, _("Record size:             %d (0x%X)\n"), recordsize, recordsize);
 			fprintf(outfp, _("Sort order:              %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
 			fprintf(outfp, _("Auto increment:          %d (0x%X)\n"), pxh->px_autoinc, pxh->px_autoinc);
 			fprintf(outfp, _("Modified Flags 1:        %d (0x%X)\n"), pxh->px_modifiedflags1, pxh->px_modifiedflags1);
@@ -1066,8 +1078,8 @@ int main(int argc, char *argv[]) {
 	if(outputschema) {
 		int sumlen = 0;
 
-		if((pxh->px_filetype != pxfFileTypIndexDB) && 
-		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
+		if((filetype != pxfFileTypIndexDB) && 
+		   (filetype != pxfFileTypNonIndexDB)) {
 			fprintf(stderr, _("Schema output is only reasonable for DB files."));
 			fprintf(stderr, "\n");
 			PX_close(pxdoc);
@@ -1262,7 +1274,7 @@ int main(int argc, char *argv[]) {
 				}
 				pxf++;
 			}
-			if(pxh->px_filetype == pxfFileTypPrimIndex) {
+			if(filetype == pxfFileTypPrimIndex) {
 				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
@@ -1299,7 +1311,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		/* Allocate memory for record */
-		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, recordsize, _("Allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -1307,7 +1319,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if(outputdeleted) {
-			numrecords = pxh->px_theonumrecords;
+			numrecords = theonumrecords;
 			presetdeleted = 1;
 		} else {
 			numrecords = PX_get_num_records(pxdoc);
@@ -1477,7 +1489,7 @@ int main(int argc, char *argv[]) {
 					offset += pxf->px_flen;
 					pxf++;
 				}
-				if(pxh->px_filetype == pxfFileTypPrimIndex) {
+				if(filetype == pxfFileTypPrimIndex) {
 					short int value;
 					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "%c", delimiter);
@@ -1507,7 +1519,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		/* Print sum over all records */
-		if(pxh->px_filetype == pxfFileTypPrimIndex) {
+		if(filetype == pxfFileTypPrimIndex) {
 			for(i=0; i<PX_get_num_fields(pxdoc); i++)
 				fprintf(outfp, "%c", delimiter);
 			fprintf(outfp, "%c", delimiter);
@@ -1528,15 +1540,15 @@ int main(int argc, char *argv[]) {
 		struct str_buffer *sbuf;
 		char *sqlerror;
 
-		if((pxh->px_filetype != pxfFileTypIndexDB) && 
-		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
+		if((filetype != pxfFileTypIndexDB) && 
+		   (filetype != pxfFileTypNonIndexDB)) {
 			fprintf(stderr, _("SQL output is only reasonable for DB files."));
 			fprintf(stderr, "\n");
 			PX_close(pxdoc);
 			exit(1);
 		}
 
-		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -1615,7 +1627,7 @@ int main(int argc, char *argv[]) {
 							first = 1;
 							break;
 					}
-					if(i < pxh->px_primarykeyfields)
+					if(i < primarykeyfields)
 						str_buffer_print(pxdoc, sbuf, " unique");
 				}
 				pxf++;
@@ -1634,7 +1646,7 @@ int main(int argc, char *argv[]) {
 
 			/* Create the indexes */
 			pxf = PX_get_fields(pxdoc);
-			for(i=0; i<pxh->px_primarykeyfields; i++) {
+			for(i=0; i<primarykeyfields; i++) {
 				if(fieldregex == NULL ||  selectedfields[i]) {
 					strrep(pxf->px_fname, ' ', '_');
 					str_buffer_clear(pxdoc, sbuf);
@@ -1656,7 +1668,7 @@ int main(int argc, char *argv[]) {
 
 		/* Only output data if we have at least one record */
 		if(PX_get_num_records(pxdoc) > 0) {
-			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+			if((data = (char *) pxdoc->malloc(pxdoc, recordsize, _("Could not allocate memory for record."))) == NULL) {
 				if(selectedfields)
 					pxdoc->free(pxdoc, selectedfields);
 				PX_close(pxdoc);
@@ -1868,7 +1880,7 @@ int main(int argc, char *argv[]) {
 		int isdeleted, presetdeleted;
 
 		/* Allocate memory for record data */
-		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -1876,7 +1888,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if(outputdeleted) {
-			numrecords = pxh->px_theonumrecords;
+			numrecords = theonumrecords;
 			presetdeleted = 1;
 		} else {
 			numrecords = PX_get_num_records(pxdoc);
@@ -2091,7 +2103,7 @@ int main(int argc, char *argv[]) {
 					offset += pxf->px_flen;
 					pxf++;
 				}
-				if(pxh->px_filetype == pxfFileTypPrimIndex) {
+				if(filetype == pxfFileTypPrimIndex) {
 					short int value;
 					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "  <td>%d</td>\n", value);
@@ -2121,8 +2133,8 @@ int main(int argc, char *argv[]) {
 	/* Output data as sql statements {{{
 	 */
 	if(outputsql) {
-		if((pxh->px_filetype != pxfFileTypIndexDB) && 
-		   (pxh->px_filetype != pxfFileTypNonIndexDB)) {
+		if((filetype != pxfFileTypIndexDB) && 
+		   (filetype != pxfFileTypNonIndexDB)) {
 			fprintf(stderr, _("SQL output is only reasonable for DB files."));
 			fprintf(stderr, "\n");
 			PX_close(pxdoc);
@@ -2170,7 +2182,7 @@ int main(int argc, char *argv[]) {
 							first = 1;
 							break;
 					}
-					if(i < pxh->px_primarykeyfields)
+					if(i < primarykeyfields)
 						fprintf(outfp, " unique");
 				}
 				pxf++;
@@ -2179,7 +2191,7 @@ int main(int argc, char *argv[]) {
 
 			/* Create the indexes */
 			pxf = PX_get_fields(pxdoc);
-			for(i=0; i<pxh->px_primarykeyfields; i++) {
+			for(i=0; i<primarykeyfields; i++) {
 				if(fieldregex == NULL ||  selectedfields[i]) {
 					strrep(pxf->px_fname, ' ', '_');
 					fprintf(outfp, "CREATE INDEX %s_%s_index on %s (%s);\n", tablename, pxf->px_fname, tablename, pxf->px_fname);
@@ -2190,7 +2202,7 @@ int main(int argc, char *argv[]) {
 
 		/* Only output data if we have at least one record */
 		if(PX_get_num_records(pxdoc) > 0) {
-			if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+			if((data = (char *) pxdoc->malloc(pxdoc, recordsize, _("Could not allocate memory for record."))) == NULL) {
 				if(selectedfields)
 					pxdoc->free(pxdoc, selectedfields);
 				PX_close(pxdoc);
@@ -2653,7 +2665,7 @@ int main(int argc, char *argv[]) {
 	if(outputdebug) {
 		int numrecords;
 		int isdeleted, presetdeleted;
-		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				pxdoc->free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -2661,7 +2673,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		if(outputdeleted) {
-			numrecords = pxh->px_theonumrecords;
+			numrecords = theonumrecords;
 			presetdeleted = 1;
 		} else {
 			numrecords = PX_get_num_records(pxdoc);
