@@ -70,7 +70,8 @@ manpage.1: manpage.sgml
       <arg><option>-n FILE | --primary-index-file=FILE <replaceable></replaceable></option></arg>
       <arg><option>-r ENCODING | --recode=ENCODING <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
-      <arg><option>--delete-tablename <replaceable></replaceable></option></arg>
+      <arg><option>--delete-table <replaceable></replaceable></option></arg>
+      <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
     </cmdsynopsis>
   </refsynopsisdiv>
@@ -82,7 +83,7 @@ manpage.1: manpage.sgml
 
     <para>&dhpackage; reads Paradox files and dumps each record in
 			sql format. The resulting file will contain all sql statements to
-			delete an existing table (only if --delete-tablename is passed),
+			delete an existing table (only if --delete-table is passed),
 			create a new table, create all indexes, and insert all records.
 			&dhpackage; is equivalent to pxview(1) when called with
 			the option -s.

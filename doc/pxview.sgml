@@ -82,7 +82,8 @@ manpage.1: manpage.sgml
       <arg><option>--include-blobs <replaceable></replaceable></option></arg>
       <arg><option>--fields=REGEX <replaceable></replaceable></option></arg>
       <arg><option>--tablename=NAME <replaceable></replaceable></option></arg>
-      <arg><option>--delete-tablename <replaceable></replaceable></option></arg>
+      <arg><option>--delete-table <replaceable></replaceable></option></arg>
+      <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg><option>--output-deleted <replaceable></replaceable></option></arg>
       <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
       <arg>FILE </arg>
@@ -349,7 +350,16 @@ manpage.1: manpage.sgml
         <listitem>
           <para>Adds a sql command at the begining of the sql output to delete
 					 an existing table before creating the new one. This option only
-					 affects schema and sql output.</para>
+					 affects sql output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--use-copy</option>
+        </term>
+        <listitem>
+          <para>Use the sql COPY statement in the sql output instead of the
+					 default INSERT. Using COPY is usually faster but less supported
+					 by databases. This option only affects sql output.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -357,7 +367,7 @@ manpage.1: manpage.sgml
         </term>
         <listitem>
           <para>Use given tablename instead of the one stored in the database
-					 file. This option only affects schema and sql output.</para>
+					 file. This option only affects schema, sql and sqlite output.</para>
         </listitem>
       </varlistentry>
     </variablelist>
