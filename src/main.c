@@ -1418,7 +1418,7 @@ int main(int argc, char *argv[]) {
 		pxf = pxh->px_fields;
 		for(i=0; i<pxh->px_numfields; i++) {
 			if(fieldregex == NULL ||  selectedfields[i]) {
-				fprintf(outfp, "  <td><b>");
+				fprintf(outfp, "  <th>");
 				fprintf(outfp, "%s", pxf->px_fname);
 				switch(pxf->px_ftype) {
 					case pxfAlpha:
@@ -1473,12 +1473,12 @@ int main(int argc, char *argv[]) {
 						fprintf(outfp, ",#,%d", pxf->px_flen);
 						break;
 				}
-				fprintf(outfp, "</b></td>\n");
+				fprintf(outfp, "</th>\n");
 			}
 			pxf++;
 		}
 		if(markdeleted) {
-			fprintf(outfp, "  <td><b>deleted</b></td>\n", isdeleted);
+			fprintf(outfp, "  <th>deleted</th>\n", isdeleted);
 		}
 		fprintf(outfp, " </tr>\n");
 
