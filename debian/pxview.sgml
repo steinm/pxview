@@ -73,6 +73,7 @@ manpage.1: manpage.sgml
       <arg><option>-o FILE | --output=FILE <replaceable></replaceable></option></arg>
       <arg><option>-b FILE | --blobfile=FILE <replaceable></replaceable></option></arg>
       <arg><option>-p PREFIX | --blobprefix=PREFIX <replaceable></replaceable></option></arg>
+      <arg><option>-r ENCODING | --recode=ENCODING <replaceable></replaceable></option></arg>
       <arg><option>--separator=CHAR <replaceable></replaceable></option></arg>
       <arg><option>--enclosure=CHAR <replaceable></replaceable></option></arg>
       <arg><option>--includeblobs <replaceable></replaceable></option></arg>
@@ -212,6 +213,18 @@ manpage.1: manpage.sgml
         </listitem>
       </varlistentry>
       <varlistentry>
+        <term><option>-r ENCODING</option>
+          <option>--recode=ENCODING</option>
+        </term>
+        <listitem>
+          <para>Recode all fields of type alpha to the given encoding. You will
+					 have to specify the encoding similar to the
+					 <application>recode</application> command, by passing only the part
+					 on the right hand side of the `..' of what you usually pass to
+					 recode.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
         <term><option>--separator=CHAR</option>
         </term>
         <listitem>
@@ -275,6 +288,12 @@ manpage.1: manpage.sgml
 		 sql.</para>
 		<para>The default field separator if exporting csv format is a tabulator.
 		 Fields will be enclosed in ".</para>
+  </refsect1>
+  <refsect1>
+    <title>SEE ALSO</title>
+
+    <para>recode(1)</para>
+
   </refsect1>
   <refsect1>
     <title>AUTHOR</title>

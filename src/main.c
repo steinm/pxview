@@ -40,6 +40,8 @@ void usage(char *progname) {
 	printf("\n");
 	printf(_("  -p, --blobprefix=PREFIX prefix for all created files with blob data."));
 	printf("\n");
+	printf(_("  -r, --recode=ENCODING sets the target encoding."));
+	printf("\n");
 	if(strcmp(progname, "px2sql")) {
 		printf(_("  --separator=CHAR    character used to separate field values."));
 		printf("\n");
@@ -82,7 +84,7 @@ int main(int argc, char *argv[]) {
 	pxblob_t *pxblob = NULL;
 	char *progname = NULL;
 	char *selectedfields;
-	char *data, buffer[1000];
+	char *data, *buffer = NULL;
 	int i, j, c; // general counters
 	int first; // used to indicate if output has started or not
 	int outputcsv = 0;
@@ -100,6 +102,7 @@ int main(int argc, char *argv[]) {
 	char *blobprefix = NULL;
 	char *fieldregex = NULL;
 	char *tablename = NULL;
+	char *targetencoding = NULL;
 	FILE *outfp = NULL;
 
 #ifdef ENABLE_NLS
@@ -120,6 +123,7 @@ int main(int argc, char *argv[]) {
 			{"schema", 0, 0, 't'},
 			{"blobfile", 1, 0, 'b'},
 			{"blobprefix", 1, 0, 'p'},
+			{"recode", 1, 0, 'r'},
 			{"output", 1, 0, 'o'},
 			{"help", 0, 0, 'h'},
 			{"separator", 1, 0, 0},
@@ -131,7 +135,7 @@ int main(int argc, char *argv[]) {
 			{"mode", 1, 0, 4},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icstf:b:p:o:h",
+		c = getopt_long (argc, argv, "icstf:b:r:p:o:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -174,6 +178,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'p':
 				blobprefix = strdup(optarg);
+				break;
+			case 'r':
+				targetencoding = strdup(optarg);
 				break;
 			case 'f':
 				fieldregex = strdup(optarg);
@@ -239,6 +246,8 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 	pxh = pxdoc->px_head;
+	if(targetencoding != NULL)
+		PX_set_targetencoding(pxdoc, targetencoding);
 
 	/* Open the file containing the blobs if one is given */
 	if(blobfile) {
@@ -459,7 +468,7 @@ int main(int argc, char *argv[]) {
 			exit;
 		}
 		/* allocate memory for selected field array */
-		if((selectedfields = (char *) px_malloc(pxdoc, pxh->px_numfields, _("Could not allocate memory for array of selected fields."))) == NULL) {
+		if((selectedfields = (char *) pxdoc->malloc(pxdoc, pxh->px_numfields, _("Could not allocate memory for array of selected fields."))) == NULL) {
 			PX_close(pxdoc);
 			exit;
 		}
@@ -475,7 +484,7 @@ int main(int argc, char *argv[]) {
 
 	/* Output data as comma separated values */
 	if(outputcsv) {
-		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -493,19 +502,43 @@ int main(int argc, char *argv[]) {
 						if(first == 1)
 							fprintf(outfp, "%c", delimiter);
 						switch(pxf->px_ftype) {
-							case pxfAlpha:
-								memcpy(buffer, &data[offset], pxf->px_flen);
-								buffer[pxf->px_flen] = '\0';
-								if(enclosure)
-									fprintf(outfp, "%c%s%c", enclosure, buffer, enclosure);
-								else
-									fprintf(outfp, "%s", buffer);
+							case pxfAlpha: {
+								char *value;
+								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(enclosure)
+										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
+									else
+										fprintf(outfp, "%s", value);
+								}
 								first = 1;
+
+/*								if(targetencoding != NULL) {
+									outbuffer = PX_recode_buffer(pxdoc, &data[offset], pxf->px_flen);
+								} else {
+									buffer = (char *) pxdoc->realloc(pxdoc, buffer, pxf->px_flen+1,  _("Could not reallocate memory for field data."));
+									memcpy(buffer, &data[offset], pxf->px_flen);
+									outbuffer = buffer;
+									outbuffer[pxf->px_flen] = '\0';
+								}
+								if(outbuffer) {
+									if(enclosure)
+										fprintf(outfp, "%c%s%c", enclosure, outbuffer, enclosure);
+									else
+										fprintf(outfp, "%s", outbuffer);
+									first = 1;
+
+									if(targetencoding != NULL) {
+										free(outbuffer);
+										outbuffer = NULL;
+									}
+								}
+*/
 								break;
+							}
 							case pxfDate: {
 								long value;
 								int year, month, day;
-								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									PX_SdnToGregorian(value+1721425, &year, &month, &day);
 									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
 								}
@@ -514,7 +547,7 @@ int main(int argc, char *argv[]) {
 								}
 							case pxfShort: {
 								short int value;
-								if(PX_get_data_short(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%d", value);
 								}
 								first = 1;
@@ -523,7 +556,7 @@ int main(int argc, char *argv[]) {
 							case pxfAutoInc:
 							case pxfLong: {
 								long value;
-								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%ld", value);
 								}
 								first = 1;
@@ -531,7 +564,7 @@ int main(int argc, char *argv[]) {
 								}
 							case pxfTime: {
 								long value;
-								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								}
 								first = 1;
@@ -540,7 +573,7 @@ int main(int argc, char *argv[]) {
 							case pxfCurrency:
 							case pxfNumber: {
 								double value;
-								if(PX_get_data_double(&data[offset], pxf->px_flen, &value))
+								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value))
 									fprintf(outfp, "%f", value);
 								} 
 								first = 1;
@@ -701,7 +734,7 @@ int main(int argc, char *argv[]) {
 		}
 		fprintf(outfp, "\n);\n\n");
 
-		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
 			PX_close(pxdoc);
@@ -757,15 +790,21 @@ int main(int argc, char *argv[]) {
 						if(first == 1)
 							fprintf(outfp, "\t");
 						switch(pxf->px_ftype) {
-							case pxfAlpha:
-								memcpy(buffer, &data[offset], pxf->px_flen);
-								buffer[pxf->px_flen] = '\0';
-								fprintf(outfp, "%s", buffer);
+							case pxfAlpha: {
+								char *value;
+								if(PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									if(enclosure)
+										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
+									else
+										fprintf(outfp, "%s", value);
+								}
 								first = 1;
+
 								break;
+							}
 							case pxfDate: {
 								long value;
-								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%ld", value);
 								} else {
 									fprintf(outfp, "\\N");
@@ -775,7 +814,7 @@ int main(int argc, char *argv[]) {
 							}
 							case pxfShort: {
 								short int value;
-								if(PX_get_data_short(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_short(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%d", value);
 								} else {
 									fprintf(outfp, "\\N");
@@ -786,7 +825,7 @@ int main(int argc, char *argv[]) {
 							case pxfAutoInc:
 							case pxfLong: {
 								long value;
-								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%ld", value);
 								} else {
 									fprintf(outfp, "\\N");
@@ -796,7 +835,7 @@ int main(int argc, char *argv[]) {
 							}
 							case pxfTime: {
 								long value;
-								if(PX_get_data_long(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
 								} else {
 									fprintf(outfp, "\\N");
@@ -807,7 +846,7 @@ int main(int argc, char *argv[]) {
 							case pxfCurrency:
 							case pxfNumber: {
 								double value;
-								if(PX_get_data_double(&data[offset], pxf->px_flen, &value)) {
+								if(PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									fprintf(outfp, "%f", value);
 								} else {
 									fprintf(outfp, "\\N");
@@ -853,7 +892,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(outputdebug) {
-		if((data = (char *) px_malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
+		if((data = (char *) pxdoc->malloc(pxdoc, pxh->px_recordsize, _("Could not allocate memory for record."))) == NULL) {
 			if(selectedfields)
 				px_free(pxdoc, selectedfields);
 			PX_close(pxdoc);
