@@ -1,6 +1,6 @@
 
 %.1: %.sgml
-	docbook-to-man $< > $@
+	$(DOC_TO_MAN) $< > $@
 
 %.html: %.sgml
 	docbook2html $<
