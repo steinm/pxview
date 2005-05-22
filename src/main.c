@@ -1370,7 +1370,7 @@ int main(int argc, char *argv[]) {
 							case pxfAlpha: {
 								char *value;
 								if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									if(enclosure && strchr(value, delimiter)) {
+									if(enclosure && (strchr(value, delimiter) || strchr(value, '\n') || strchr(value, '\r'))) {
 										fprintf(outfp, "%c", enclosure);
 										if(strchr(value, enclosure))
 											printmask(outfp, value, enclosure, enclosure);
@@ -1386,6 +1386,9 @@ int main(int argc, char *argv[]) {
 											fprintf(outfp, "%s", value);
 									}
 									pxdoc->free(pxdoc, value);
+								} else {
+									fprintf(stderr, "Error while reading data of field number %d", i+1);
+									fprintf(stderr, "\n");
 								}
 								first = 1;
 								break;
@@ -1472,9 +1475,15 @@ int main(int argc, char *argv[]) {
 									if(blobdata) {
 										if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
 											int i;
+											if(enclosure && (strchr(blobdata, delimiter) || strchr(blobdata, '\n') || strchr(blobdata, '\r')))
+												fprintf(outfp, "%c", enclosure);
 											for(i=0; i<size; i++) {
+												if(blobdata[i] == enclosure)
+													fputc(enclosure, outfp);
 												fputc(blobdata[i], outfp);
 											}
+											if(enclosure && (strchr(blobdata, delimiter) || strchr(blobdata, '\n') || strchr(blobdata, '\r')))
+												fprintf(outfp, "%c", enclosure);
 										} else {
 											sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
 											fp = fopen(filename, "w");
@@ -2429,6 +2438,8 @@ int main(int argc, char *argv[]) {
 												if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
 													int i;
 													for(i=0; i<size; i++) {
+														if(blobdata[i] == '\t')
+															fputc('\\', outfp);
 														fputc(blobdata[i], outfp);
 													}
 												} else {
@@ -2659,6 +2670,8 @@ int main(int argc, char *argv[]) {
 												if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
 													int i;
 													for(i=0; i<size; i++) {
+														if(blobdata[i] == '\'')
+															fputc('\\', outfp);
 														fputc(blobdata[i], outfp);
 													}
 												} else {
