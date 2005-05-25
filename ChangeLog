@@ -1,4 +1,11 @@
 Version 0.2.4
+	- check return value of PX_get_data_alpha() and output an error message
+	  if needed
+	- mask special chars in memoblobs (sql output)
+	- use delimeter char for fields if they contain a line break (csv output)
+	- surrounds field data of memoblobs by enclosure char (csv output)
+	- primary key fields are treated as unique(field1, field2, field3, ...)
+	  and not unique(field1), unique(field2), ...
 	- fixed various memory leaks
 	- fixed many compiler warnings
 	- configure checks for PX_timestamp2string() to ensure pxlib >= 0.4.3
