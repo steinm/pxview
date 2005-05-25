@@ -1369,7 +1369,8 @@ int main(int argc, char *argv[]) {
 						switch(pxf->px_ftype) {
 							case pxfAlpha: {
 								char *value;
-								if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								int ret;
+								if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 									if(enclosure && (strchr(value, delimiter) || strchr(value, '\n') || strchr(value, '\r'))) {
 										fprintf(outfp, "%c", enclosure);
 										if(strchr(value, enclosure))
@@ -1386,7 +1387,7 @@ int main(int argc, char *argv[]) {
 											fprintf(outfp, "%s", value);
 									}
 									pxdoc->free(pxdoc, value);
-								} else {
+								} else if(ret < 0) {
 									fprintf(stderr, "Error while reading data of field number %d", i+1);
 									fprintf(stderr, "\n");
 								}
@@ -1744,7 +1745,8 @@ int main(int argc, char *argv[]) {
 							switch(pxf->px_ftype) {
 								case pxfAlpha: {
 									char *value;
-									if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+									int ret;
+									if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 										if(strchr(value, '\'')) {
 											str_buffer_print(pxdoc, sbuf, "'");
 											str_buffer_printmask(pxdoc, sbuf, value, '\'', '\'');
@@ -1752,8 +1754,11 @@ int main(int argc, char *argv[]) {
 										} else
 											str_buffer_print(pxdoc, sbuf, "'%s'", value);
 										pxdoc->free(pxdoc, value);
-									} else {
+									} else if(ret == 0) {
 										str_buffer_print(pxdoc, sbuf, "NULL");
+									} else {
+										fprintf(stderr, "Error while reading data of field number %d", i+1);
+										fprintf(stderr, "\n");
 									}
 									first = 1;
 
@@ -2037,9 +2042,13 @@ int main(int argc, char *argv[]) {
 						switch(pxf->px_ftype) {
 							case pxfAlpha: {
 								char *value;
-								if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+								int ret;
+								if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 									fprintf(outfp, "%s", value);
 									pxdoc->free(pxdoc, value);
+								} else if(ret < 0) {
+									fprintf(stderr, "Error while reading data of field number %d", i+1);
+									fprintf(stderr, "\n");
 								}
 								break;
 							}
@@ -2327,15 +2336,19 @@ int main(int argc, char *argv[]) {
 								switch(pxf->px_ftype) {
 									case pxfAlpha: {
 										char *value;
-										if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										int ret;
+										if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 											if(strchr(value, '\t'))
 												printmask(outfp, value, '\t', '\\');
 											else
 												fprintf(outfp, "%s", value);
 											pxdoc->free(pxdoc, value);
-										} else {
+										} else if(ret == 0) {
 											if(emptystringisnull)
 												fprintf(outfp, "\\N");
+										} else {
+											fprintf(stderr, "Error while reading data of field number %d", i+1);
+											fprintf(stderr, "\n");
 										}
 										first = 1;
 
@@ -2554,7 +2567,8 @@ int main(int argc, char *argv[]) {
 								switch(pxf->px_ftype) {
 									case pxfAlpha: {
 										char *value;
-										if(0 < PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value)) {
+										int ret;
+										if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 											if(strchr(value, '\'')) {
 												fprintf(outfp, "'");
 												printmask(outfp, value, '\'', '\\');
@@ -2562,11 +2576,14 @@ int main(int argc, char *argv[]) {
 											} else
 												fprintf(outfp, "'%s'", value);
 											pxdoc->free(pxdoc, value);
-										} else {
+										} else if(ret == 0) {
 											if(emptystringisnull)
 												fprintf(outfp, "NULL");
 											else
 												fprintf(outfp, "''");
+										} else {
+											fprintf(stderr, "Error while reading data of field number %d", i+1);
+											fprintf(stderr, "\n");
 										}
 										first = 1;
 
