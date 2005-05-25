@@ -19,7 +19,6 @@ intltoolize --force --copy
 aclocal
 autoheader
 automake --verbose --foreign --add-missing --copy
-intltoolize --copy --force
 autoconf
 
 # For the Debian build
