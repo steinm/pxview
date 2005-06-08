@@ -964,6 +964,8 @@ int main(int argc, char *argv[]) {
 	if(outputinfo) {
 		int reclen;
 		struct tm time_tm;
+		char *str;
+		float number;
 		fprintf(outfp, _("File Version:            %1.1f\n"), (float) pxh->px_fileversion/10.0);
 		fprintf(outfp, _("File Type:               "));
 		switch(filetype) {
@@ -996,15 +998,21 @@ int main(int argc, char *argv[]) {
 				break;
 		}
 		fprintf(outfp, "\n");
-		fprintf(outfp, _("Tablename:               %s\n"), pxh->px_tablename);
+		PX_get_parameter(pxdoc, "tablename", &str);
+		fprintf(outfp, _("Tablename:               %s\n"), str);
 		fprintf(outfp, _("Num. of Records:         %d\n"), PX_get_num_records(pxdoc));
 		fprintf(outfp, _("Theor. Num. of Rec.:     %d\n"), theonumrecords);
 		fprintf(outfp, _("Num. of Fields:          %d\n"), PX_get_num_fields(pxdoc));
-		fprintf(outfp, _("Header size:             %d (0x%X)\n"), pxh->px_headersize, pxh->px_headersize);
-		fprintf(outfp, _("Max. Table size:         %d (0x%X)\n"), pxh->px_maxtablesize, pxh->px_maxtablesize*0x400);
-		fprintf(outfp, _("Num. of Data Blocks:     %d\n"), pxh->px_fileblocks);
-		fprintf(outfp, _("Num. of 1st Data Block:  %d\n"), pxh->px_firstblock);
-		fprintf(outfp, _("Num. of last Data Block: %d\n"), pxh->px_lastblock);
+		PX_get_value(pxdoc, "headersize", &number);
+		fprintf(outfp, _("Header size:             %d (0x%X)\n"), (int) number, (int) number); 
+		PX_get_value(pxdoc, "maxtablesize", &number);
+		fprintf(outfp, _("Max. Table size:         %d (0x%X)\n"), (int) number, (int) number*0x400);
+		PX_get_value(pxdoc, "numblocks", &number);
+		fprintf(outfp, _("Num. of Data Blocks:     %d\n"), (int) number);
+		PX_get_value(pxdoc, "firstblock", &number);
+		fprintf(outfp, _("Num. of 1st Data Block:  %d\n"), (int) number);
+		PX_get_value(pxdoc, "lastblock", &number);
+		fprintf(outfp, _("Num. of last Data Block: %d\n"), (int) number);
 		if((filetype == pxfFileTypNonIncSecIndex) ||
 		   (filetype == pxfFileTypIncSecIndex)) {
 			fprintf(outfp, _("Num. of Index Field:     %d\n"), pxh->px_indexfieldnumber);
@@ -1016,11 +1024,14 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, _("Next auto inc. value:    %d\n"), pxh->px_autoinc);
 		}
 		if(filetype == pxfFileTypPrimIndex) {
-			fprintf(outfp, _("Root index block number: %d\n"), pxh->px_indexroot);
+			PX_get_value(pxdoc, "autoinc", &number);
+			fprintf(outfp, _("Root index block number: %d\n"), (int) number);
 			fprintf(outfp, _("Num. of index levels:    %d\n"), pxh->px_numindexlevels);
 		}
 		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
-		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), pxh->px_doscodepage, pxh->px_doscodepage);
+		PX_get_value(pxdoc, "codepage", &number);
+		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), (int) number, (int) number);
+		fprintf(outfp, _("Encryption:              0x%X\n"), pxh->px_encryption);
 		localtime_r((time_t *) &(pxh->px_fileupdatetime), &time_tm);
 		fprintf(outfp, _("Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"), time_tm.tm_mday, time_tm.tm_mon+1, time_tm.tm_year+1900, time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, pxh->px_fileupdatetime);
 		if(verbose) {
