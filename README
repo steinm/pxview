@@ -1,7 +1,7 @@
 What is pxview ?
 ----------------
 
-pxview is quite simple command line program which has been originally
+pxview is a quite simple command line program which has been originally
 created to test pxlib. pxlib is a library to read Paradox files.
 During the development pxview has evolved more and more into a useful
 program to examine the contents of Paradox files and to convert them
