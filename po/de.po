@@ -126,8 +126,8 @@ msgstr "  -x, --html          gebe Datensätze im HTML-Format aus."
 
 #: ../src/main.c:383
 #, c-format
-msgid "  -t, --shema         output schema of database."
-msgstr "  -t, --shema         gebe Schema der Datenbank aus."
+msgid "  -t, --schema        output schema of database."
+msgstr "  -t, --schema        gebe Schema der Datenbank aus."
 
 #: ../src/main.c:385
 #, c-format

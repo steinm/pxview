@@ -380,7 +380,7 @@ void usage(char *progname) {
 #endif
 		printf(_("  -x, --html          dump records in HTML format."));
 		printf("\n");
-		printf(_("  -t, --shema         output schema of database."));
+		printf(_("  -t, --schema        output schema of database."));
 		printf("\n");
 		printf(_("  --mode=MODE         set output mode (info, csv, sql, sqlite, html or schema)."));
 		printf("\n");
