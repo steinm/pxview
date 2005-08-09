@@ -1812,7 +1812,9 @@ int main(int argc, char *argv[]) {
 								case pxfDate: {
 									long value;
 									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										str_buffer_print(pxdoc, sbuf, "%ld", value);
+										char *str = PX_timestamp2string(pxdoc, (double) value*1000.0*86400.0, date_format);
+										str_buffer_print(pxdoc, sbuf, "%s", str);
+										pxdoc->free(pxdoc, str);
 									} else {
 										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
@@ -1855,7 +1857,9 @@ int main(int argc, char *argv[]) {
 								case pxfTime: {
 									long value;
 									if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										str_buffer_print(pxdoc, sbuf, "'%02d:%02d:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+										char *str = PX_timestamp2string(pxdoc, (double) value, time_format);
+										str_buffer_print(pxdoc, sbuf, "%s", str);
+										pxdoc->free(pxdoc, str);
 									} else {
 										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
@@ -2099,10 +2103,10 @@ int main(int argc, char *argv[]) {
 							}
 							case pxfDate: {
 								long value;
-								int year, month, day;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									PX_SdnToGregorian(value+1721425, &year, &month, &day);
-									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+									char *str = PX_timestamp2string(pxdoc, (double) value*1000.0*86400.0, date_format);
+									fprintf(outfp, "%s", str);
+									pxdoc->free(pxdoc, str);
 								}
 								break;
 								}
@@ -2124,7 +2128,9 @@ int main(int argc, char *argv[]) {
 							case pxfTime: {
 								long value;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "'%02ld:%02ld:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+									char *str = PX_timestamp2string(pxdoc, (double) value, time_format);
+									fprintf(outfp, "%s", str);
+									pxdoc->free(pxdoc, str);
 								}
 								break;
 							}
@@ -2401,10 +2407,10 @@ int main(int argc, char *argv[]) {
 									}
 									case pxfDate: {
 										long value;
-										int year, month, day;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											PX_SdnToGregorian(value+1721425, &year, &month, &day);
-											fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+											char *str = PX_timestamp2string(pxdoc, (double) value*1000.0*86400.0, date_format);
+											fprintf(outfp, "%s", str);
+											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -2447,7 +2453,9 @@ int main(int argc, char *argv[]) {
 									case pxfTime: {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%02ld:%02ld:%02.3f", value/3600000, value/60000%60, value%60000/1000.0);
+											char *str = PX_timestamp2string(pxdoc, (double) value, time_format);
+											fprintf(outfp, "%s", str);
+											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -2636,10 +2644,10 @@ int main(int argc, char *argv[]) {
 									}
 									case pxfDate: {
 										long value;
-										int year, month, day;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											PX_SdnToGregorian(value+1721425, &year, &month, &day);
-											fprintf(outfp, "'%02d.%02d.%04d'", day, month, year);
+											char *str = PX_timestamp2string(pxdoc, (double) value*1000.0*86400.0, date_format);
+											fprintf(outfp, "%s", str);
+											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "NULL");
 										}
@@ -2682,7 +2690,9 @@ int main(int argc, char *argv[]) {
 									case pxfTime: {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "'%02ld:%02ld:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+											char *str = PX_timestamp2string(pxdoc, (double) value, time_format);
+											fprintf(outfp, "%s", str);
+											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "NULL");
 										}
