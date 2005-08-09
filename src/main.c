@@ -333,7 +333,7 @@ void usage(char *progname) {
 
 	printf(_("Version: %s %s http://sourceforge.net/projects/pxlib"), progname, VERSION);
 	printf("\n");
-	printf(_("Copyright: Copyright (C) 2003, 2004 Uwe Steinmann <uwe@steinmann.cx>"));
+	printf(_("Copyright: Copyright (C) 2003-2005 Uwe Steinmann <uwe@steinmann.cx>"));
 	printf("\n\n");
 	if(!strcmp(progname, "px2csv")) {
 		printf(_("%s reads a paradox file and outputs the file in CSV format."), progname);
@@ -394,6 +394,12 @@ void usage(char *progname) {
 	printf(_("  -r, --recode=ENCODING sets the target encoding."));
 	printf("\n");
 	printf(_("  -n, --primary-index-file=FILE read primary index from file."));
+	printf("\n");
+	printf(_("  --timestamp-format=FORMAT Set format for timestamps (default Y-m-d H:i:s)."));
+	printf("\n");
+	printf(_("  --time-format=FORMAT Set format for times (default H:i:s)."));
+	printf("\n");
+	printf(_("  --date-format=FORMAT Set format for dates (default Y-m-d)."));
 	printf("\n");
 
 	printf("\n");
@@ -542,6 +548,9 @@ int main(int argc, char *argv[]) {
 	char *tablename = NULL;
 	char *targetencoding = NULL;
 	struct sql_type_map *typemap;
+	char *timestamp_format = NULL;
+	char *time_format = NULL;
+	char *date_format = NULL;
 	FILE *outfp = NULL;
 
 	/* allocate 1 more struct because the first one is not used */
@@ -599,6 +608,9 @@ int main(int argc, char *argv[]) {
 			{"empty-string-is-null", 0, 0, 15},
 			{"primary-index-file", 1, 0, 'n'},
 			{"version", 0, 0, 11},
+			{"timestamp-format", 1, 0, 17},
+			{"time-format", 1, 0, 18},
+			{"date-format", 1, 0, 19},
 			{0, 0, 0, 0}
 		};
 		c = getopt_long (argc, argv, "icsxqvtf:b:r:p:o:n:h",
@@ -731,6 +743,15 @@ int main(int argc, char *argv[]) {
 			case 16:
 				blobextension = strdup(optarg);
 				break;
+			case 17:
+				timestamp_format = strdup(optarg);
+				break;
+			case 18:
+				time_format = strdup(optarg);
+				break;
+			case 19:
+				date_format = strdup(optarg);
+				break;
 			case 'r':
 				targetencoding = strdup(optarg);
 				break;
@@ -819,6 +840,16 @@ int main(int argc, char *argv[]) {
 	/* if none the output modes is selected then display info */
 	if(outputinfo == 0 && outputcsv == 0 && outputschema == 0 && outputsql == 0 && outputdebug == 0 && outputhtml == 0 && outputsqlite == 0)
 		outputinfo = 1;
+
+	/* Set default values for timestamp, time, date format if it was
+	 * not set by the program options
+	 */
+	if(NULL == timestamp_format)
+		timestamp_format = "Y-m-d H:i:s";
+	if(NULL == time_format)
+		time_format = "H:i:s";
+	if(NULL == date_format)
+		date_format = "Y-m-d";
 
 	/* Create output file {{{
 	 */
@@ -1409,8 +1440,9 @@ int main(int argc, char *argv[]) {
 								long value;
 								int year, month, day;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									PX_SdnToGregorian(value+1721425, &year, &month, &day);
-									fprintf(outfp, "%02d.%02d.%04d", day, month, year);
+									char *str = PX_timestamp2string(pxdoc, (double) value*1000.0*86400.0, date_format);
+									fprintf(outfp, "%s", str);
+									pxdoc->free(pxdoc, str);
 								}
 								first = 1;
 								break;
@@ -1435,7 +1467,7 @@ int main(int argc, char *argv[]) {
 							case pxfTimestamp: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									char *str = PX_timestamp2string(pxdoc, value, "H:i:s d.m.Y");
+									char *str = PX_timestamp2string(pxdoc, value, timestamp_format);
 									fprintf(outfp, "%s", str);
 									pxdoc->free(pxdoc, str);
 								} 
@@ -1445,7 +1477,9 @@ int main(int argc, char *argv[]) {
 							case pxfTime: {
 								long value;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "'%02ld:%02ld:%02.3f'", value/3600000, value/60000%60, value%60000/1000.0);
+									char *str = PX_timestamp2string(pxdoc, (double) value, time_format);
+									fprintf(outfp, "%s", str);
+									pxdoc->free(pxdoc, str);
 								}
 								first = 1;
 								break;
