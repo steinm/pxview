@@ -20,7 +20,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Uwe</firstname>">
   <!ENTITY dhsurname   "<surname>Steinmann</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>April 29, 2003</date>">
+  <!ENTITY dhdate      "<date>August 08, 2005</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
@@ -44,7 +44,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2003</year>
+      <year>2003-2005</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -88,6 +88,9 @@ manpage.1: manpage.sgml
       <arg><option>--use-copy <replaceable></replaceable></option></arg>
       <arg><option>--short-insert <replaceable></replaceable></option></arg>
       <arg><option>--set-sql-type=SPEC <replaceable></replaceable></option></arg>
+      <arg><option>--timestamp-format=FORMAT <replaceable></replaceable></option></arg>
+      <arg><option>--time-format=FORMAT <replaceable></replaceable></option></arg>
+      <arg><option>--date-format=FORMAT <replaceable></replaceable></option></arg>
       <arg><option>--empty-string-is-null <replaceable></replaceable></option></arg>
       <arg><option>--output-deleted <replaceable></replaceable></option></arg>
       <arg><option>--mark-deleted <replaceable></replaceable></option></arg>
@@ -110,9 +113,9 @@ manpage.1: manpage.sgml
 		  readable CSV files (comma separated values) or SQL insert statements to
 			import the records into a relational database. The sql output is optimized
 			to be used with PostgreSQL.</para>
-		<para>The programm currently supports only a subset of possible field
-		  types.  These are strings, short and long integers, boolean, bcd, blobs
-			and decimal numbers.</para>
+		<para>The programm can read encrypted an unencrypted .db and .mb files.
+		  There is not need to provide a password in order to read encrypted files.
+			</para>
   </refsect1>
   <refsect1>
     <title>OPTIONS</title>
@@ -385,7 +388,7 @@ manpage.1: manpage.sgml
 					 by the insert statement,
 					 but uses a form like 'insert into tablename values (...)'.
 					 Such statements will only work if the table has the same number
-					 of fields in the same sequence as the INSERT statement lists the
+					 of fields in the same order as the INSERT statement lists the
 					 field values. This option will mostly not be appropriate if you
 					 want to extract some fields from a larger table (--fields) and
 					 populate an existing sql table whose schema is not identical to
@@ -433,6 +436,36 @@ manpage.1: manpage.sgml
 						which has no characters or contain the NULL string. The default
 						is to tread them as empty strings. By passing this option they
 						will be treaded as NULL strings in the sql output.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--timestamp-format=FORMAT</option>
+        </term>
+        <listitem>
+          <para>Overrides the default format for outputing timestamps.
+					  The default is set to 'Y-m-d H:i:s'. Check the section on
+						'Date/Time formats' for a complete list of placeholders in the
+						format string.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--time-format=FORMAT</option>
+        </term>
+        <listitem>
+          <para>Overrides the default format for outputing times.
+					  The default is set to 'H:i:s'. Check the section on
+						'Date/Time formats' for a complete list of placeholders in the
+						format string.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term><option>--date-format=FORMAT</option>
+        </term>
+        <listitem>
+          <para>Overrides the default format for outputing dates.
+					  The default is set to 'Y-m-d'. Check the section on
+						'Date/Time formats' for a complete list of placeholders in the
+						format string.</para>
         </listitem>
       </varlistentry>
     </variablelist>
@@ -518,6 +551,125 @@ manpage.1: manpage.sgml
 			helpful for investigating the tree structure of the index file.
 			Quite often one will find index blocks at the begining of an index
 			file.</para>
+	</refsect1>
+	<refsect1>
+	  <title>DATE/TIME FORMATS</title>
+		<para>Paradox knows three field types for date and time values. Each
+		  of those can be formated by specifying a format string with the
+			options <option>--timestamp-format</option>,
+			<option>--time-format</option>, <option>--date-format</option>.</para>
+		<para>A format string contains arbitrary characters with some of them
+		  having a special meaning. The following list describes the characters
+			with a special meaning.</para>
+    <variablelist>
+      <varlistentry>
+        <term>Y</term>
+        <listitem>
+          <para>A full numeric representation of a year, 4 digits
+					 (e.g. 1999 or 2004).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>y</term>
+        <listitem>
+          <para>A two digit representation of a year (e.g. 99 or 04).</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>m</term>
+        <listitem>
+          <para>Numeric representation of a month, with leading zeros, 01 to 12.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>n</term>
+        <listitem>
+          <para>Numeric representation of a month, without leading zeros, 1 to 12.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>d</term>
+        <listitem>
+          <para>Day of the month, 2 digits with leading zeros, 01 to 31.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>j</term>
+        <listitem>
+          <para>Day of the month without leading zeros, 1 to 31</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>H</term>
+        <listitem>
+          <para>24-hour format of an hour with leading zeros, 00 to 23.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>h</term>
+        <listitem>
+          <para>12-hour format of an hour with leading zeros, 01 to 12.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>G</term>
+        <listitem>
+          <para>24-hour format of an hour without leading zeros, 0 to 23.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>g</term>
+        <listitem>
+          <para>12-hour format of an hour without leading zeros, 1 to 12.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>i</term>
+        <listitem>
+          <para>Minutes with leading zeros, 00 to 59.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>s</term>
+        <listitem>
+          <para>Seconds, with leading zeros, 00 to 59.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>A</term>
+        <listitem>
+          <para>Uppercase Ante meridiem and Post meridiem, AM or PM.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>a</term>
+        <listitem>
+          <para>Lowercase Ante meridiem and Post meridiem, am or pm.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>S</term>
+        <listitem>
+          <para>English ordinal suffix for the day of the month, 2 characters, st, nd, rd, or th.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>L</term>
+        <listitem>
+          <para>Whether it's a leap year, 1 if it is a leap year, 0 otherwise.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+	</refsect1>
+	<refsect1>
+	  <title>ENCRYPTED FILES</title>
+		<para>Paradox supports file encryption for .db and .mb files. &dhpackage;
+		  can read encrypted files without specifying a password. You will actually
+			not notice while reading a paradox file whether it is encrypted or not.
+			The only difference is an extra line in the information output, listing
+			the encryption vector which is a 4 byte hash value of the password.
+			There is currently no way for &dhpackage; to regain the passwort from
+			the hash.</para>
 	</refsect1>
   <refsect1>
     <title>SEE ALSO</title>
