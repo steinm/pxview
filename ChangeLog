@@ -1,5 +1,7 @@
 Version 0.2.5
 	- Output password checksum if file is encrypted
+	- output format of timestamp, date, time can be set with program
+	  option. The default has been changed to the sql format.
 
 Version 0.2.4
 	- check return value of PX_get_data_alpha() and output an error message
