@@ -2860,6 +2860,19 @@ int main(int argc, char *argv[]) {
 						hex_dump(outfp, &data[offset], pxf->px_flen);
 						fprintf(outfp, "\n");
 					}
+					switch(pxf->px_ftype) {
+						case pxfFmtMemoBLOb:
+						case pxfMemoBLOb:
+						case pxfBLOb: {
+							long size, index, mod_nr, boffset;
+							size = get_long_le(&data[offset+pxf->px_flen-10+4]);
+							index = get_long_le(&data[offset+pxf->px_flen-10]) & 0x000000ff;
+							mod_nr = get_short_le(&data[offset+pxf->px_flen-10+8]);
+							boffset = get_long_le(&data[offset+pxf->px_flen-10]) & 0xffffff00;
+							fprintf(outfp, "size=%ld, index=%ld, mod_nr=%d, offset=%ld\n", size, index, mod_nr, boffset);
+						}
+					}
+
 					offset += pxf->px_flen;
 					pxf++;
 				}
