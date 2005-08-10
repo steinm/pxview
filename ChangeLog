@@ -1,4 +1,5 @@
 Version 0.2.5
+	- output some more information about blobs in debug mode
 	- Output password checksum if file is encrypted
 	- output format of timestamp, date, time can be set with program
 	  option. The default has been changed to the sql format.
