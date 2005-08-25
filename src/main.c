@@ -213,11 +213,11 @@ int str_buffer_printmask(pxdoc_t *pxdoc, struct str_buffer *sb, char *str, char 
  * Prints str and masks each occurence of c1 with c2.
  * Returns the number of written chars.
  */
-int printmask(FILE *outfp, char *str, char c1, char c2 ) {
+int printmask(FILE *outfp, char *str, size_t size, char c1, char c2 ) {
 	char *ptr;
 	int len = 0;
 	ptr = str;
-	while(*ptr != '\0') {
+	while(*ptr != '\0' && size > 0) {
 		if(*ptr == c1) {
 			fprintf(outfp, "%c", c2);
 			len ++;
@@ -225,6 +225,7 @@ int printmask(FILE *outfp, char *str, char c1, char c2 ) {
 		fprintf(outfp, "%c", *ptr);
 		len++;
 		ptr++;
+		size--;
 	}
 	return(len);
 }
@@ -1413,20 +1414,30 @@ int main(int argc, char *argv[]) {
 								char *value;
 								int ret;
 								if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
-									if(enclosure && (strchr(value, delimiter) || strchr(value, '\n') || strchr(value, '\r'))) {
+									int i, needsenclosure=0;
+									for(i=0; i<pxf->px_flen && needsenclosure==0; i++)
+										if(value[i] == delimiter ||
+										   value[i] == '\n' ||
+										   value[i] == '\r')
+											needsenclosure = 1;
+									if(enclosure && needsenclosure) {
 										fprintf(outfp, "%c", enclosure);
 										if(strchr(value, enclosure))
-											printmask(outfp, value, enclosure, enclosure);
+											printmask(outfp, value, pxf->px_flen, enclosure, enclosure);
 										else
-											fprintf(outfp, "%s", value);
+											/* Use printmask because value is not \0 terminated */
+											printmask(outfp, value, pxf->px_flen, '\0', '\0');
+//											fprintf(outfp, "%s", value);
 										fprintf(outfp, "%c", enclosure);
 									} else {
 										if(strchr(value, enclosure)) {
 											fprintf(outfp, "%c", enclosure);
-											printmask(outfp, value, enclosure, enclosure);
+											printmask(outfp, value, pxf->px_flen, enclosure, enclosure);
 											fprintf(outfp, "%c", enclosure);
 										} else
-											fprintf(outfp, "%s", value);
+											/* Use printmask because value is not \0 terminated */
+											printmask(outfp, value, pxf->px_flen, '\0', '\0');
+//											fprintf(outfp, "%s", value);
 									}
 									pxdoc->free(pxdoc, value);
 								} else if(ret < 0) {
@@ -1520,8 +1531,13 @@ int main(int argc, char *argv[]) {
 								if(ret > 0) {
 									if(blobdata) {
 										if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
-											int i;
-											if(enclosure && (strchr(blobdata, delimiter) || strchr(blobdata, '\n') || strchr(blobdata, '\r')))
+											int i, needsenclosure=0;
+											for(i=0; i<size && needsenclosure==0; i++)
+												if(blobdata[i] == delimiter ||
+												   blobdata[i] == '\n' ||
+												   blobdata[i] == '\r')
+													needsenclosure = 1;
+											if(enclosure && needsenclosure)
 												fprintf(outfp, "%c", enclosure);
 											for(i=0; i<size; i++) {
 												if(blobdata[i] == enclosure)
@@ -2390,7 +2406,7 @@ int main(int argc, char *argv[]) {
 										int ret;
 										if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 											if(strchr(value, '\t'))
-												printmask(outfp, value, '\t', '\\');
+												printmask(outfp, value, pxf->px_flen, '\t', '\\');
 											else
 												fprintf(outfp, "%s", value);
 											pxdoc->free(pxdoc, value);
@@ -2624,7 +2640,7 @@ int main(int argc, char *argv[]) {
 										if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
 											if(strchr(value, '\'')) {
 												fprintf(outfp, "'");
-												printmask(outfp, value, '\'', '\\');
+												printmask(outfp, value, pxf->px_flen, '\'', '\\');
 												fprintf(outfp, "'");
 											} else
 												fprintf(outfp, "'%s'", value);
@@ -2838,7 +2854,7 @@ int main(int argc, char *argv[]) {
 				fprintf(outfp, _("Real block number in file: "));
 				fprintf(outfp, "%d\n", pxdbinfo.number);
 				fprintf(outfp, _("Block size: "));
-				fprintf(outfp, "%d\n", pxdbinfo.size);
+				fprintf(outfp, "%d (%d x %d)\n", pxdbinfo.size, pxdbinfo.numrecords, pxdoc->px_head->px_recordsize);
 				fprintf(outfp, _("Record number in block: "));
 				fprintf(outfp, "%d\n", pxdbinfo.recno);
 				fprintf(outfp, _("Number of records in block: "));
