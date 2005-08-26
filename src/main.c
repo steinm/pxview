@@ -119,7 +119,7 @@ void str_buffer_delete(pxdoc_t *pxdoc, struct str_buffer *sb) {
 /* str_buffer_print() {{{
  * print a string at the end of a buffer
  */
-void str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ...) {
+int str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ...) {
 	char msg[MSG_BUFSIZE];
 	va_list ap;
 	int written;
@@ -127,8 +127,9 @@ void str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ..
 	va_start(ap, fmt);
 	written = vsnprintf(msg, MSG_BUFSIZE, fmt, ap);
 	if(written >= MSG_BUFSIZE) {
-		fprintf(stderr, "Fatal Error: Format string is to short\n");
-		exit(1);
+		fprintf(stderr, _("Fatal Error: Format string is to short"));
+		fprintf(stderr, "\n");
+		return(written);
 	}
 
 	/* Enlarge memory for buffer
@@ -143,6 +144,7 @@ void str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ..
 	sb->cur += written;
 
 	va_end(ap);
+	return(written);
 }
 /* }}} */
 #undef MSG_BUFSIZE
@@ -228,6 +230,46 @@ int printmask(FILE *outfp, char *str, size_t size, char c1, char c2 ) {
 		size--;
 	}
 	return(len);
+}
+/* }}} */
+
+/* fnprintf() {{{
+ * Prints str like fprintf but nur more than size chars.
+ * Returns the number of written chars.
+ */
+int fnprintf(FILE *outfp, size_t size, const char *fmt, ...) {
+	char *msg;
+	va_list ap;
+	int written;
+
+	msg = malloc(size+1);
+	va_start(ap, fmt);
+	written = vsnprintf(msg, size, fmt, ap);
+	if(written >= size) {
+		fprintf(stderr, _("Fatal Error: Format string is to short"));
+		fprintf(stderr, "\n");
+	} else {
+		msg[size] = '\0';
+		fprintf(outfp, "%s", msg);
+	}
+	va_end(ap);
+	free(msg);
+	return(written);
+}
+/* }}} */
+
+/* strnchr() {{{
+ * Searches for a char in a string up to its end but not more
+ * than size bytes.
+ * Returns pointer to char or NULL.
+ */
+char *strnchr(const char *s, size_t size, int c) {
+	int i;
+	char *ptr = s;
+	for(i=0; i<size && *ptr != '\0'; i++, ptr++) {
+		if(*ptr == (char) c || *ptr == '\0')
+			return(ptr);
+	}
 }
 /* }}} */
 
@@ -1425,9 +1467,7 @@ int main(int argc, char *argv[]) {
 										if(strchr(value, enclosure))
 											printmask(outfp, value, pxf->px_flen, enclosure, enclosure);
 										else
-											/* Use printmask because value is not \0 terminated */
-											printmask(outfp, value, pxf->px_flen, '\0', '\0');
-//											fprintf(outfp, "%s", value);
+											fnprintf(outfp, pxf->px_flen, "%s", value);
 										fprintf(outfp, "%c", enclosure);
 									} else {
 										if(strchr(value, enclosure)) {
