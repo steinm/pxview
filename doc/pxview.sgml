@@ -20,7 +20,7 @@ manpage.1: manpage.sgml
   <!ENTITY dhfirstname "<firstname>Uwe</firstname>">
   <!ENTITY dhsurname   "<surname>Steinmann</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
-  <!ENTITY dhdate      "<date>August 08, 2005</date>">
+  <!ENTITY dhdate      "<date>January 25, 2006</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
   <!ENTITY dhsection   "<manvolnum>1</manvolnum>">
@@ -44,7 +44,7 @@ manpage.1: manpage.sgml
       &dhsurname;
     </author>
     <copyright>
-      <year>2003-2005</year>
+      <year>2003-2006</year>
       <holder>&dhusername;</holder>
     </copyright>
     &dhdate;
@@ -116,6 +116,10 @@ manpage.1: manpage.sgml
 		<para>The programm can read encrypted an unencrypted .db and .mb files.
 		  There is not need to provide a password in order to read encrypted files.
 			</para>
+		<para>Since version 0.2.6 the default for LC_NUMERIC is not C
+		  anymore. This may have consequences for all output of float and bcd
+			values because the decimal point may not be the period anymore but
+			the character set in your locale.</para>
   </refsect1>
   <refsect1>
     <title>OPTIONS</title>
