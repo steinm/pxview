@@ -1,3 +1,10 @@
+Version 0.2.6
+	- LC_NUMERIC isn't set to 'C' anymore and floats are propperly enclosed
+	  in csv mode, if the enclosure char is the decimal point char
+	- cvs output: do not output overall length (34) of bcd fields in header line
+	- fixed potential problem with non null terminated fields of type alpha
+	  or blob
+
 Version 0.2.5
 	- output some more information about blobs in debug mode
 	- Output password checksum if file is encrypted
