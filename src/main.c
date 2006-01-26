@@ -595,6 +595,7 @@ int main(int argc, char *argv[]) {
 	char *time_format = NULL;
 	char *date_format = NULL;
 	FILE *outfp = NULL;
+	struct lconv *lc;
 
 	/* allocate 1 more struct because the first one is not used */
 	typemap = malloc((pxfBytes+1) * sizeof(struct sql_type_map));
@@ -606,10 +607,16 @@ int main(int argc, char *argv[]) {
 
 #ifdef ENABLE_NLS
 	setlocale (LC_ALL, "");
-	setlocale (LC_NUMERIC, "C");
+	/* Setting LC_NUMERIC to 'C' will release on from enclosing
+	 * all decimal numbers in csv mode when the decimal point is
+	 * a comma.
+	 */
+//	setlocale (LC_NUMERIC, "C");
 	bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
 	textdomain (GETTEXT_PACKAGE);
 #endif
+
+	lc = localeconv();
 
 	/* Handle program options {{{
 	 */
@@ -1378,7 +1385,7 @@ int main(int argc, char *argv[]) {
 							fprintf(outfp, ",Y,%d", pxf->px_flen);
 							break;
 						case pxfBCD:
-							fprintf(outfp, ",#,%d,%d", pxf->px_flen*2, pxf->px_fdc);
+							fprintf(outfp, ",#,%d", pxf->px_fdc);
 							break;
 					}
 					if(delimiter == ',')
@@ -1539,7 +1546,10 @@ int main(int argc, char *argv[]) {
 							case pxfNumber: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%lf", value);
+									if(lc->decimal_point[0] == delimiter)
+										fprintf(outfp, "%c%lf%c", enclosure, value, enclosure);
+									else
+										fprintf(outfp, "%lf", value);
 								} 
 								first = 1;
 								break;
@@ -1614,7 +1624,10 @@ int main(int argc, char *argv[]) {
 								char *value;
 						//		hex_dump(outfp, &data[offset], pxf->px_flen);
 								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
-									fprintf(outfp, "%s", value);
+									if(lc->decimal_point[0] == delimiter)
+										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
+									else
+										fprintf(outfp, "%s", value);
 									pxdoc->free(pxdoc, value);
 								}
 								first = 1;
