@@ -1,3 +1,9 @@
+Version 0.2.7
+	- .YGx files are treated like .PX files
+	- number of index field and sorting is output for all kinds of
+	  secondary indexes
+	- NULL values for blob fields are handled propperly in sql output.
+
 Version 0.2.6
 	- LC_NUMERIC isn't set to 'C' anymore and floats are propperly enclosed
 	  in csv mode, if the enclosure char is the decimal point char
