@@ -1095,7 +1095,9 @@ int main(int argc, char *argv[]) {
 		PX_get_value(pxdoc, "lastblock", &number);
 		fprintf(outfp, _("Num. of last Data Block: %d\n"), (int) number);
 		if((filetype == pxfFileTypNonIncSecIndex) ||
-		   (filetype == pxfFileTypIncSecIndex)) {
+		   (filetype == pxfFileTypIncSecIndex) ||
+		   (filetype == pxfFileTypNonIncSecIndexG) ||
+		   (filetype == pxfFileTypIncSecIndexG)) {
 			fprintf(outfp, _("Num. of Index Field:     %d\n"), pxh->px_indexfieldnumber);
 			fprintf(outfp, _("Sort order of Field:     %d\n"), pxh->px_refintegrity);
 		}
@@ -1104,7 +1106,9 @@ int main(int argc, char *argv[]) {
 			fprintf(outfp, _("Num. of prim. Key fields: %d\n"), primarykeyfields);
 			fprintf(outfp, _("Next auto inc. value:    %d\n"), pxh->px_autoinc);
 		}
-		if(filetype == pxfFileTypPrimIndex) {
+		if((filetype == pxfFileTypPrimIndex) ||
+		   (filetype == pxfFileTypSecIndex) ||
+		   (filetype == pxfFileTypSecIndexG)) {
 			PX_get_value(pxdoc, "autoinc", &number);
 			fprintf(outfp, _("Root index block number: %d\n"), (int) number);
 			fprintf(outfp, _("Num. of index levels:    %d\n"), pxh->px_numindexlevels);
@@ -1394,29 +1398,31 @@ int main(int argc, char *argv[]) {
 				}
 				pxf++;
 			}
-			if(filetype == pxfFileTypPrimIndex) {
+			if((filetype == pxfFileTypPrimIndex)  ||
+			   (filetype == pxfFileTypSecIndex) ||
+			   (filetype == pxfFileTypSecIndexG)) {
 				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
-				fprintf(outfp, "blocknr,I,4");
-				if(delimiter == ',')
-					fprintf(outfp, "%c", enclosure);
-				fprintf(outfp, "%c", delimiter);
-				if(delimiter == ',')
-					fprintf(outfp, "%c", enclosure);
-				fprintf(outfp, "count,I,4");
+				fprintf(outfp, "blocknr,S,2");
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
 				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
-				fprintf(outfp, "dummy,I,4");
+				fprintf(outfp, "count,S,2");
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
 				fprintf(outfp, "%c", delimiter);
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
-				fprintf(outfp, "thisblocknr,I,4");
+				fprintf(outfp, "dummy,S,2");
+				if(delimiter == ',')
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "%c", delimiter);
+				if(delimiter == ',')
+					fprintf(outfp, "%c", enclosure);
+				fprintf(outfp, "thisblocknr,S,2");
 				if(delimiter == ',')
 					fprintf(outfp, "%c", enclosure);
 			}
@@ -1641,7 +1647,9 @@ int main(int argc, char *argv[]) {
 					offset += pxf->px_flen;
 					pxf++;
 				}
-				if(filetype == pxfFileTypPrimIndex) {
+				if((filetype == pxfFileTypPrimIndex)  ||
+				   (filetype == pxfFileTypSecIndex) ||
+				   (filetype == pxfFileTypSecIndexG)) {
 					short int value;
 					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "%c", delimiter);
@@ -1671,7 +1679,9 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		/* Print sum over all records */
-		if(filetype == pxfFileTypPrimIndex) {
+		if((filetype == pxfFileTypPrimIndex)  ||
+		   (filetype == pxfFileTypSecIndex) ||
+		   (filetype == pxfFileTypSecIndexG)) {
 			for(i=0; i<PX_get_num_fields(pxdoc); i++)
 				fprintf(outfp, "%c", delimiter);
 			fprintf(outfp, "%c", delimiter);
@@ -1972,8 +1982,8 @@ int main(int argc, char *argv[]) {
 										ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 									else
 										ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-									str_buffer_print(pxdoc, sbuf, "'");
 									if(ret > 0) {
+										str_buffer_print(pxdoc, sbuf, "'");
 										if(blobdata) {
 											if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
 												int i;
@@ -1991,15 +2001,23 @@ int main(int argc, char *argv[]) {
 													fclose(fp);
 													str_buffer_print(pxdoc, sbuf, "%s", filename);
 												} else {
-													fprintf(stderr, "Couldn't open file '%s' for blob data\n", filename);
+													fprintf(stderr, _("Could not open file '%s' for blob data"), filename);
+													fprintf(stderr, "\n");
 												}
 											}
 											pxdoc->free(pxdoc, blobdata);
 										} else {
-											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
+											fprintf(stderr, _("Could not get blob data for %d"), mod_nr);
+											fprintf(stderr, "\n");
 										}
+										str_buffer_print(pxdoc, sbuf, "'");
+									} else if(ret == 0) {
+										str_buffer_print(pxdoc, sbuf, "NULL");
+									} else {
+										str_buffer_print(pxdoc, sbuf, "''");
+										fprintf(stderr, _("Could not get blob data for %d"), mod_nr);
+										fprintf(stderr, "\n");
 									}
-									str_buffer_print(pxdoc, sbuf, "'");
 									first = 1;
 
 									break;
@@ -2286,7 +2304,9 @@ int main(int argc, char *argv[]) {
 					offset += pxf->px_flen;
 					pxf++;
 				}
-				if(filetype == pxfFileTypPrimIndex) {
+				if((filetype == pxfFileTypPrimIndex)  ||
+				   (filetype == pxfFileTypSecIndex) ||
+				   (filetype == pxfFileTypSecIndexG)) {
 					short int value;
 					if(0 < PX_get_data_short(pxdoc, &data[offset], 2, &value)) {
 						fprintf(outfp, "  <td>%d</td>\n", value);
@@ -2592,6 +2612,8 @@ int main(int argc, char *argv[]) {
 											} else {
 												fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
 											}
+										} else if(ret == 0) {
+											fprintf(outfp, "\\N");
 										}
 										first = 1;
 
@@ -2805,8 +2827,8 @@ int main(int argc, char *argv[]) {
 											ret = PX_get_data_graphic(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
 										else
 											ret = PX_get_data_blob(pxdoc, &data[offset], pxf->px_flen, &mod_nr, &size, &blobdata);
-										fputc('\'', outfp);
 										if(ret > 0) {
+											fputc('\'', outfp);
 											if(blobdata) {
 												if(pxf->px_ftype == pxfFmtMemoBLOb || pxf->px_ftype == pxfMemoBLOb) {
 													int i;
@@ -2830,8 +2852,13 @@ int main(int argc, char *argv[]) {
 											} else {
 												fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
 											}
+											fputc('\'', outfp);
+										} else if(ret == 0) {
+											fprintf(outfp, "NULL");
+										} else {
+											fprintf(outfp, "''");
+											fprintf(stderr, "Couldn't get blob data for %d\n", mod_nr);
 										}
-										fputc('\'', outfp);
 										first = 1;
 
 										break;
