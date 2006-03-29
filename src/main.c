@@ -1469,28 +1469,29 @@ int main(int argc, char *argv[]) {
 								char *value;
 								int ret;
 								if(0 < (ret = PX_get_data_alpha(pxdoc, &data[offset], pxf->px_flen, &value))) {
-									int i, needsenclosure=0;
-									for(i=0; i<pxf->px_flen && needsenclosure==0; i++)
+									int i, needsenclosure=0, hasenclosure=0;
+									for(i=0; i<pxf->px_flen && needsenclosure==0&& value[i] != '\0'; i++) {
 										if(value[i] == delimiter ||
 										   value[i] == '\n' ||
 										   value[i] == '\r')
 											needsenclosure = 1;
+										if(value[i] == enclosure)
+											hasenclosure = 1;
+									}
 									if(enclosure && needsenclosure) {
 										fprintf(outfp, "%c", enclosure);
-										if(strchr(value, enclosure))
+										if(hasenclosure)
 											printmask(outfp, value, pxf->px_flen, enclosure, enclosure);
 										else
-											fnprintf(outfp, pxf->px_flen, "%s", value);
+											fprintf(outfp, "%s", value);
 										fprintf(outfp, "%c", enclosure);
 									} else {
-										if(strchr(value, enclosure)) {
+										if(hasenclosure) {
 											fprintf(outfp, "%c", enclosure);
 											printmask(outfp, value, pxf->px_flen, enclosure, enclosure);
 											fprintf(outfp, "%c", enclosure);
 										} else
-											/* Use printmask because value is not \0 terminated */
-											printmask(outfp, value, pxf->px_flen, '\0', '\0');
-//											fprintf(outfp, "%s", value);
+											fprintf(outfp, "%s", value);
 									}
 									pxdoc->free(pxdoc, value);
 								} else if(ret < 0) {
