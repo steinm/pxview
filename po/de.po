@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: pxview 0.0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-27 23:59+0100\n"
+"POT-Creation-Date: 2006-03-29 09:49+0200\n"
 "PO-Revision-Date: 2003-03-05 08:51+0100\n"
 "Last-Translator: Uwe Steinmann <uwe@steinmann.cx>\n"
 "Language-Team: de <uwe@steinmann.cx>\n"
@@ -549,179 +549,179 @@ msgstr "Nr. des ersten Datenblocks: %d\n"
 msgid "Num. of last Data Block: %d\n"
 msgstr "Nr. des letzten Datenblocks: %d\n"
 
-#: ../src/main.c:1099
+#: ../src/main.c:1101
 #, c-format
 msgid "Num. of Index Field:     %d\n"
 msgstr "Num. des Indexfeldes:    %d\n"
 
-#: ../src/main.c:1100
+#: ../src/main.c:1102
 #, c-format
 msgid "Sort order of Field:     %d\n"
 msgstr "Sortierung des Feldes:   %d\n"
 
-#: ../src/main.c:1104
+#: ../src/main.c:1106
 #, c-format
 msgid "Num. of prim. Key fields: %d\n"
 msgstr "Anz. der Primärschl.felder: %d\n"
 
-#: ../src/main.c:1105
+#: ../src/main.c:1107
 #, c-format
 msgid "Next auto inc. value:    %d\n"
 msgstr "Näch. Auto ink. Wert:    %d\n"
 
-#: ../src/main.c:1109
+#: ../src/main.c:1113
 #, c-format
 msgid "Root index block number: %d\n"
 msgstr "Num. des Index-Root-Blocks: %d\n"
 
-#: ../src/main.c:1110
+#: ../src/main.c:1114
 #, c-format
 msgid "Num. of index levels:    %d\n"
 msgstr "Anzahl der Indexlevel:   %d\n"
 
-#: ../src/main.c:1112
+#: ../src/main.c:1116
 #, c-format
 msgid "Write protected:         %d\n"
 msgstr "Schreibschutz:           %d\n"
 
-#: ../src/main.c:1114
+#: ../src/main.c:1118
 #, c-format
 msgid "Code Page:               %d (0x%X)\n"
 msgstr "Code Page:               %d (0x%X)\n"
 
-#: ../src/main.c:1115
+#: ../src/main.c:1119
 #, c-format
 msgid "Encryption:              0x%X\n"
 msgstr "Verschlüsselung:         0x%X\n"
 
-#: ../src/main.c:1117
+#: ../src/main.c:1121
 #, c-format
 msgid "Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"
 msgstr "Letzte Aktualisierung:   %d.%d.%d %d:%02d:%02d (%d)\n"
 
-#: ../src/main.c:1119
+#: ../src/main.c:1123
 #, c-format
 msgid "Record size:             %d (0x%X)\n"
 msgstr "Größe eines Datens.:     %d (0x%X)\n"
 
-#: ../src/main.c:1120
+#: ../src/main.c:1124
 #, c-format
 msgid "Sort order:              %d (0x%X)\n"
 msgstr "Sortierreihenfolge:      %d (0x%X)\n"
 
-#: ../src/main.c:1121
+#: ../src/main.c:1125
 #, c-format
 msgid "Auto increment:          %d (0x%X)\n"
 msgstr "Auto inkrement:          %d (0x%X)\n"
 
-#: ../src/main.c:1122
+#: ../src/main.c:1126
 #, c-format
 msgid "Modified Flags 1:        %d (0x%X)\n"
 msgstr "Modifiziert Flags 1:     %d (0x%X)\n"
 
-#: ../src/main.c:1123
+#: ../src/main.c:1127
 #, c-format
 msgid "Modified Flags 2:        %d (0x%X)\n"
 msgstr "Modifiziert Flags 2      %d (0x%X)\n"
 
-#: ../src/main.c:1127
+#: ../src/main.c:1131
 #, c-format
 msgid "Fieldname          | Type\n"
 msgstr "Feldname           | Typ\n"
 
-#: ../src/main.c:1192
+#: ../src/main.c:1196
 #, c-format
 msgid "     Record length | %d (0x%X)\n"
 msgstr "Größe eines Datens.: %d (0x%X)\n"
 
-#: ../src/main.c:1203
+#: ../src/main.c:1207
 #, c-format
 msgid "Schema output is only reasonable for DB files."
 msgstr "Schema-Ausgabe macht nur bei DB-Dateien Sinn."
 
-#: ../src/main.c:1299
+#: ../src/main.c:1303
 #, c-format
 msgid "Could not compile regular expression to select fields."
 msgstr "Konnte regulären Ausdruck nicht übersetzen."
 
 #. allocate memory for selected field array
-#: ../src/main.c:1304
+#: ../src/main.c:1308
 msgid "Could not allocate memory for array of selected fields."
 msgstr "Konnte Speicher für Array der selektierten Felder nicht allozieren."
 
 #. Allocate memory for record
-#: ../src/main.c:1434
+#: ../src/main.c:1440
 msgid "Allocate memory for record."
 msgstr "Alloziere Speicher für Datensatz."
 
-#: ../src/main.c:1670 ../src/main.c:2038 ../src/main.c:2316 ../src/main.c:2637
-#: ../src/main.c:2882 ../src/main.c:2965
+#: ../src/main.c:1679 ../src/main.c:2049 ../src/main.c:2329 ../src/main.c:2650
+#: ../src/main.c:2895 ../src/main.c:2978
 #, c-format
 msgid "Couldn't get record number %d\n"
 msgstr "Konnte auf Datensatz Nummer %d nicht zugreifen.\n"
 
-#: ../src/main.c:1697 ../src/main.c:2329
+#: ../src/main.c:1708 ../src/main.c:2342
 #, c-format
 msgid "SQL output is only reasonable for DB files."
 msgstr "SQL-Ausgabe macht nur bei DB-Dateien Sinn."
 
 #. Allocate memory for record data
-#: ../src/main.c:1703 ../src/main.c:1840 ../src/main.c:2068 ../src/main.c:2412
-#: ../src/main.c:2898
+#: ../src/main.c:1714 ../src/main.c:1851 ../src/main.c:2079 ../src/main.c:2425
+#: ../src/main.c:2911
 msgid "Could not allocate memory for record."
 msgstr "Konnte Speicher für Datensatz nicht allozieren."
 
-#: ../src/main.c:1994
+#: ../src/main.c:2005
 #, c-format
 msgid "Could not open file '%s' for blob data"
 msgstr "Konnte Blob-Datei '%s' für Daten nicht öffnen."
 
-#: ../src/main.c:2000 ../src/main.c:2008
+#: ../src/main.c:2011 ../src/main.c:2019
 #, c-format
 msgid "Could not get blob data for %d"
 msgstr "Konnte Blob-Daten für %d nicht lesen."
 
-#: ../src/main.c:2918
+#: ../src/main.c:2931
 #, c-format
 msgid "Previous block number according to header: "
 msgstr "Vorherige Blocknummer gemäß Header: "
 
-#: ../src/main.c:2920
+#: ../src/main.c:2933
 #, c-format
 msgid "Next block number according to header: "
 msgstr "Nächste Blocknummer gemäß Header: "
 
-#: ../src/main.c:2922
+#: ../src/main.c:2935
 #, c-format
 msgid "Real block number in file: "
 msgstr "Blocknummer in der Datei: "
 
-#: ../src/main.c:2924
+#: ../src/main.c:2937
 #, c-format
 msgid "Block size: "
 msgstr "Blockgröße: "
 
-#: ../src/main.c:2926
+#: ../src/main.c:2939
 #, c-format
 msgid "Record number in block: "
 msgstr "Datensatznummer innerhalb des Blocks: "
 
-#: ../src/main.c:2928
+#: ../src/main.c:2941
 #, c-format
 msgid "Number of records in block: "
 msgstr "Anzahl der Datensätze im Block: "
 
-#: ../src/main.c:2930
+#: ../src/main.c:2943
 #, c-format
 msgid "Block position in file: "
 msgstr "Blockposition in der Datei: "
 
-#: ../src/main.c:2932
+#: ../src/main.c:2945
 #, c-format
 msgid "Record position in file: "
 msgstr "Datensatzposition in der Datei: "
 
-#: ../src/main.c:2935
+#: ../src/main.c:2948
 #, c-format
 msgid "Record deleted: "
 msgstr "Datensatz gelöscht: "
