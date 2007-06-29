@@ -16,7 +16,7 @@ for i in config.guess config.sub missing install-sh mkinstalldirs ; do
 done
 
 intltoolize --force --copy
-aclocal
+aclocal -I m4
 autoheader
 automake --verbose --foreign --add-missing --copy
 autoconf
