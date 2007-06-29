@@ -27,11 +27,12 @@ AC_PROG_INSTALL
 AC_PROG_CPP
 
 dnl Add the languages which your application supports here.
-ALL_LINGUAS="de"
-AM_GLIB_GNU_GETTEXT
+dnl ALL_LINGUAS="de"
 GETTEXT_PACKAGE=pxview
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", GETTEXT_PACKAGE)
+AM_GNU_GETTEXT([external])
+dnl AM_GLIB_GNU_GETTEXT
 
 AM_PROG_LIBTOOL
 
@@ -47,11 +48,11 @@ AC_CHECK_HEADERS(fcntl.h unistd.h ctype.h dirent.h errno.h malloc.h)
 AC_CHECK_HEADERS(stdarg.h sys/stat.h sys/types.h time.h)
 AC_CHECK_HEADERS(stdlib.h sys/socket.h netinet/in.h arpa/inet.h)
 AC_CHECK_HEADERS(netdb.h sys/time.h sys/select.h sys/mman.h)
+AC_CHECK_HEADERS(regex.h)
 
 dnl Checks for library functions.
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS(strdup strndup strerror snprintf)
-AC_CHECK_FUNCS(finite isnand fp_class class fpclass)
 AC_CHECK_FUNCS(strftime localtime)
 
 AC_ARG_WITH(pxlib, [  --with-pxlib=DIR        Path to paradox library (/usr)])
