@@ -1,14 +1,18 @@
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <stdarg.h>
 #include <getopt.h>
+#ifdef HAVE_GETTEXT
 #include <libintl.h>
+#endif
 #include <sys/types.h>
+#ifdef HAVE_REGEX_H
 #include <regex.h>
+#endif
 #include <libgen.h>
-#include "config.h"
 #ifdef HAVE_GSF
 #include <paradox-gsf.h>
 #else
@@ -127,7 +131,7 @@ int str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ...
 	va_start(ap, fmt);
 	written = vsnprintf(msg, MSG_BUFSIZE, fmt, ap);
 	if(written >= MSG_BUFSIZE) {
-		fprintf(stderr, _("Fatal Error: Format string is to short"));
+		fprintf(stderr, _("Fatal Error: Format string is too short"));
 		fprintf(stderr, "\n");
 		return(written);
 	}
@@ -246,7 +250,7 @@ int fnprintf(FILE *outfp, size_t size, const char *fmt, ...) {
 	va_start(ap, fmt);
 	written = vsnprintf(msg, size, fmt, ap);
 	if(written >= size) {
-		fprintf(stderr, _("Fatal Error: Format string is to short"));
+		fprintf(stderr, _("Fatal Error: Format string is too short"));
 		fprintf(stderr, "\n");
 	} else {
 		msg[size] = '\0';
@@ -612,8 +616,8 @@ int main(int argc, char *argv[]) {
 	 * a comma.
 	 */
 //	setlocale (LC_NUMERIC, "C");
-	bindtextdomain (GETTEXT_PACKAGE, PACKAGE_LOCALE_DIR);
-	textdomain (GETTEXT_PACKAGE);
+	bindtextdomain (PACKAGE, PACKAGE_LOCALE_DIR);
+	textdomain (PACKAGE);
 #endif
 
 	lc = localeconv();
@@ -1044,7 +1048,7 @@ int main(int argc, char *argv[]) {
 	 */
 	if(outputinfo) {
 		int reclen;
-		struct tm time_tm;
+		struct tm *time_tm;
 		char *str;
 		float number;
 		fprintf(outfp, _("File Version:            %1.1f\n"), (float) pxh->px_fileversion/10.0);
@@ -1117,8 +1121,8 @@ int main(int argc, char *argv[]) {
 		PX_get_value(pxdoc, "codepage", &number);
 		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), (int) number, (int) number);
 		fprintf(outfp, _("Encryption:              0x%X\n"), pxh->px_encryption);
-		localtime_r((time_t *) &(pxh->px_fileupdatetime), &time_tm);
-		fprintf(outfp, _("Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"), time_tm.tm_mday, time_tm.tm_mon+1, time_tm.tm_year+1900, time_tm.tm_hour, time_tm.tm_min, time_tm.tm_sec, pxh->px_fileupdatetime);
+		time_tm = localtime((time_t *) &(pxh->px_fileupdatetime));
+		fprintf(outfp, _("Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"), time_tm->tm_mday, time_tm->tm_mon+1, time_tm->tm_year+1900, time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, pxh->px_fileupdatetime);
 		if(verbose) {
 			fprintf(outfp, _("Record size:             %d (0x%X)\n"), recordsize, recordsize);
 			fprintf(outfp, _("Sort order:              %d (0x%X)\n"), pxh->px_sortorder, pxh->px_sortorder);
@@ -1298,12 +1302,14 @@ int main(int argc, char *argv[]) {
 	/* Check which fields shall be shown in output {{{
 	 */
 	if(fieldregex) {
+#ifdef HAVE_REGEX_H
 		regex_t preg;
 		if(regcomp(&preg, fieldregex, REG_NOSUB|REG_EXTENDED|REG_ICASE)) {
 			fprintf(stderr, _("Could not compile regular expression to select fields."));
 			PX_close(pxdoc);
 			exit(1);
 		}
+#endif
 		/* allocate memory for selected field array */
 		if((selectedfields = (char *) pxdoc->malloc(pxdoc, PX_get_num_fields(pxdoc), _("Could not allocate memory for array of selected fields."))) == NULL) {
 			PX_close(pxdoc);
@@ -1312,7 +1318,11 @@ int main(int argc, char *argv[]) {
 		memset(selectedfields, '\0', PX_get_num_fields(pxdoc));
 		pxf = PX_get_fields(pxdoc);
 		for(i=0; i<PX_get_num_fields(pxdoc); i++) {
+#ifdef HAVE_REGEX_H
 			if(0 == regexec(&preg, pxf->px_fname, 0, NULL, 0)) {
+#else
+			if(NULL != strstr(fieldregex, pxf->px_fname)) {
+#endif
 				selectedfields[i] = 1;
 			}
 			pxf++;
@@ -1553,7 +1563,11 @@ int main(int argc, char *argv[]) {
 							case pxfNumber: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
+#ifdef HAVE_LOCALE_H
 									if(lc->decimal_point[0] == delimiter)
+#else
+									if('.' == delimiter)
+#endif
 										fprintf(outfp, "%c%lf%c", enclosure, value, enclosure);
 									else
 										fprintf(outfp, "%lf", value);
@@ -1631,7 +1645,11 @@ int main(int argc, char *argv[]) {
 								char *value;
 						//		hex_dump(outfp, &data[offset], pxf->px_flen);
 								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
+#ifdef HAVE_LOCALE_H
 									if(lc->decimal_point[0] == delimiter)
+#else
+									if('.' == delimiter)
+#endif
 										fprintf(outfp, "%c%s%c", enclosure, value, enclosure);
 									else
 										fprintf(outfp, "%s", value);
