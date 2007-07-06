@@ -3,8 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef HAVE_STDARG_H
 #include <stdarg.h>
+#endif
+#ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
 #ifdef HAVE_GETTEXT
 #include <libintl.h>
 #endif
@@ -269,11 +276,12 @@ int fnprintf(FILE *outfp, size_t size, const char *fmt, ...) {
  */
 char *strnchr(const char *s, size_t size, int c) {
 	int i;
-	char *ptr = s;
+	const char *ptr = s;
 	for(i=0; i<size && *ptr != '\0'; i++, ptr++) {
 		if(*ptr == (char) c || *ptr == '\0')
-			return(ptr);
+			return((char *) ptr);
 	}
+	return NULL;
 }
 /* }}} */
 
@@ -626,7 +634,7 @@ int main(int argc, char *argv[]) {
 	 */
 	progname = basename(strdup(argv[0]));
 	while(1) {
-		int this_option_optind = optind ? optind : 1;
+//		int this_option_optind = optind ? optind : 1;
 		int option_index = 0;
 		static struct option long_options[] = {
 			{"info", 0, 0, 'i'},
@@ -1120,7 +1128,7 @@ int main(int argc, char *argv[]) {
 		fprintf(outfp, _("Write protected:         %d\n"), pxh->px_writeprotected);
 		PX_get_value(pxdoc, "codepage", &number);
 		fprintf(outfp, _("Code Page:               %d (0x%X)\n"), (int) number, (int) number);
-		fprintf(outfp, _("Encryption:              0x%X\n"), pxh->px_encryption);
+		fprintf(outfp, _("Encryption:              0x%lX\n"), pxh->px_encryption);
 		time_tm = localtime((time_t *) &(pxh->px_fileupdatetime));
 		fprintf(outfp, _("Update time:             %d.%d.%d %d:%02d:%02d (%d)\n"), time_tm->tm_mday, time_tm->tm_mon+1, time_tm->tm_year+1900, time_tm->tm_hour, time_tm->tm_min, time_tm->tm_sec, pxh->px_fileupdatetime);
 		if(verbose) {
@@ -1513,7 +1521,6 @@ int main(int argc, char *argv[]) {
 							}
 							case pxfDate: {
 								long value;
-								int year, month, day;
 								if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 									char *str = PX_timestamp2string(pxdoc, (double) value*1000.0*86400.0, date_format);
 									fprintf(outfp, "%s", str);
@@ -1644,7 +1651,7 @@ int main(int argc, char *argv[]) {
 							case pxfBCD: {
 								char *value;
 						//		hex_dump(outfp, &data[offset], pxf->px_flen);
-								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
+								if(0 < PX_get_data_bcd(pxdoc, (unsigned char*) &data[offset], pxf->px_fdc, &value)) {
 #ifdef HAVE_LOCALE_H
 									if(lc->decimal_point[0] == delimiter)
 #else
@@ -1716,7 +1723,6 @@ int main(int argc, char *argv[]) {
 	/* Output data into sqlite database {{{
 	 */
 	if(outputsqlite) {
-		int numrecords;
 		sqlite *sql;
 		struct str_buffer *sbuf;
 		char *sqlerror;
@@ -2044,7 +2050,7 @@ int main(int argc, char *argv[]) {
 								case pxfBCD: {
 									char *value;
 									int ret;
-									if(0 < (ret = PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value))) {
+									if(0 < (ret = PX_get_data_bcd(pxdoc, (unsigned char*) &data[offset], pxf->px_fdc, &value))) {
 										str_buffer_print(pxdoc, sbuf, "%s", value);
 										pxdoc->free(pxdoc, value);
 									} else if(ret == 0) {
@@ -2307,7 +2313,7 @@ int main(int argc, char *argv[]) {
 							}
 							case pxfBCD: {
 								char *value;
-								if(0 < PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value)) {
+								if(0 < PX_get_data_bcd(pxdoc, (unsigned char*) &data[offset], pxf->px_fdc, &value)) {
 									fprintf(outfp, "%s", value);
 									pxdoc->free(pxdoc, value);
 								}
@@ -2641,7 +2647,7 @@ int main(int argc, char *argv[]) {
 									case pxfBCD: {
 										char *value;
 										int ret;
-										if(0 < (ret = PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value))) {
+										if(0 < (ret = PX_get_data_bcd(pxdoc, (unsigned char*) &data[offset], pxf->px_fdc, &value))) {
 											fprintf(outfp, "%s", value);
 											pxdoc->free(pxdoc, value);
 										} else if(ret == 0) {
@@ -2885,7 +2891,7 @@ int main(int argc, char *argv[]) {
 									case pxfBCD: {
 										char *value;
 										int ret;
-										if(0 < (ret = PX_get_data_bcd(pxdoc, &data[offset], pxf->px_fdc, &value))) {
+										if(0 < (ret = PX_get_data_bcd(pxdoc, (unsigned char*) &data[offset], pxf->px_fdc, &value))) {
 											fprintf(outfp, "%s", value);
 											pxdoc->free(pxdoc, value);
 										} else if(ret == 0) {
@@ -2984,7 +2990,7 @@ int main(int argc, char *argv[]) {
 							index = get_long_le(&data[offset+pxf->px_flen-10]) & 0x000000ff;
 							mod_nr = get_short_le(&data[offset+pxf->px_flen-10+8]);
 							boffset = get_long_le(&data[offset+pxf->px_flen-10]) & 0xffffff00;
-							fprintf(outfp, "size=%ld, index=%ld, mod_nr=%d, offset=%ld\n", size, index, mod_nr, boffset);
+							fprintf(outfp, "size=%ld, index=%ld, mod_nr=%ld, offset=%ld\n", size, index, mod_nr, boffset);
 						}
 					}
 
