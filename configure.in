@@ -47,7 +47,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(fcntl.h unistd.h ctype.h dirent.h errno.h malloc.h)
 AC_CHECK_HEADERS(stdarg.h sys/stat.h sys/types.h time.h)
 AC_CHECK_HEADERS(stdlib.h sys/time.h sys/select.h sys/mman.h)
-AC_CHECK_HEADERS(regex.h)
+AC_CHECK_HEADERS(getopt.h regex.h)
 
 dnl Checks for library functions.
 AC_FUNC_STRFTIME
