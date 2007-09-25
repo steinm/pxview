@@ -51,8 +51,8 @@ AC_CHECK_HEADERS(getopt.h regex.h)
 
 dnl Checks for library functions.
 AC_FUNC_STRFTIME
-AC_CHECK_FUNCS(strdup strndup strerror snprintf)
-AC_CHECK_FUNCS(strftime localtime)
+AC_CHECK_FUNCS(strdup strndup strerror snprintf vsnprintf)
+AC_CHECK_FUNCS(strftime localtime basename)
 
 AC_ARG_WITH(pxlib, [  --with-pxlib=DIR        Path to paradox library (/usr)])
 if test -r ${withval}/include/paradox.h ; then
