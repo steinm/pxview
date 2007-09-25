@@ -1,4 +1,6 @@
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +10,9 @@
 #endif
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
+#endif
+#ifdef WIN32
+#include "getopt/my_getopt.h"
 #endif
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -19,7 +24,6 @@
 #ifdef HAVE_REGEX_H
 #include <regex.h>
 #endif
-#include <libgen.h>
 #ifdef HAVE_GSF
 #include <paradox-gsf.h>
 #else
@@ -39,6 +43,11 @@
 #else
 #define _(String) String
 #endif
+
+/* These are not officially exported by pxlib */
+extern void hex_dump(FILE *outfp, char *p, int len);
+extern long get_long_le(const char *cp);
+extern unsigned short int get_short_le(const char *cp);
 
 /* strrep() {{{
  * Replace a char c1 with c2
@@ -136,7 +145,11 @@ int str_buffer_print(pxdoc_t *pxdoc, struct str_buffer *sb, const char *fmt, ...
 	int written;
 
 	va_start(ap, fmt);
+#ifdef HAVE_VSNPRINTF
 	written = vsnprintf(msg, MSG_BUFSIZE, fmt, ap);
+#else
+	written = vsprintf(msg, fmt, ap);
+#endif
 	if(written >= MSG_BUFSIZE) {
 		fprintf(stderr, _("Fatal Error: Format string is too short"));
 		fprintf(stderr, "\n");
@@ -255,7 +268,11 @@ int fnprintf(FILE *outfp, size_t size, const char *fmt, ...) {
 
 	msg = malloc(size+1);
 	va_start(ap, fmt);
+#ifdef HAVE_VSNPRINTF
 	written = vsnprintf(msg, size, fmt, ap);
+#else
+	written = vsprintf(msg, fmt, ap);
+#endif
 	if(written >= size) {
 		fprintf(stderr, _("Fatal Error: Format string is too short"));
 		fprintf(stderr, "\n");
@@ -368,7 +385,11 @@ char *get_sql_type(struct sql_type_map *typemap, int pxtype, int len) {
 	if(pxtype < 1 || pxtype > pxfBytes) {
 		return NULL;
 	}
+#ifdef HAVE_SNPRINTF
 	snprintf(buffer, 200, typemap[pxtype].sqltype, len);
+#else
+	sprintf(buffer, typemap[pxtype].sqltype, len);
+#endif
 	return(buffer);
 }
 /* }}} */
@@ -632,9 +653,21 @@ int main(int argc, char *argv[]) {
 
 	/* Handle program options {{{
 	 */
+#ifdef HAVE_BASENAME
 	progname = basename(strdup(argv[0]));
+#else
+	progname = strdup(argv[0]);
+#endif
 	while(1) {
-//		int this_option_optind = optind ? optind : 1;
+#ifdef WIN32
+#define GETOPT_GETOPT_LONG my_getopt_long
+#define GETOPT_OPTARG my_optarg
+#define GETOPT_OPTIND my_optind
+#else
+#define GETOPT_GETOPT_LONG getopt_long
+#define GETOPT_OPTARG optarg
+#define GETOPT_OPTIND optind
+#endif
 		int option_index = 0;
 		static struct option long_options[] = {
 			{"info", 0, 0, 'i'},
@@ -675,28 +708,28 @@ int main(int argc, char *argv[]) {
 			{"date-format", 1, 0, 19},
 			{0, 0, 0, 0}
 		};
-		c = getopt_long (argc, argv, "icsxqvtf:b:r:p:o:n:h",
+		c = GETOPT_GETOPT_LONG (argc, argv, "icsxqvtf:b:r:p:o:n:h",
 				long_options, &option_index);
 		if (c == -1)
 			break;
 		switch (c) {
 			case 0:
-				delimiter = optarg[0];
+				delimiter = GETOPT_OPTARG[0];
 				break;
 			case 1:
-				enclosure = optarg[0];
+				enclosure = GETOPT_OPTARG[0];
 				break;
 			case 3:
-				tablename = strdup(optarg);
+				tablename = strdup(GETOPT_OPTARG);
 				break;
 			case 4:
-				if(!strcmp(optarg, "info")) {
+				if(!strcmp(GETOPT_OPTARG, "info")) {
 					outputinfo = 1;
-				} else if(!strcmp(optarg, "csv")) {
+				} else if(!strcmp(GETOPT_OPTARG, "csv")) {
 					outputcsv = 1;
-				} else if(!strcmp(optarg, "sql")) {
+				} else if(!strcmp(GETOPT_OPTARG, "sql")) {
 					outputsql = 1;
-				} else if(!strcmp(optarg, "sqlite")) {
+				} else if(!strcmp(GETOPT_OPTARG, "sqlite")) {
 #ifdef HAVE_SQLITE
 					outputsqlite = 1;
 #else
@@ -704,11 +737,11 @@ int main(int argc, char *argv[]) {
 					fprintf(stderr, "\n");
 					exit(1);
 #endif
-				} else if(!strcmp(optarg, "html")) {
+				} else if(!strcmp(GETOPT_OPTARG, "html")) {
 					outputhtml = 1;
-				} else if(!strcmp(optarg, "schema")) {
+				} else if(!strcmp(GETOPT_OPTARG, "schema")) {
 					outputschema = 1;
-				} else if(!strcmp(optarg, "debug")) {
+				} else if(!strcmp(GETOPT_OPTARG, "debug")) {
 					outputdebug = 1;
 				}
 				break;
@@ -748,12 +781,12 @@ int main(int argc, char *argv[]) {
 				char *delimptr;
 				int typelen;
 				int index = 0;
-				delimptr = strchr(optarg, ':');
+				delimptr = strchr(GETOPT_OPTARG, ':');
 				if(NULL != delimptr) {
-					typelen = delimptr-optarg;
+					typelen = delimptr-GETOPT_OPTARG;
 					for(i=1; i<=pxfBytes; i++) {
 						if(typemap[i].pxtype) {
-							if(!strncmp(typemap[i].pxtype, optarg, typelen) &&
+							if(!strncmp(typemap[i].pxtype, GETOPT_OPTARG, typelen) &&
 							   (strlen(typemap[i].pxtype) == typelen)) {
 								index = i;
 							}
@@ -797,31 +830,31 @@ int main(int argc, char *argv[]) {
 				outputschema = 1;
 				break;
 			case 'b':
-				blobfile = strdup(optarg);
+				blobfile = strdup(GETOPT_OPTARG);
 				break;
 			case 'p':
-				blobprefix = strdup(optarg);
+				blobprefix = strdup(GETOPT_OPTARG);
 				break;
 			case 16:
-				blobextension = strdup(optarg);
+				blobextension = strdup(GETOPT_OPTARG);
 				break;
 			case 17:
-				timestamp_format = strdup(optarg);
+				timestamp_format = strdup(GETOPT_OPTARG);
 				break;
 			case 18:
-				time_format = strdup(optarg);
+				time_format = strdup(GETOPT_OPTARG);
 				break;
 			case 19:
-				date_format = strdup(optarg);
+				date_format = strdup(GETOPT_OPTARG);
 				break;
 			case 'r':
-				targetencoding = strdup(optarg);
+				targetencoding = strdup(GETOPT_OPTARG);
 				break;
 			case 'f':
-				fieldregex = strdup(optarg);
+				fieldregex = strdup(GETOPT_OPTARG);
 				break;
 			case 'o':
-				outputfile = strdup(optarg);
+				outputfile = strdup(GETOPT_OPTARG);
 				break;
 			case 'i':
 				outputinfo = 1;
@@ -844,13 +877,13 @@ int main(int argc, char *argv[]) {
 #endif
 				break;
 			case 'n':
-				pindexfile = strdup(optarg);
+				pindexfile = strdup(GETOPT_OPTARG);
 				break;
 		}
 	}
 
-	if (optind < argc) {
-		inputfile = strdup(argv[optind]);
+	if (GETOPT_OPTIND < argc) {
+		inputfile = strdup(argv[GETOPT_OPTIND]);
 	}
 
 	if(!inputfile) {
