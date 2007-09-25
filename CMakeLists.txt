@@ -9,6 +9,8 @@ else(CMAKE_COMPILER_IS_GNUCC)
 	set(all_LIBS pxlib)
 endif(CMAKE_COMPILER_IS_GNUCC)
 
+ADD_DEFINITIONS(-DHAVE_CONFIG_H)
+
 set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "2")
 set(CPACK_PACKAGE_VERSION_PATCH "6")
@@ -21,6 +23,7 @@ include(CheckIncludeFile)
 #check system for includes
 check_include_file("sqlite.h"           HAVE_SQLITE_H)
 check_include_file("locale.h"           HAVE_LOCALE_H)
+check_include_file("iconv.h"            HAVE_ICONV_H)
 check_include_file("libintl.h"          HAVE_LIBINTL_H)
 check_include_file("regex.h"            HAVE_REGEX_H)
 check_include_file("stdarg.h"           HAVE_STDARG_H)
@@ -66,7 +69,12 @@ INCLUDE_DIRECTORIES( . )
 
 configure_file(${CMAKE_SOURCE_DIR}/cmakeconfig.h.in ${CMAKE_BINARY_DIR}/config.h)
 
-set(pxview_FILES src/main.c)
+if(CMAKE_COMPILER_IS_GNUCC)
+	set(pxview_FILES src/main.c)
+else(CMAKE_COMPILER_IS_GNUCC)
+	set(pxview_FILES src/main.c getopt/my_getopt.c)
+endif(CMAKE_COMPILER_IS_GNUCC)
+
 add_executable(pxview ${pxview_FILES})
 target_link_libraries(pxview ${all_LIBS})
 
