@@ -29,6 +29,9 @@
 #else
 #include <paradox.h>
 #endif
+#ifdef HAVE_BASENAME
+#include <libgen.h>
+#endif
 
 #ifdef MEMORY_DEBUGGING
 #include <paradox-mp.h>
@@ -987,7 +990,7 @@ int main(int argc, char *argv[]) {
 		GsfInputMemory *in_mem;
 		GError *gerr = NULL;
 		fprintf(stderr, "Inputfile:  %s\n", inputfile);
-		gsf_init ();
+		gsf_init();
 		in_mem = gsf_input_mmap_new (inputfile, NULL);
 		if (in_mem == NULL) {
 			in_stdio = gsf_input_stdio_new(inputfile, &gerr);
@@ -997,6 +1000,7 @@ int main(int argc, char *argv[]) {
 				fprintf(stderr, _("Could not open gsf input file."));
 				fprintf(stderr, "\n");
 				g_object_unref (G_OBJECT (input));
+				PX_delete(pxdoc);
 				exit(1);
 			}
 		} else {
@@ -1005,6 +1009,7 @@ int main(int argc, char *argv[]) {
 		if(0 > PX_open_gsf(pxdoc, input)) {
 			fprintf(stderr, _("Could not open input file."));
 			fprintf(stderr, "\n");
+			PX_delete(pxdoc);
 			exit(1);
 		}
 	} else {
@@ -1012,6 +1017,7 @@ int main(int argc, char *argv[]) {
 		if(0 > PX_open_file(pxdoc, inputfile)) {
 			fprintf(stderr, _("Could not open input file."));
 			fprintf(stderr, "\n");
+			PX_delete(pxdoc);
 			exit(1);
 		}
 #ifdef HAVE_GSF
@@ -1029,16 +1035,22 @@ int main(int argc, char *argv[]) {
 		if(0 > PX_open_file(pindexdoc, pindexfile)) {
 			fprintf(stderr, _("Could not open primary index file."));
 			fprintf(stderr, "\n");
+			PX_close(pxdoc);
+			PX_delete(pxdoc);
 			exit(1);
 		}
 		if(0 > PX_read_primary_index(pindexdoc)) {
 			fprintf(stderr, _("Could not read primary index file."));
 			fprintf(stderr, "\n");
+			PX_close(pxdoc);
+			PX_delete(pxdoc);
 			exit(1);
 		}
 		if(0 > PX_add_primary_index(pxdoc, pindexdoc)) {
 			fprintf(stderr, _("Could not add primary index file."));
 			fprintf(stderr, "\n");
+			PX_close(pxdoc);
+			PX_delete(pxdoc);
 			exit(1);
 		}
 	}
@@ -1076,6 +1088,7 @@ int main(int argc, char *argv[]) {
 			fprintf(stderr, _("Could not open blob file."));
 			fprintf(stderr, "\n");
 			PX_close(pxdoc);
+			PX_delete(pxdoc);
 			exit(1);
 		}
 		if(!blobprefix)
@@ -1828,12 +1841,12 @@ int main(int argc, char *argv[]) {
 						case pxfTime:
 						case pxfTimestamp:
 						case pxfBytes:
-							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "  `%s` ", pxf->px_fname);
 							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 							first = 1;
 							break;
 						case pxfBCD:
-							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "  `%s` ", pxf->px_fname);
 							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
 							first = 1;
 							break;
@@ -1842,7 +1855,7 @@ int main(int argc, char *argv[]) {
 						case pxfFmtMemoBLOb:
 						case pxfGraphic:
 						case pxfOLE:
-							str_buffer_print(pxdoc, sbuf, "  %s ", pxf->px_fname);
+							str_buffer_print(pxdoc, sbuf, "  `%s` ", pxf->px_fname);
 							str_buffer_print(pxdoc, sbuf, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 							first = 1;
 							break;
@@ -2007,7 +2020,7 @@ int main(int argc, char *argv[]) {
 								case pxfNumber: {
 									double value;
 									if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-										str_buffer_print(pxdoc, sbuf, "%g", value);
+										str_buffer_print(pxdoc, sbuf, "%lf", value);
 									} else {
 										str_buffer_print(pxdoc, sbuf, "NULL");
 									}
@@ -2283,7 +2296,7 @@ int main(int argc, char *argv[]) {
 							case pxfNumber: {
 								double value;
 								if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-									fprintf(outfp, "%g", value);
+									fprintf(outfp, "%lf", value);
 								} 
 								break;
 							} 
@@ -2433,12 +2446,12 @@ int main(int argc, char *argv[]) {
 						case pxfFmtMemoBLOb:
 						case pxfGraphic:
 						case pxfOLE:
-							fprintf(outfp, "  %s ", pxf->px_fname);
+							fprintf(outfp, "  `%s` ", pxf->px_fname);
 							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_flen));
 							first = 1;
 							break;
 						case pxfBCD:
-							fprintf(outfp, "  %s ", pxf->px_fname);
+							fprintf(outfp, "  `%s` ", pxf->px_fname);
 							fprintf(outfp, "%s", get_sql_type(typemap, pxf->px_ftype, pxf->px_fdc));
 							first = 1;
 							break;
@@ -2613,7 +2626,7 @@ int main(int argc, char *argv[]) {
 									case pxfNumber: {
 										double value;
 										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%g", value);
+											fprintf(outfp, "%lf", value);
 										} else {
 											fprintf(outfp, "\\N");
 										}
@@ -2840,7 +2853,7 @@ int main(int argc, char *argv[]) {
 										long value;
 										if(0 < PX_get_data_long(pxdoc, &data[offset], pxf->px_flen, &value)) {
 											char *str = PX_timestamp2string(pxdoc, (double) value, time_format);
-											fprintf(outfp, "%s", str);
+											fprintf(outfp, "'%s'", str);
 											pxdoc->free(pxdoc, str);
 										} else {
 											fprintf(outfp, "NULL");
@@ -2852,7 +2865,7 @@ int main(int argc, char *argv[]) {
 									case pxfNumber: {
 										double value;
 										if(0 < PX_get_data_double(pxdoc, &data[offset], pxf->px_flen, &value)) {
-											fprintf(outfp, "%g", value);
+											fprintf(outfp, "%lf", value);
 										} else {
 											fprintf(outfp, "NULL");
 										}
