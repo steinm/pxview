@@ -1387,6 +1387,7 @@ int main(int argc, char *argv[]) {
 	/* Output data as comma separated values {{{ */
 	if(outputcsv) {
 		int numrecords, ireccounter = 0;
+		int blob_count = 1; /* used for counting blobs writen to file */
 		int isdeleted, presetdeleted;
 
 		/* Output first line with column names */
@@ -1671,7 +1672,7 @@ int main(int argc, char *argv[]) {
 											if(enclosure && (strchr(blobdata, delimiter) || strchr(blobdata, '\n') || strchr(blobdata, '\r')))
 												fprintf(outfp, "%c", enclosure);
 										} else {
-											sprintf(filename, "%s_%d.%s", blobprefix, mod_nr, blobextension);
+											sprintf(filename, "%s_%d.%s", blobprefix, blob_count++, blobextension);
 											fp = fopen(filename, "w");
 											if(fp) {
 												fwrite(blobdata, size, 1, fp);
